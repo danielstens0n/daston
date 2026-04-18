@@ -1,0 +1,12 @@
+.route-shell {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+.route-canvas {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}

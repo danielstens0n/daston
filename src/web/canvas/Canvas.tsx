@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useEditorStore } from '../state/editor.ts';
 import { normalizeWheelDelta, type ViewState, zoomAt } from './viewport-math.ts';
 import './canvas.css';
 
@@ -62,6 +63,9 @@ export function Canvas({ children }: Props) {
     // A pointerdown on a child (e.g. the card) has event.target === child,
     // which stops us from stealing the drag.
     if (event.target !== event.currentTarget) return;
+    // Clicking empty canvas deselects. getState() avoids subscribing Canvas
+    // to store changes — it only writes.
+    useEditorStore.getState().select(null);
     event.currentTarget.setPointerCapture(event.pointerId);
     panRef.current = {
       pointerId: event.pointerId,

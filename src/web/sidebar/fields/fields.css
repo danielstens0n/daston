@@ -1,0 +1,119 @@
+/* Field primitives + Section + FieldRow layout. All are type-agnostic; any
+   inspector section can reuse them. */
+
+.sidebar-section {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-surface-subtle);
+}
+
+.sidebar-section-title {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.sidebar-field-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sidebar-field-row:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-field-row > span {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* Color field: a clickable swatch that opens the native picker + a hex text input. */
+.sidebar-color-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar-color-swatch {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-strong);
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-color-swatch > input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.sidebar-color-hex {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.sidebar-color-hex:focus {
+  border-color: var(--color-accent);
+}
+
+/* Number field: simple input plus optional unit suffix. */
+.sidebar-number-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-number-field > input {
+  width: 100%;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar-number-field > input:focus {
+  border-color: var(--color-accent);
+}
+
+.sidebar-number-field > span {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* Toggle field: minimal checkbox. */
+.sidebar-toggle-field {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-toggle-field > input[type='checkbox'] {
+  margin: 0;
+  cursor: pointer;
+}

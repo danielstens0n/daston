@@ -1,0 +1,23 @@
+/* Semantic color + shadow tokens. Every component CSS file references these
+   via var(--...) instead of hardcoding hex, so a single edit here re-themes
+   the app. Add a [data-theme='dark'] block (or similar) when dark mode
+   lands. */
+
+:root {
+  --color-canvas-bg: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #ededef;
+
+  --color-border: #e4e4e7;
+  --color-border-strong: #d4d4d8;
+
+  --color-text-primary: #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-tertiary: #71717a;
+  --color-text-muted: #a1a1aa;
+
+  --color-accent: #3b82f6;
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
