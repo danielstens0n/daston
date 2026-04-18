@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.daston/
+.tanstack/
+src/web/routeTree.gen.ts
+*.log
+.DS_Store
