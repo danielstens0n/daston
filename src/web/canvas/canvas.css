@@ -1,0 +1,26 @@
+/* The viewport fills its container (the route), clips the world to its bounds,
+   and claims touchpad gestures so the browser doesn't pan/zoom the page itself.
+   `data-panning` is toggled from Canvas.tsx while a pan is in progress. */
+.canvas-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+  cursor: default;
+  background: #f7f7f8;
+}
+
+.canvas-viewport[data-panning='true'] {
+  cursor: grabbing;
+}
+
+/* The world container is what gets transformed. All previews live inside it
+   at world-space coordinates and ride the pan/zoom for free. */
+.canvas-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}

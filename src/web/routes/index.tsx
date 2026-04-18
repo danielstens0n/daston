@@ -1,9 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { Canvas } from '../canvas/Canvas.tsx';
+import { Card } from '../previews/Card.tsx';
 
 export const Route = createFileRoute('/')({
-  component: Canvas,
+  component: CanvasRoute,
 });
 
-function Canvas() {
-  return <div>daston canvas</div>;
+function CanvasRoute() {
+  return (
+    <Canvas>
+      <Card />
+    </Canvas>
+  );
 }

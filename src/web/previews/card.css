@@ -1,0 +1,34 @@
+.preview-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 280px;
+  padding: 20px 24px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: grab;
+  user-select: none;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.preview-card[data-dragging='true'] {
+  cursor: grabbing;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.preview-card-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.preview-card-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #52525b;
+}
