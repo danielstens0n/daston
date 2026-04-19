@@ -3,6 +3,12 @@ import { useShallow } from 'zustand/react/shallow';
 import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../shared/chrome-colors.ts';
 import type { ComponentId } from '../../shared/types.ts';
 import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../lib/fonts.ts';
+import {
+  buildLayerTreeFromSignature,
+  encodeLayerTreeSignature,
+  type LayerNode,
+  type SelectedTarget,
+} from './layers.ts';
 import type {
   ButtonInstance,
   ButtonProps,
@@ -22,6 +28,7 @@ type Point = { x: number; y: number };
 type EditorSnapshot = {
   instances: ComponentInstance[];
   selectedId: string | null;
+  selectedTarget: SelectedTarget | null;
   nextInstanceId: number;
   clipboard: ComponentInstance | null;
   lastPasteId: string | null;
@@ -35,9 +42,13 @@ const MIN_SIZE = 40;
 // Figma's visual nudge so the clone is obviously distinct from the source.
 const PASTE_OFFSET = 20;
 
+/** Canvas viewport fill (Figma-style); independent of app chrome theme. */
+export const DEFAULT_CANVAS_BACKGROUND = '#f7f7f8';
+
 type EditorStore = {
   instances: ComponentInstance[];
   selectedId: string | null;
+  selectedTarget: SelectedTarget | null;
   // Monotonic counter for generated ids. Starts at 2 because the seeded
   // default card uses `card-1`. Shared across all component types — ids
   // follow the `${type}-${n}` convention.
@@ -57,7 +68,11 @@ type EditorStore = {
   past: EditorSnapshot[];
   future: EditorSnapshot[];
   historyBatch: EditorSnapshot | null;
+  /** World background behind artboards; not part of undo history. */
+  canvasBackgroundColor: string;
+  setCanvasBackgroundColor: (color: string) => void;
   select: (id: string | null) => void;
+  selectLayer: (target: Extract<SelectedTarget, { kind: 'layer' }>) => void;
   beginHistoryBatch: () => void;
   endHistoryBatch: () => void;
   undo: () => void;
@@ -123,10 +138,22 @@ function createSnapshot(source: EditorSnapshot): EditorSnapshot {
   return structuredClone({
     instances: source.instances,
     selectedId: source.selectedId,
+    selectedTarget: source.selectedTarget,
     nextInstanceId: source.nextInstanceId,
     clipboard: source.clipboard,
     lastPasteId: source.lastPasteId,
   });
+}
+
+/** History snapshots omit canvas background; keep the current fill across undo/redo. */
+function restoreSnapshotKeepingCanvas(
+  state: EditorStore,
+  snapshot: EditorSnapshot,
+): EditorSnapshot & { canvasBackgroundColor: string } {
+  return {
+    ...createSnapshot(snapshot),
+    canvasBackgroundColor: state.canvasBackgroundColor,
+  };
 }
 
 function snapshotsEqual(a: EditorSnapshot, b: EditorSnapshot): boolean {
@@ -137,6 +164,9 @@ function mergeSnapshot(state: EditorStore, patch: Partial<EditorSnapshot>): Edit
   return createSnapshot({
     instances: Object.hasOwn(patch, 'instances') ? (patch.instances ?? state.instances) : state.instances,
     selectedId: Object.hasOwn(patch, 'selectedId') ? (patch.selectedId ?? null) : state.selectedId,
+    selectedTarget: Object.hasOwn(patch, 'selectedTarget')
+      ? (patch.selectedTarget ?? null)
+      : state.selectedTarget,
     nextInstanceId: Object.hasOwn(patch, 'nextInstanceId')
       ? (patch.nextInstanceId ?? state.nextInstanceId)
       : state.nextInstanceId,
@@ -265,13 +295,25 @@ export const useEditorStore = create<EditorStore>((set) => {
   return {
     instances: [defaultCard],
     selectedId: null,
+    selectedTarget: null,
     nextInstanceId: 2,
     clipboard: null,
     lastPasteId: null,
     past: [],
     future: [],
     historyBatch: null,
-    select: (id) => set({ selectedId: id }),
+    canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+    setCanvasBackgroundColor: (color) => set({ canvasBackgroundColor: color }),
+    select: (id) =>
+      set({
+        selectedId: id,
+        selectedTarget: id ? { kind: 'instance', instanceId: id } : null,
+      }),
+    selectLayer: (target) =>
+      set({
+        selectedId: target.instanceId,
+        selectedTarget: target,
+      }),
     beginHistoryBatch: () =>
       set((state) => {
         if (state.historyBatch) return state;
@@ -296,7 +338,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         const previous = state.past.at(-1);
         if (!previous) return state;
         return {
-          ...createSnapshot(previous),
+          ...restoreSnapshotKeepingCanvas(state, previous),
           past: state.past.slice(0, -1),
           future: [createSnapshot(state), ...state.future],
         };
@@ -307,7 +349,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         const [next, ...future] = state.future;
         if (!next) return state;
         return {
-          ...createSnapshot(next),
+          ...restoreSnapshotKeepingCanvas(state, next),
           past: [...state.past, createSnapshot(state)],
           future,
         };
@@ -360,6 +402,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
+              selectedTarget: { kind: 'instance', instanceId: id },
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -377,6 +420,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
+              selectedTarget: { kind: 'instance', instanceId: id },
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -394,6 +438,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
+              selectedTarget: { kind: 'instance', instanceId: id },
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -411,6 +456,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
+              selectedTarget: { kind: 'instance', instanceId: id },
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -432,6 +478,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, instance],
           selectedId: id,
+          selectedTarget: { kind: 'instance', instanceId: id },
           nextInstanceId: state.nextInstanceId + 1,
         };
       }),
@@ -453,6 +500,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: state.instances.filter((instance) => instance.id !== id),
           selectedId: state.selectedId === id ? null : state.selectedId,
+          selectedTarget: state.selectedTarget?.instanceId === id ? null : state.selectedTarget,
           lastPasteId: state.lastPasteId === id ? null : state.lastPasteId,
         };
       }),
@@ -469,6 +517,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, clone],
           selectedId: clone.id,
+          selectedTarget: { kind: 'instance', instanceId: clone.id },
           nextInstanceId: state.nextInstanceId + 1,
         };
       }),
@@ -483,6 +532,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, clone],
           selectedId: cloneId,
+          selectedTarget: { kind: 'instance', instanceId: cloneId },
           nextInstanceId: state.nextInstanceId + 1,
         };
       });
@@ -501,6 +551,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: state.instances.filter((instance) => instance.id !== id),
           selectedId: state.selectedId === id ? null : state.selectedId,
+          selectedTarget: state.selectedTarget?.instanceId === id ? null : state.selectedTarget,
           clipboard: structuredClone(src),
           lastPasteId: null,
         };
@@ -538,6 +589,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, clone],
           selectedId: newId,
+          selectedTarget: { kind: 'instance', instanceId: newId },
           lastPasteId: newId,
           nextInstanceId: state.nextInstanceId + 1,
         };
@@ -556,30 +608,12 @@ export function useInstanceIds(): string[] {
   return useEditorStore(useShallow((state) => state.instances.map((instance) => instance.id)));
 }
 
-// One sidebar layer row per canvas instance. Encoded as a delimited primitive
-// in the store selector so `useShallow` compares element-by-element and stays
-// stable on x/y drag (only id/type/definitionId affect the panel).
-export type LayerRow =
-  | { id: string; type: 'imported'; definitionId: string }
-  | { id: string; type: Exclude<ComponentInstance['type'], 'imported'> };
-
-const LAYER_ROW_SEP = '\x1f';
-
-function encodeLayerRow(instance: ComponentInstance): string {
-  return instance.type === 'imported'
-    ? `imported${LAYER_ROW_SEP}${instance.id}${LAYER_ROW_SEP}${instance.definitionId}`
-    : `${instance.type}${LAYER_ROW_SEP}${instance.id}`;
-}
-
-// Round-trip with `encodeLayerRow`; parts are always present by construction.
-function decodeLayerRow(row: string): LayerRow {
-  const [type, id, definitionId] = row.split(LAYER_ROW_SEP) as [LayerRow['type'], string, string];
-  return type === 'imported' ? { id, type, definitionId } : { id, type };
-}
-
-export function useLayerRows(): LayerRow[] {
-  const encoded = useEditorStore(useShallow((state) => state.instances.map(encodeLayerRow)));
-  return encoded.map(decodeLayerRow);
+// The layers sidebar projects each top-level instance into a derived tree.
+// Encode only the stable fields that affect the sidebar structure so x/y drags
+// do not cause tree churn.
+export function useLayerTree(): LayerNode[] {
+  const encoded = useEditorStore(useShallow((state) => state.instances.map(encodeLayerTreeSignature)));
+  return encoded.map(buildLayerTreeFromSignature);
 }
 
 // A single instance by id. Same-reference until its fields are mutated, so
@@ -625,24 +659,41 @@ export function useLandingProps(id: string): LandingProps | null {
   });
 }
 
-// Meta view of the currently selected instance: just id + type. Used by the
-// sidebar to render its header and pick an inspector. Via `useShallow`, this
-// is stable across drags and prop edits — only selection changes re-render.
-export type SelectedInstanceMeta = ComponentInstance extends infer Instance
-  ? Instance extends ComponentInstance
-    ? Pick<Instance, 'id' | 'type'>
-    : never
-  : never;
+export type SelectedTargetMeta =
+  | { kind: 'instance'; instanceId: string; type: ComponentInstance['type'] }
+  | {
+      kind: 'layer';
+      instanceId: string;
+      type: ComponentInstance['type'];
+      layerId: string;
+      layerKind: Extract<SelectedTarget, { kind: 'layer' }>['layerKind'];
+    };
 
-export function useSelectedInstanceMeta(): SelectedInstanceMeta | null {
+export function useSelectedTargetMeta(): SelectedTargetMeta | null {
   return useEditorStore(
-    useShallow((state): SelectedInstanceMeta | null => {
-      if (state.selectedId === null) return null;
-      const instance = state.instances.find((i) => i.id === state.selectedId);
+    useShallow((state): SelectedTargetMeta | null => {
+      if (!state.selectedTarget) return null;
+      const instance = state.instances.find((candidate) => candidate.id === state.selectedTarget?.instanceId);
       if (!instance) return null;
-      return { id: instance.id, type: instance.type };
+      return state.selectedTarget.kind === 'instance'
+        ? {
+            kind: 'instance',
+            instanceId: state.selectedTarget.instanceId,
+            type: instance.type,
+          }
+        : {
+            kind: 'layer',
+            instanceId: state.selectedTarget.instanceId,
+            type: instance.type,
+            layerId: state.selectedTarget.layerId,
+            layerKind: state.selectedTarget.layerKind,
+          };
     }),
   );
+}
+
+export function useSelectedTarget(): SelectedTarget | null {
+  return useEditorStore((state) => state.selectedTarget);
 }
 
 export function useIsSelected(id: string): boolean {

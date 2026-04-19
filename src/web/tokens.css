@@ -1,7 +1,6 @@
 /* Semantic color + shadow tokens. Every component CSS file references these
    via var(--...) instead of hardcoding hex, so a single edit here re-themes
-   the app. Add a [data-theme='dark'] block (or similar) when dark mode
-   lands.
+   the app. Switch themes with data-theme="light" | "dark" on <html>.
 
    Chrome vs preview blues:
    - `--color-chrome-focus` (alias of `--color-selection`): shell focus rings,
@@ -10,7 +9,38 @@
    - `--color-accent`: default preview fills (button/landing fallbacks in CSS);
      user-editable; keep in sync with `src/shared/chrome-colors.ts` ACCENT_HEX. */
 
-:root {
+:root,
+[data-theme='dark'] {
+  --color-canvas-bg: #0e0f12;
+  --color-surface: #17181c;
+  --color-surface-subtle: #1f2025;
+
+  --color-border: #2a2c32;
+  --color-border-strong: #3a3d45;
+
+  --color-text-primary: #f5f6f8;
+  --color-text-secondary: #b8bcc4;
+  --color-text-tertiary: #8b8f99;
+  --color-text-muted: #6a6e78;
+
+  --color-accent: #0162ff;
+  --color-accent-hover: #217ce5;
+  --color-selection: var(--color-accent);
+  --color-chrome-focus: var(--color-accent);
+  --color-chrome-focus-hover: var(--color-accent-hover);
+  --color-text-on-accent: #ffffff;
+
+  --color-success-text: #86efac;
+  --color-danger-text: #fca5a5;
+  --color-danger-bg: #2a1518;
+  --color-danger-border: #7f1d1d;
+  --color-overlay-scrim: rgb(0 0 0 / 0.55);
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='light'] {
   --color-canvas-bg: #f7f7f8;
   --color-surface: #ffffff;
   --color-surface-subtle: #ededef;
@@ -23,9 +53,18 @@
   --color-text-tertiary: #71717a;
   --color-text-muted: #a1a1aa;
 
-  --color-accent: #3b82f6;
-  --color-selection: #60a5fa;
-  --color-chrome-focus: var(--color-selection);
+  --color-accent: #0162ff;
+  --color-accent-hover: #217ce5;
+  --color-selection: var(--color-accent);
+  --color-chrome-focus: var(--color-accent);
+  --color-chrome-focus-hover: var(--color-accent-hover);
+  --color-text-on-accent: #ffffff;
+
+  --color-success-text: #166534;
+  --color-danger-text: #9f1239;
+  --color-danger-bg: #fff1f2;
+  --color-danger-border: #fecaca;
+  --color-overlay-scrim: rgb(15 23 42 / 0.2);
 
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.14);

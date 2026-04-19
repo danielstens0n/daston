@@ -156,12 +156,15 @@ export function Canvas({ children, overlay }: Props) {
     });
   }
 
+  const canvasBackgroundColor = useEditorStore((s) => s.canvasBackgroundColor);
+
   return (
     <CanvasHandleContext.Provider value={handle}>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: viewport handles pan + canvas context menu */}
       <div
         ref={viewportRef}
         className="canvas-viewport"
+        style={{ background: canvasBackgroundColor }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endPan}

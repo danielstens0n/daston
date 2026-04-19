@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useEditorStore } from './editor.ts';
+import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from './editor.ts';
+import { buildLayerTreeFromSignature, encodeLayerTreeSignature } from './layers.ts';
 import type { CardInstance, ImportedInstance } from './types.ts';
 
 // Reset the store to a known two-instance baseline before each test. We
@@ -56,12 +57,14 @@ beforeEach(() => {
   useEditorStore.setState({
     instances: [baselineA, baselineB],
     selectedId: null,
+    selectedTarget: null,
     nextInstanceId: 2,
     clipboard: null,
     lastPasteId: null,
     past: [],
     future: [],
     historyBatch: null,
+    canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
   });
 });
 
@@ -71,6 +74,54 @@ describe('select', () => {
     expect(useEditorStore.getState().selectedId).toBe('a');
     useEditorStore.getState().select(null);
     expect(useEditorStore.getState().selectedId).toBeNull();
+  });
+
+  it('tracks the selected instance target', () => {
+    useEditorStore.getState().select('a');
+    expect(useEditorStore.getState().selectedTarget).toEqual({ kind: 'instance', instanceId: 'a' });
+  });
+
+  it('tracks a selected layer while keeping the owning instance selected', () => {
+    useEditorStore
+      .getState()
+      .selectLayer({ kind: 'layer', instanceId: 'a', layerId: 'title', layerKind: 'text' });
+    expect(useEditorStore.getState().selectedId).toBe('a');
+    expect(useEditorStore.getState().selectedTarget).toEqual({
+      kind: 'layer',
+      instanceId: 'a',
+      layerId: 'title',
+      layerKind: 'text',
+    });
+  });
+});
+
+describe('layer tree projection', () => {
+  it('derives nested card layers from the flat instance list', () => {
+    const tree = useEditorStore
+      .getState()
+      .instances.map(encodeLayerTreeSignature)
+      .map(buildLayerTreeFromSignature);
+    expect(tree[0]).toMatchObject({
+      instanceId: 'a',
+      label: 'Card',
+      selection: { kind: 'instance', instanceId: 'a' },
+    });
+    expect(tree[0]?.children.map((child) => child.label)).toEqual(['Surface', 'Title', 'Body']);
+    expect(tree[0]?.children.map((child) => child.kind)).toEqual(['rectangle', 'text', 'text']);
+  });
+
+  it('keeps imported components as opaque leaves', () => {
+    useEditorStore.setState({ instances: [importedBaseline], selectedTarget: null });
+    const tree = useEditorStore
+      .getState()
+      .instances.map(encodeLayerTreeSignature)
+      .map(buildLayerTreeFromSignature);
+    expect(tree[0]).toMatchObject({
+      instanceId: 'imported-1',
+      label: 'Imported',
+      secondaryLabel: 'imported-def-9 · imported-1',
+      children: [],
+    });
   });
 });
 
@@ -256,6 +307,14 @@ describe('remove', () => {
     expect(useEditorStore.getState().selectedId).toBeNull();
   });
 
+  it('clears selectedTarget when removing the owning instance', () => {
+    useEditorStore
+      .getState()
+      .selectLayer({ kind: 'layer', instanceId: 'a', layerId: 'body', layerKind: 'text' });
+    useEditorStore.getState().remove('a');
+    expect(useEditorStore.getState().selectedTarget).toBeNull();
+  });
+
   it('leaves selectedId alone when a different instance is removed', () => {
     useEditorStore.getState().select('b');
     useEditorStore.getState().remove('a');
@@ -320,6 +379,7 @@ describe('duplicate', () => {
     useEditorStore.setState({
       instances: [baselineA, importedBaseline],
       selectedId: null,
+      selectedTarget: null,
       nextInstanceId: 2,
       clipboard: null,
       lastPasteId: null,
@@ -418,7 +478,7 @@ describe('cut', () => {
     expect(state.instances).toEqual([baselineA, baselineB]);
   });
 
-  it('restores the canvas and clipboard on undo, then reapplies on redo', () => {
+  it('restores instances and clears clipboard on undo, then reapplies cut on redo', () => {
     useEditorStore.getState().cut('a');
     expect(useEditorStore.getState().instances).toEqual([baselineB]);
 
@@ -498,6 +558,7 @@ describe('paste', () => {
     useEditorStore.setState({
       instances: [baselineA, importedBaseline],
       selectedId: null,
+      selectedTarget: null,
       nextInstanceId: 2,
       clipboard: null,
       lastPasteId: null,
