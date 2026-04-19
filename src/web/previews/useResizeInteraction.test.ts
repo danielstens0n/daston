@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resizeRect, type ResizeRect } from './useResizeInteraction.ts';
+import { type ResizeRect, resizeRect } from './useResizeInteraction.ts';
 
 // Pure-function tests for the resize math. The hook itself is exercised
 // visually — these cover the two interesting cases per corner: free resize

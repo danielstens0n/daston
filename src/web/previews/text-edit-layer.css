@@ -1,0 +1,16 @@
+.text-edit-layer-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.text-edit-layer-surface {
+  position: absolute;
+  pointer-events: auto;
+  min-width: 0;
+}
+
+.text-edit-layer-control {
+  display: block;
+}

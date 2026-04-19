@@ -2,12 +2,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { useKeyboardShortcuts } from '../keyboard/useKeyboardShortcuts.ts';
+import { LayersSidebar } from '../layers/LayersSidebar.tsx';
 import { Button } from '../previews/Button.tsx';
 import { Card } from '../previews/Card.tsx';
 import { ImportedPreview } from '../previews/ImportedPreview.tsx';
 import { Landing } from '../previews/Landing.tsx';
 import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
 import { Table } from '../previews/Table.tsx';
+import { TextEditLayer } from '../previews/TextEditLayer.tsx';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
 import { useInstance, useInstanceIds } from '../state/editor.ts';
 import { useImportedComponentsStore } from '../state/imported-components.ts';
@@ -29,11 +31,13 @@ function CanvasRoute() {
   const instanceIds = useInstanceIds();
   return (
     <div className="route-shell">
+      <LayersSidebar />
       <div className="route-canvas">
         <Canvas overlay={<CanvasToolbar />}>
           {instanceIds.map((id) => (
             <PreviewSlot key={id} id={id} />
           ))}
+          <TextEditLayer />
         </Canvas>
       </div>
       <Sidebar />

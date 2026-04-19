@@ -1,5 +1,8 @@
 import { useCardProps } from '../../state/editor.ts';
 import type { CardProps } from '../../state/types.ts';
+import { FieldRow } from '../fields/FieldRow.tsx';
+import { Section } from '../fields/Section.tsx';
+import { TextField } from '../fields/TextField.tsx';
 import { BorderSection } from '../sections/BorderSection.tsx';
 import { FillSection } from '../sections/FillSection.tsx';
 import { LayoutSection } from '../sections/LayoutSection.tsx';
@@ -19,6 +22,14 @@ export function CardInspector({ id, onPatch }: Props) {
   if (!props) return null;
   return (
     <>
+      <Section title="Content">
+        <FieldRow label="Title">
+          <TextField value={props.title} onChange={(value) => onPatch({ title: value })} />
+        </FieldRow>
+        <FieldRow label="Body">
+          <TextField value={props.body} onChange={(value) => onPatch({ body: value })} />
+        </FieldRow>
+      </Section>
       <LayoutSection props={props} onPatch={onPatch} />
       <FillSection props={props} onPatch={onPatch} />
       <BorderSection props={props} onPatch={onPatch} />

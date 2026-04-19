@@ -19,6 +19,7 @@
 
 .preview-table-el {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
 }
@@ -38,6 +39,12 @@
 
 .preview-table-el td {
   color: var(--table-body-text, var(--color-text-secondary));
+}
+
+.preview-table-text {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 .preview-table-el tbody tr:last-child td {

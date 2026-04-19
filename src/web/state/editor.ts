@@ -509,6 +509,32 @@ export function useInstanceIds(): string[] {
   return useEditorStore(useShallow((state) => state.instances.map((instance) => instance.id)));
 }
 
+// One sidebar layer row per canvas instance. Encoded as a delimited primitive
+// in the store selector so `useShallow` compares element-by-element and stays
+// stable on x/y drag (only id/type/definitionId affect the panel).
+export type LayerRow =
+  | { id: string; type: 'imported'; definitionId: string }
+  | { id: string; type: Exclude<ComponentInstance['type'], 'imported'> };
+
+const LAYER_ROW_SEP = '\x1f';
+
+function encodeLayerRow(instance: ComponentInstance): string {
+  return instance.type === 'imported'
+    ? `imported${LAYER_ROW_SEP}${instance.id}${LAYER_ROW_SEP}${instance.definitionId}`
+    : `${instance.type}${LAYER_ROW_SEP}${instance.id}`;
+}
+
+// Round-trip with `encodeLayerRow`; parts are always present by construction.
+function decodeLayerRow(row: string): LayerRow {
+  const [type, id, definitionId] = row.split(LAYER_ROW_SEP) as [LayerRow['type'], string, string];
+  return type === 'imported' ? { id, type, definitionId } : { id, type };
+}
+
+export function useLayerRows(): LayerRow[] {
+  const encoded = useEditorStore(useShallow((state) => state.instances.map(encodeLayerRow)));
+  return encoded.map(decodeLayerRow);
+}
+
 // A single instance by id. Same-reference until its fields are mutated, so
 // previews only re-render when their own instance changes.
 export function useInstance(id: string): ComponentInstance | null {

@@ -25,6 +25,7 @@ export function Landing({ id }: Props) {
       <div className="preview-landing-hero" data-shadow={p.shadowEnabled || undefined}>
         <h2 className="preview-landing-title">
           <EditableText
+            instanceId={id}
             value={p.heroTitle}
             onChange={(heroTitle) => useEditorStore.getState().updateProps(id, { heroTitle })}
             multiline
@@ -32,6 +33,7 @@ export function Landing({ id }: Props) {
         </h2>
         <p className="preview-landing-body">
           <EditableText
+            instanceId={id}
             value={p.heroBody}
             onChange={(heroBody) => useEditorStore.getState().updateProps(id, { heroBody })}
             multiline
@@ -39,6 +41,7 @@ export function Landing({ id }: Props) {
         </p>
         <span className="preview-landing-cta">
           <EditableText
+            instanceId={id}
             value={p.ctaLabel}
             onChange={(ctaLabel) => useEditorStore.getState().updateProps(id, { ctaLabel })}
           />
@@ -47,6 +50,7 @@ export function Landing({ id }: Props) {
       <div className="preview-landing-features">
         <p className="preview-landing-features-title">
           <EditableText
+            instanceId={id}
             value={p.featuresTitle}
             onChange={(featuresTitle) => useEditorStore.getState().updateProps(id, { featuresTitle })}
             multiline
@@ -56,6 +60,7 @@ export function Landing({ id }: Props) {
           {p.features.map((feature, index) => (
             <li key={`${id}-feature-${feature}`} className="preview-landing-feature">
               <EditableText
+                instanceId={id}
                 value={feature}
                 onChange={(nextFeature) =>
                   useEditorStore.getState().updateProps(id, {

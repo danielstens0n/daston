@@ -1,5 +1,6 @@
+import { componentTypeLabel } from '../state/component-type-label.ts';
 import { type SelectedInstanceMeta, useEditorStore, useSelectedInstanceMeta } from '../state/editor.ts';
-import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../state/types.ts';
+import type { ButtonProps, CardProps, LandingProps, TableProps } from '../state/types.ts';
 import { ButtonInspector } from './inspectors/ButtonInspector.tsx';
 import { CardInspector } from './inspectors/CardInspector.tsx';
 import { ImportedInspector } from './inspectors/ImportedInspector.tsx';
@@ -14,7 +15,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <header className="sidebar-header">
-        <h2 className="sidebar-header-title">{meta ? titleFor(meta.type) : 'Inspector'}</h2>
+        <h2 className="sidebar-header-title">{meta ? componentTypeLabel(meta.type) : 'Inspector'}</h2>
         <p className="sidebar-header-subtitle">
           {meta ? `${meta.type} · ${meta.id}` : 'Select a component to edit'}
         </p>
@@ -42,25 +43,6 @@ function renderInspector(meta: SelectedInstanceMeta) {
       return <ImportedInspector id={meta.id} />;
     default: {
       const _exhaustive: never = meta;
-      return _exhaustive;
-    }
-  }
-}
-
-function titleFor(type: ComponentInstance['type']): string {
-  switch (type) {
-    case 'card':
-      return 'Card';
-    case 'button':
-      return 'Button';
-    case 'table':
-      return 'Table';
-    case 'landing':
-      return 'Landing page';
-    case 'imported':
-      return 'Imported';
-    default: {
-      const _exhaustive: never = type;
       return _exhaustive;
     }
   }

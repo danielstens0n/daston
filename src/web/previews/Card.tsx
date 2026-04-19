@@ -29,6 +29,7 @@ export function Card({ id }: Props) {
     <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style}>
       <h3 className="preview-card-title">
         <EditableText
+          instanceId={id}
           value={p.title}
           onChange={(title) => useEditorStore.getState().updateProps(id, { title })}
           multiline
@@ -36,6 +37,7 @@ export function Card({ id }: Props) {
       </h3>
       <p className="preview-card-body">
         <EditableText
+          instanceId={id}
           value={p.body}
           onChange={(body) => useEditorStore.getState().updateProps(id, { body })}
           multiline

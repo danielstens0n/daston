@@ -33,6 +33,7 @@ export function Table({ id }: Props) {
                 {p.columns.map((column, columnIndex) => (
                   <th key={`${id}-column-${column}`}>
                     <EditableText
+                      instanceId={id}
                       value={column}
                       onChange={(nextColumn) =>
                         useEditorStore.getState().updateProps(id, {
@@ -42,7 +43,6 @@ export function Table({ id }: Props) {
                         })
                       }
                       className="preview-table-text"
-                      inputClassName="preview-table-text preview-inline-text-input"
                     />
                   </th>
                 ))}
@@ -61,6 +61,7 @@ export function Table({ id }: Props) {
                   {p.columns.map((column, columnIndex) => (
                     <td key={`${id}-cell-${column}-${row[columnIndex] ?? ''}`}>
                       <EditableText
+                        instanceId={id}
                         value={row[columnIndex] ?? ''}
                         onChange={(nextCell) =>
                           useEditorStore.getState().updateProps(id, {
@@ -74,7 +75,6 @@ export function Table({ id }: Props) {
                           })
                         }
                         className="preview-table-text"
-                        inputClassName="preview-table-text preview-inline-text-input"
                       />
                     </td>
                   ))}
