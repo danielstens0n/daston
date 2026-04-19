@@ -1,11 +1,15 @@
 .preview-card {
   box-sizing: border-box;
-  width: var(--card-width, 280px);
+  /* Size is owned by the PreviewWrapper (resize handles write to the
+     instance's width/height), so the body just fills the wrapper. */
+  width: 100%;
+  height: 100%;
   padding: var(--card-padding, 20px) calc(var(--card-padding, 20px) * 1.2);
   background: var(--card-fill, var(--color-surface));
   border: var(--card-border-width, 1px) solid var(--card-border-color, var(--color-border));
   border-radius: var(--card-border-radius, 12px);
   font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
 }
 
 /* Shadow opts in per instance via the data-shadow attribute so toggling it

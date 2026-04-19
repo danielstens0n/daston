@@ -18,3 +18,39 @@
   outline: 1px solid var(--color-selection);
   outline-offset: 2px;
 }
+
+/* Resize handles are 10×10 squares at each corner, offset so they straddle
+   the selection outline. Only rendered when the wrapper is selected. */
+.preview-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-selection);
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.preview-resize-handle-nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+
+.preview-resize-handle-ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+
+.preview-resize-handle-sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+
+.preview-resize-handle-se {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}

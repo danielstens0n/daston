@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampScale, normalizeWheelDelta, type ViewState, zoomAt } from './viewport-math.ts';
+import { clampScale, normalizeWheelDelta, screenToWorld, type ViewState, zoomAt } from './viewport-math.ts';
 
 describe('zoomAt', () => {
   it('keeps the world point under the cursor invariant', () => {
@@ -37,6 +37,19 @@ describe('clampScale', () => {
     expect(clampScale(0.01, 0.1, 4)).toBe(0.1);
     expect(clampScale(10, 0.1, 4)).toBe(4);
     expect(clampScale(1, 0.1, 4)).toBe(1);
+  });
+});
+
+describe('screenToWorld', () => {
+  it('inverts the canvas-world transform', () => {
+    const view: ViewState = { x: 50, y: 30, scale: 2 };
+    // World point (10, 20) maps to screen (50 + 10*2, 30 + 20*2) = (70, 70).
+    expect(screenToWorld({ x: 70, y: 70 }, view)).toEqual({ x: 10, y: 20 });
+  });
+
+  it('is the identity when view is at origin with scale 1', () => {
+    const view: ViewState = { x: 0, y: 0, scale: 1 };
+    expect(screenToWorld({ x: 123, y: 456 }, view)).toEqual({ x: 123, y: 456 });
   });
 });
 

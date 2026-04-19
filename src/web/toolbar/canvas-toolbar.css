@@ -1,0 +1,80 @@
+/* Pill toolbar floating at the bottom-center of the canvas. Lives inside
+   .canvas-overlay (see canvas.css) so it stays fixed while the world pans
+   and zooms. All colors/shadows come from tokens.css. */
+
+.canvas-toolbar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-elevated);
+}
+
+.canvas-toolbar-button {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.canvas-toolbar-button:hover:not(:disabled):not([data-active]) {
+  background: var(--color-surface-subtle);
+}
+
+.canvas-toolbar-button:focus-visible {
+  /* Dark ring reads on both the transparent surface and the active blue. */
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.canvas-toolbar-button:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Current-tool highlight, Figma-style. Uses --color-selection so the "active
+   tool" and the "selected component" share one visual language (see DAS-3). */
+.canvas-toolbar-button[data-active] {
+  background: var(--color-selection);
+  color: var(--color-surface);
+}
+
+/* CSS-only tooltip. Content comes from data-tooltip so the markup stays
+   clean. Short delay on hover to match Figma's feel; focus-visible fires
+   immediately for keyboard users. */
+.canvas-toolbar-button::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--color-text-primary);
+  color: var(--color-surface);
+  font-size: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease 0.15s;
+}
+
+.canvas-toolbar-button:hover::after,
+.canvas-toolbar-button:focus-visible::after {
+  opacity: 1;
+}

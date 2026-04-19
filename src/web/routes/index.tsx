@@ -5,6 +5,7 @@ import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
 import { useInstance, useInstanceIds } from '../state/editor.ts';
 import type { ComponentInstance } from '../state/types.ts';
+import { CanvasToolbar } from '../toolbar/CanvasToolbar.tsx';
 import './route.css';
 
 export const Route = createFileRoute('/')({
@@ -18,7 +19,7 @@ function CanvasRoute() {
   return (
     <div className="route-shell">
       <div className="route-canvas">
-        <Canvas>
+        <Canvas overlay={<CanvasToolbar />}>
           {instanceIds.map((id) => (
             <PreviewSlot key={id} id={id} />
           ))}

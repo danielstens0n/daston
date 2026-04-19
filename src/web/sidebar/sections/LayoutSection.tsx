@@ -11,15 +11,6 @@ type Props = {
 export function LayoutSection({ props, onPatch }: Props) {
   return (
     <Section title="Layout">
-      <FieldRow label="Width">
-        <NumberField
-          value={props.width}
-          onChange={(value) => onPatch({ width: value })}
-          min={80}
-          max={800}
-          unit="px"
-        />
-      </FieldRow>
       <FieldRow label="Padding">
         <NumberField
           value={props.padding}

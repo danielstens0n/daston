@@ -20,7 +20,6 @@ export type ShadowProps = {
 };
 
 export type LayoutProps = {
-  width: number;
   padding: number;
 };
 
@@ -31,11 +30,16 @@ export type TextColorProps = {
 
 export type CardProps = LayoutProps & FillProps & BorderProps & ShadowProps & TextColorProps;
 
+// Size lives on the instance root alongside x/y — resize handles on the
+// wrapper read and write width/height directly, symmetric with how drag
+// updates x/y. Type-specific props stay in `props`.
 export type CardInstance = {
   id: string;
   type: 'card';
   x: number;
   y: number;
+  width: number;
+  height: number;
   props: CardProps;
 };
 

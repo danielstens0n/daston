@@ -18,7 +18,6 @@ export function Card({ id }: Props) {
     '--card-border-color': p.borderColor,
     '--card-border-width': `${p.borderWidth}px`,
     '--card-border-radius': `${p.borderRadius}px`,
-    '--card-width': `${p.width}px`,
     '--card-padding': `${p.padding}px`,
     '--card-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
     '--card-title-color': p.titleColor,

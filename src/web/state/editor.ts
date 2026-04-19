@@ -1,41 +1,72 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
+import type { ComponentId } from '../../shared/types.ts';
 import type { CardInstance, CardProps, ComponentInstance } from './types.ts';
+
+type Rect = { x: number; y: number; width: number; height: number };
+type Point = { x: number; y: number };
+
+// Minimum drag-resize dimensions. Clamped at the store so the drag hook
+// doesn't need to know the rule.
+const MIN_SIZE = 40;
 
 type EditorStore = {
   instances: ComponentInstance[];
   selectedId: string | null;
+  // Monotonic counter for generated ids. Starts at 2 because the seeded
+  // default card uses `card-1`. Shared across all component types — ids
+  // follow the `${type}-${n}` convention.
+  nextInstanceId: number;
+  // Reserved for DAS-1 (keyboard shortcuts / copy-paste). The clipboard
+  // holds the most recently copied instance snapshot; lastPasteId lets the
+  // paste action offset successive pastes of the same clipboard entry.
+  // Actions are not wired up yet.
+  clipboard: ComponentInstance | null;
+  lastPasteId: string | null;
   select: (id: string | null) => void;
-  move: (id: string, pos: { x: number; y: number }) => void;
+  move: (id: string, pos: Point) => void;
+  resize: (id: string, rect: Rect) => void;
+  addInstance: (type: ComponentId, worldCenter: Point) => void;
   // Generic at the store level. Type safety for specific props lives at the
   // call site (see Sidebar.tsx), where the instance has been narrowed.
   updateProps: (id: string, patch: Record<string, unknown>) => void;
 };
+
+// Shared default prop values for new cards. The default card uses the same
+// set, so seeding and `addInstance` stay consistent.
+const defaultCardProps: CardProps = {
+  padding: 20,
+  fill: '#ffffff',
+  borderColor: '#e4e4e7',
+  borderWidth: 1,
+  borderRadius: 12,
+  shadowEnabled: true,
+  shadowColor: '#0000001a',
+  shadowBlur: 12,
+  shadowOffsetY: 4,
+  titleColor: '#18181b',
+  bodyColor: '#52525b',
+};
+
+const DEFAULT_CARD_WIDTH = 280;
+const DEFAULT_CARD_HEIGHT = 180;
 
 const defaultCard: CardInstance = {
   id: 'card-1',
   type: 'card',
   x: 120,
   y: 120,
-  props: {
-    width: 280,
-    padding: 20,
-    fill: '#ffffff',
-    borderColor: '#e4e4e7',
-    borderWidth: 1,
-    borderRadius: 12,
-    shadowEnabled: true,
-    shadowColor: '#0000001a',
-    shadowBlur: 12,
-    shadowOffsetY: 4,
-    titleColor: '#18181b',
-    bodyColor: '#52525b',
-  },
+  width: DEFAULT_CARD_WIDTH,
+  height: DEFAULT_CARD_HEIGHT,
+  props: defaultCardProps,
 };
 
 export const useEditorStore = create<EditorStore>((set) => ({
   instances: [defaultCard],
   selectedId: null,
+  nextInstanceId: 2,
+  clipboard: null,
+  lastPasteId: null,
   select: (id) => set({ selectedId: id }),
   move: (id, pos) =>
     set((state) => ({
@@ -43,6 +74,44 @@ export const useEditorStore = create<EditorStore>((set) => ({
         instance.id === id ? { ...instance, x: pos.x, y: pos.y } : instance,
       ),
     })),
+  resize: (id, rect) =>
+    set((state) => {
+      const width = Math.max(MIN_SIZE, rect.width);
+      const height = Math.max(MIN_SIZE, rect.height);
+      return {
+        instances: state.instances.map((instance) =>
+          instance.id === id ? { ...instance, x: rect.x, y: rect.y, width, height } : instance,
+        ),
+      };
+    }),
+  addInstance: (type, worldCenter) =>
+    set((state) => {
+      switch (type) {
+        case 'card': {
+          const id = `${type}-${state.nextInstanceId}`;
+          const instance: CardInstance = {
+            id,
+            type: 'card',
+            x: worldCenter.x - DEFAULT_CARD_WIDTH / 2,
+            y: worldCenter.y - DEFAULT_CARD_HEIGHT / 2,
+            width: DEFAULT_CARD_WIDTH,
+            height: DEFAULT_CARD_HEIGHT,
+            props: defaultCardProps,
+          };
+          return {
+            instances: [...state.instances, instance],
+            selectedId: id,
+            nextInstanceId: state.nextInstanceId + 1,
+          };
+        }
+        // The toolbar disables button/table/landing today, so addInstance is
+        // never called for them. If a future caller forgets, fail loudly.
+        case 'button':
+        case 'table':
+        case 'landing':
+          throw new Error(`addInstance: component type "${type}" is not implemented yet`);
+      }
+    }),
   updateProps: (id, patch) =>
     set((state) => ({
       instances: state.instances.map((instance) =>

@@ -12,6 +12,15 @@ export function clampScale(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+// Map a point from screen space (viewport pixels relative to the viewport's
+// top-left) into world space. Inverse of the transform applied to canvas-world.
+export function screenToWorld(point: ViewportPoint, view: ViewState): ViewportPoint {
+  return {
+    x: (point.x - view.x) / view.scale,
+    y: (point.y - view.y) / view.scale,
+  };
+}
+
 // Zoom anchored at the cursor: the world point under the cursor before the zoom
 // stays under the cursor after. With transform `translate(x,y) scale(s)`, the
 // screen→world mapping is worldP = (cursorP - viewP) / s. After scaling to s',
