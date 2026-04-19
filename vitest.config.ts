@@ -9,5 +9,8 @@ export default defineConfig({
   test: {
     root: resolve(__dirname, '.'),
     include: ['src/**/*.{test,spec}.ts', 'src/**/*.{test,spec}.tsx'],
+    // Loads @testing-library/jest-dom matchers into vitest's expect and
+    // augments the Assertion type so TS sees toHaveValue et al.
+    setupFiles: [resolve(__dirname, 'vitest.setup.ts')],
   },
 });
