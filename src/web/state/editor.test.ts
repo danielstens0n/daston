@@ -149,3 +149,185 @@ describe('updateProps', () => {
     expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
   });
 });
+
+describe('remove', () => {
+  it('drops the matching instance and leaves others alone', () => {
+    useEditorStore.getState().remove('a');
+    const { instances } = useEditorStore.getState();
+    expect(instances).toEqual([baselineB]);
+  });
+
+  it('clears selectedId when it matches the removed id', () => {
+    useEditorStore.getState().select('a');
+    useEditorStore.getState().remove('a');
+    expect(useEditorStore.getState().selectedId).toBeNull();
+  });
+
+  it('leaves selectedId alone when a different instance is removed', () => {
+    useEditorStore.getState().select('b');
+    useEditorStore.getState().remove('a');
+    expect(useEditorStore.getState().selectedId).toBe('b');
+  });
+
+  it('clears lastPasteId when the removed instance was the last paste', () => {
+    useEditorStore.setState({ lastPasteId: 'a' });
+    useEditorStore.getState().remove('a');
+    expect(useEditorStore.getState().lastPasteId).toBeNull();
+  });
+
+  it('is a no-op when the id is unknown', () => {
+    useEditorStore.getState().remove('missing');
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+  });
+});
+
+describe('duplicate', () => {
+  it('clones the instance with +20 offset on x and y', () => {
+    useEditorStore.getState().duplicate('a');
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'card',
+      x: baselineA.x + 20,
+      y: baselineA.y + 20,
+      width: baselineA.width,
+      height: baselineA.height,
+      props: baselineA.props,
+    });
+  });
+
+  it('assigns a fresh id and bumps the counter', () => {
+    useEditorStore.getState().duplicate('a');
+    const state = useEditorStore.getState();
+    expect(state.instances.at(-1)?.id).toBe('card-2');
+    expect(state.nextInstanceId).toBe(3);
+  });
+
+  it('selects the new instance', () => {
+    useEditorStore.getState().duplicate('a');
+    const state = useEditorStore.getState();
+    expect(state.selectedId).toBe(state.instances.at(-1)?.id);
+  });
+
+  it('does not touch clipboard or lastPasteId', () => {
+    useEditorStore.setState({ clipboard: baselineB, lastPasteId: 'b' });
+    useEditorStore.getState().duplicate('a');
+    const state = useEditorStore.getState();
+    expect(state.clipboard).toBe(baselineB);
+    expect(state.lastPasteId).toBe('b');
+  });
+
+  it('is a no-op when the id is unknown', () => {
+    useEditorStore.getState().duplicate('missing');
+    const state = useEditorStore.getState();
+    expect(state.instances).toEqual([baselineA, baselineB]);
+    expect(state.nextInstanceId).toBe(2);
+  });
+});
+
+describe('copy', () => {
+  it('stores a snapshot in clipboard', () => {
+    useEditorStore.getState().copy('a');
+    expect(useEditorStore.getState().clipboard).toEqual(baselineA);
+  });
+
+  it('resets lastPasteId so the next paste starts fresh', () => {
+    useEditorStore.setState({ lastPasteId: 'b' });
+    useEditorStore.getState().copy('a');
+    expect(useEditorStore.getState().lastPasteId).toBeNull();
+  });
+
+  it('does not mutate instances', () => {
+    useEditorStore.getState().copy('a');
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+  });
+
+  it('is a no-op when the id is unknown', () => {
+    useEditorStore.getState().copy('missing');
+    expect(useEditorStore.getState().clipboard).toBeNull();
+  });
+});
+
+describe('cut', () => {
+  it('stores the snapshot and removes the source', () => {
+    useEditorStore.getState().cut('a');
+    const state = useEditorStore.getState();
+    expect(state.clipboard).toEqual(baselineA);
+    expect(state.instances).toEqual([baselineB]);
+  });
+
+  it('clears selectedId when the cut instance was selected', () => {
+    useEditorStore.getState().select('a');
+    useEditorStore.getState().cut('a');
+    expect(useEditorStore.getState().selectedId).toBeNull();
+  });
+
+  it('is a no-op when the id is unknown', () => {
+    useEditorStore.getState().cut('missing');
+    const state = useEditorStore.getState();
+    expect(state.clipboard).toBeNull();
+    expect(state.instances).toEqual([baselineA, baselineB]);
+  });
+});
+
+describe('paste', () => {
+  it('is a no-op when the clipboard is empty', () => {
+    useEditorStore.getState().paste();
+    const state = useEditorStore.getState();
+    expect(state.instances).toEqual([baselineA, baselineB]);
+    expect(state.nextInstanceId).toBe(2);
+  });
+
+  it('offsets the first paste from the clipboard snapshot', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste();
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'card',
+      x: baselineA.x + 20,
+      y: baselineA.y + 20,
+    });
+  });
+
+  it('selects the pasted instance and tracks it as lastPasteId', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste();
+    const state = useEditorStore.getState();
+    const pastedId = state.instances.at(-1)?.id;
+    expect(state.selectedId).toBe(pastedId);
+    expect(state.lastPasteId).toBe(pastedId);
+  });
+
+  it('cascades subsequent pastes from the previously pasted instance', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste();
+    useEditorStore.getState().paste();
+    const state = useEditorStore.getState();
+    const second = state.instances.at(-1);
+    // Two pastes → x/y offset by 2 × 20 from the clipboard snapshot.
+    expect(second).toMatchObject({
+      x: baselineA.x + 40,
+      y: baselineA.y + 40,
+    });
+  });
+
+  it('cascades from the last paste even after it has been moved', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste();
+    const firstPasteId = useEditorStore.getState().lastPasteId;
+    if (!firstPasteId) throw new Error('expected lastPasteId to be set after paste');
+    useEditorStore.getState().move(firstPasteId, { x: 500, y: 500 });
+    useEditorStore.getState().paste();
+    const second = useEditorStore.getState().instances.at(-1);
+    expect(second).toMatchObject({ x: 520, y: 520 });
+  });
+
+  it('resets the cascade on copy so the first subsequent paste starts from the new snapshot', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste();
+    // Re-copy a different instance — cascade should reset to its snapshot.
+    useEditorStore.getState().copy('b');
+    useEditorStore.getState().paste();
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({ x: baselineB.x + 20, y: baselineB.y + 20 });
+  });
+});

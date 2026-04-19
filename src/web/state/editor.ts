@@ -10,6 +10,10 @@ type Point = { x: number; y: number };
 // doesn't need to know the rule.
 const MIN_SIZE = 40;
 
+// Offset applied on every duplicate and on each cascading paste. Matches
+// Figma's visual nudge so the clone is obviously distinct from the source.
+const PASTE_OFFSET = 20;
+
 type EditorStore = {
   instances: ComponentInstance[];
   selectedId: string | null;
@@ -17,11 +21,14 @@ type EditorStore = {
   // default card uses `card-1`. Shared across all component types — ids
   // follow the `${type}-${n}` convention.
   nextInstanceId: number;
-  // Reserved for DAS-1 (keyboard shortcuts / copy-paste). The clipboard
-  // holds the most recently copied instance snapshot; lastPasteId lets the
-  // paste action offset successive pastes of the same clipboard entry.
-  // Actions are not wired up yet.
+  // Internal clipboard for copy/cut/paste. Not persisted; not the system
+  // clipboard. Figma uses its own internal clipboard too.
   clipboard: ComponentInstance | null;
+  // Id of the most recently pasted instance. Each paste cascades from this
+  // instance's current position (so moving a paste between presses carries
+  // through). `copy`/`cut` reset this to null so the first paste after a
+  // copy restarts from the clipboard snapshot. `remove` clears it if the
+  // target is deleted.
   lastPasteId: string | null;
   select: (id: string | null) => void;
   move: (id: string, pos: Point) => void;
@@ -30,6 +37,11 @@ type EditorStore = {
   // Generic at the store level. Type safety for specific props lives at the
   // call site (see Sidebar.tsx), where the instance has been narrowed.
   updateProps: (id: string, patch: Record<string, unknown>) => void;
+  remove: (id: string) => void;
+  duplicate: (id: string) => void;
+  copy: (id: string) => void;
+  cut: (id: string) => void;
+  paste: () => void;
 };
 
 // Shared default prop values for new cards. The default card uses the same
@@ -120,6 +132,71 @@ export const useEditorStore = create<EditorStore>((set) => ({
           : instance,
       ),
     })),
+  remove: (id) =>
+    set((state) => ({
+      instances: state.instances.filter((instance) => instance.id !== id),
+      selectedId: state.selectedId === id ? null : state.selectedId,
+      lastPasteId: state.lastPasteId === id ? null : state.lastPasteId,
+    })),
+  duplicate: (id) =>
+    set((state) => {
+      const src = state.instances.find((instance) => instance.id === id);
+      if (!src) return state;
+      const clone = {
+        ...src,
+        id: `${src.type}-${state.nextInstanceId}`,
+        x: src.x + PASTE_OFFSET,
+        y: src.y + PASTE_OFFSET,
+      } as ComponentInstance;
+      return {
+        instances: [...state.instances, clone],
+        selectedId: clone.id,
+        nextInstanceId: state.nextInstanceId + 1,
+      };
+    }),
+  copy: (id) =>
+    set((state) => {
+      const src = state.instances.find((instance) => instance.id === id);
+      if (!src) return state;
+      return { clipboard: src, lastPasteId: null };
+    }),
+  cut: (id) =>
+    set((state) => {
+      const src = state.instances.find((instance) => instance.id === id);
+      if (!src) return state;
+      return {
+        instances: state.instances.filter((instance) => instance.id !== id),
+        selectedId: state.selectedId === id ? null : state.selectedId,
+        clipboard: src,
+        lastPasteId: null,
+      };
+    }),
+  // Paste cascades: position comes from the last-pasted instance's current
+  // position (so a move between pastes carries through), but everything
+  // else (type, size, props) comes from the clipboard snapshot — editing
+  // a pasted instance does not change what future pastes look like.
+  paste: () =>
+    set((state) => {
+      const { clipboard } = state;
+      if (!clipboard) return state;
+      const lastPasted = state.lastPasteId
+        ? (state.instances.find((instance) => instance.id === state.lastPasteId) ?? null)
+        : null;
+      const base = lastPasted ?? clipboard;
+      const newId = `${clipboard.type}-${state.nextInstanceId}`;
+      const clone = {
+        ...clipboard,
+        id: newId,
+        x: base.x + PASTE_OFFSET,
+        y: base.y + PASTE_OFFSET,
+      } as ComponentInstance;
+      return {
+        instances: [...state.instances, clone],
+        selectedId: newId,
+        lastPasteId: newId,
+        nextInstanceId: state.nextInstanceId + 1,
+      };
+    }),
 }));
 
 // Selector hooks. Each subscribes to the smallest possible slice so drag

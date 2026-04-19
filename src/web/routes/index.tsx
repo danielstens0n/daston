@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { useKeyboardShortcuts } from '../keyboard/useKeyboardShortcuts.ts';
 import { Card } from '../previews/Card.tsx';
 import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
@@ -13,6 +14,7 @@ export const Route = createFileRoute('/')({
 });
 
 function CanvasRoute() {
+  useKeyboardShortcuts();
   // Subscribing only to the id list keeps the route stable across drags and
   // prop edits — each PreviewSlot pulls its own instance data.
   const instanceIds = useInstanceIds();
