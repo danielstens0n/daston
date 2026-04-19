@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { getFontStack } from '../lib/fonts.ts';
 import { useEditorStore, useTableProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './table.css';
@@ -21,6 +22,8 @@ export function Table({ id }: Props) {
     '--table-row-fill-alt': p.rowFillAlt,
     '--table-header-text': p.headerTextColor,
     '--table-body-text': p.bodyTextColor,
+    '--table-header-font': getFontStack(p.headerFont),
+    '--table-body-font': getFontStack(p.bodyFont),
   };
 
   return (

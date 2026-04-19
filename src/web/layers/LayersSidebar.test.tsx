@@ -2,6 +2,7 @@
 
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useEditorStore } from '../state/editor.ts';
 import type { CardInstance } from '../state/types.ts';
 import { LayersSidebar } from './LayersSidebar.tsx';
@@ -31,6 +32,8 @@ const cardA: CardInstance = {
     body: 'Card body',
     titleColor: '#18181b',
     bodyColor: '#52525b',
+    titleFont: 'inter',
+    bodyFont: 'inter',
   },
 };
 
@@ -51,9 +54,14 @@ beforeEach(() => {
 
 describe('LayersSidebar', () => {
   it('lists every instance with front-most first and selects on row click', () => {
-    render(<LayersSidebar />);
+    render(
+      <ContextMenuProvider>
+        <LayersSidebar />
+      </ContextMenuProvider>,
+    );
 
-    const rows = screen.getAllByRole('button');
+    const list = screen.getByRole('list');
+    const rows = within(list).getAllByRole('button');
     expect(rows).toHaveLength(2);
     const frontRow = rows.at(0);
     const backRow = rows.at(1);
@@ -70,9 +78,52 @@ describe('LayersSidebar', () => {
     expect(useEditorStore.getState().selectedId).toBe('a');
   });
 
+  it('collapses into a slim rail and can expand again', () => {
+    render(
+      <ContextMenuProvider>
+        <LayersSidebar />
+      </ContextMenuProvider>,
+    );
+
+    const collapseButton = screen.getByRole('button', { name: 'Collapse layers sidebar' });
+    expect(collapseButton).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(collapseButton);
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+
+    const expandButton = screen.getByRole('button', { name: 'Expand layers sidebar' });
+    expect(expandButton).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(expandButton);
+    expect(screen.getByRole('list')).toBeInTheDocument();
+  });
+
   it('shows an empty state when there are no instances', () => {
     useEditorStore.setState({ instances: [] });
-    render(<LayersSidebar />);
+    render(
+      <ContextMenuProvider>
+        <LayersSidebar />
+      </ContextMenuProvider>,
+    );
     expect(screen.getByText('No instances on the canvas.')).toBeInTheDocument();
+  });
+
+  it('opens context menu on row right-click and deletes from the menu', () => {
+    render(
+      <ContextMenuProvider>
+        <LayersSidebar />
+      </ContextMenuProvider>,
+    );
+
+    const list = screen.getByRole('list');
+    const rows = within(list).getAllByRole('button');
+    const frontRow = rows.at(0);
+    if (!frontRow) throw new Error('expected layer row');
+
+    fireEvent.contextMenu(frontRow, { clientX: 50, clientY: 50, bubbles: true });
+    fireEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
+
+    expect(useEditorStore.getState().instances).toHaveLength(1);
+    expect(useEditorStore.getState().instances[0]?.id).toBe('a');
   });
 });

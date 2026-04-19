@@ -1,6 +1,7 @@
 import { useCardProps } from '../../state/editor.ts';
 import type { CardProps } from '../../state/types.ts';
 import { FieldRow } from '../fields/FieldRow.tsx';
+import { FontField } from '../fields/FontField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
 import { BorderSection } from '../sections/BorderSection.tsx';
@@ -28,6 +29,22 @@ export function CardInspector({ id, onPatch }: Props) {
         </FieldRow>
         <FieldRow label="Body">
           <TextField value={props.body} onChange={(value) => onPatch({ body: value })} />
+        </FieldRow>
+      </Section>
+      <Section title="Typography">
+        <FieldRow label="Title">
+          <FontField
+            value={props.titleFont}
+            onChange={(value) => onPatch({ titleFont: value })}
+            ariaLabel="Title font"
+          />
+        </FieldRow>
+        <FieldRow label="Body">
+          <FontField
+            value={props.bodyFont}
+            onChange={(value) => onPatch({ bodyFont: value })}
+            ariaLabel="Body font"
+          />
         </FieldRow>
       </Section>
       <LayoutSection props={props} onPatch={onPatch} />

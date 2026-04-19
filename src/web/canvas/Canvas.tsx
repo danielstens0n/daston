@@ -1,5 +1,6 @@
 import {
   createContext,
+  type MouseEvent,
   type PointerEvent,
   type ReactNode,
   useContext,
@@ -8,8 +9,10 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
+import { buildCanvasMenuItems } from '../context-menu/items.ts';
 import { useEditorStore } from '../state/editor.ts';
-import { normalizeWheelDelta, type ViewState, zoomAt } from './viewport-math.ts';
+import { normalizeWheelDelta, screenToWorld, type ViewState, zoomAt } from './viewport-math.ts';
 import './canvas.css';
 
 // Children that need to convert screen-pixel deltas to world-space (e.g. a
@@ -50,6 +53,7 @@ type Props = {
 
 export function Canvas({ children, overlay }: Props) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const { openMenu } = useContextMenuHost();
   const [view, setView] = useState<ViewState>({ x: 0, y: 0, scale: 1 });
 
   // Mirror the view state into a ref so the handle can read the latest value
@@ -134,8 +138,27 @@ export function Canvas({ children, overlay }: Props) {
     event.currentTarget.removeAttribute('data-panning');
   }
 
+  function onContextMenu(event: MouseEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    useEditorStore.getState().select(null);
+    const el = viewportRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const worldPoint = screenToWorld(
+      { x: event.clientX - rect.left, y: event.clientY - rect.top },
+      viewRef.current,
+    );
+    openMenu({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items: buildCanvasMenuItems(worldPoint),
+    });
+  }
+
   return (
     <CanvasHandleContext.Provider value={handle}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: viewport handles pan + canvas context menu */}
       <div
         ref={viewportRef}
         className="canvas-viewport"
@@ -143,6 +166,7 @@ export function Canvas({ children, overlay }: Props) {
         onPointerMove={onPointerMove}
         onPointerUp={endPan}
         onPointerCancel={endPan}
+        onContextMenu={onContextMenu}
       >
         <div
           className="canvas-world"

@@ -1,8 +1,7 @@
 import type { SVGProps } from 'react';
 
-// Minimal 20×20 inline icons, one per stock component type. Kept as pure
-// components so they don't pull in an icon library — the toolbar only needs
-// four, and the repo doesn't use svg icons anywhere else yet.
+// Minimal 20×20 inline icons. Kept as pure components so they don't pull in
+// an icon library, and the same set can be reused across the web UI.
 //
 // Each svg has a <title> for biome's noSvgWithoutTitle rule; the wrapping
 // <button> in CanvasToolbar carries the authoritative aria-label.
@@ -70,6 +69,21 @@ export function PlusIcon() {
       <title>Import component</title>
       <line x1="10" y1="4" x2="10" y2="16" />
       <line x1="4" y1="10" x2="16" y2="10" />
+    </svg>
+  );
+}
+
+export function SidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg {...base}>
+      <title>{collapsed ? 'Expand layers sidebar' : 'Collapse layers sidebar'}</title>
+      <rect x="3" y="3" width="14" height="14" rx="1.5" />
+      <line x1="7" y1="3" x2="7" y2="17" />
+      {collapsed ? (
+        <polyline points="10,7 13,10 10,13" />
+      ) : (
+        <polyline points="13,7 10,10 13,13" />
+      )}
     </svg>
   );
 }

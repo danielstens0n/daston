@@ -1,16 +1,37 @@
 .layers-sidebar {
   width: 240px;
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   font-family: system-ui, -apple-system, sans-serif;
+  transition: width 0.16s ease;
+}
+
+.layers-sidebar[data-collapsed] {
+  width: 52px;
 }
 
 .layers-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--color-surface-subtle);
+}
+
+.layers-sidebar[data-collapsed] .layers-sidebar-header {
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 8px;
+  gap: 12px;
+  border-bottom: none;
 }
 
 .layers-sidebar-title {
@@ -20,8 +41,44 @@
   color: var(--color-text-primary);
 }
 
+.layers-sidebar[data-collapsed] .layers-sidebar-title {
+  display: none;
+}
+
+.layers-sidebar-toggle {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.layers-sidebar-toggle > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.layers-sidebar-toggle:hover {
+  background: var(--color-surface-subtle);
+}
+
+.layers-sidebar-toggle:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
 .layers-sidebar-body {
+  flex: 1;
+  min-height: 0;
   padding: 8px;
+  overflow-y: auto;
 }
 
 .layers-empty {

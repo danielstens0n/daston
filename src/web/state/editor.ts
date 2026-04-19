@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../shared/chrome-colors.ts';
 import type { ComponentId } from '../../shared/types.ts';
+import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../lib/fonts.ts';
 import type {
   ButtonInstance,
   ButtonProps,
@@ -74,7 +75,7 @@ type EditorStore = {
   duplicateInPlaceForDrag: (id: string) => string | null;
   copy: (id: string) => void;
   cut: (id: string) => void;
-  paste: () => void;
+  paste: (options?: { at?: Point }) => void;
 };
 
 // Shared default prop values for new cards. The default card uses the same
@@ -94,6 +95,8 @@ function createDefaultCardProps(): CardProps {
     shadowOffsetY: 4,
     titleColor: '#18181b',
     bodyColor: '#52525b',
+    titleFont: DEFAULT_HEADING_FONT_ID,
+    bodyFont: DEFAULT_BODY_FONT_ID,
   };
 }
 
@@ -137,6 +140,7 @@ function mergeSnapshot(state: EditorStore, patch: Partial<EditorSnapshot>): Edit
 function createDefaultButtonProps(): ButtonProps {
   return {
     label: 'Button',
+    labelFont: DEFAULT_HEADING_FONT_ID,
     textColor: '#ffffff',
     fill: ACCENT_HEX,
     borderColor: ACCENT_BORDER_HEX,
@@ -164,6 +168,8 @@ function createDefaultTableProps(): TableProps {
     borderRadius: 8,
     headerTextColor: '#18181b',
     bodyTextColor: '#52525b',
+    headerFont: DEFAULT_HEADING_FONT_ID,
+    bodyFont: DEFAULT_BODY_FONT_ID,
     columns: ['Name', 'Role', 'Status'],
     rows: [
       ['Ada', 'Engineer', 'Active'],
@@ -185,6 +191,8 @@ function createDefaultLandingProps(): LandingProps {
       'Preview components on the canvas',
       'Export-ready handoff',
     ],
+    headingFont: DEFAULT_HEADING_FONT_ID,
+    bodyFont: DEFAULT_BODY_FONT_ID,
     accentColor: ACCENT_HEX,
     pageFill: '#f7f7f8',
     heroFill: '#ffffff',
@@ -473,20 +481,31 @@ export const useEditorStore = create<EditorStore>((set) => {
     // position (so a move between pastes carries through), but everything
     // else (type, size, props) comes from the clipboard snapshot — editing
     // a pasted instance does not change what future pastes look like.
-    paste: () =>
+    // With `{ at }`, the clone is centered on that world point; `lastPasteId`
+    // still seeds the next cascade from the new instance.
+    paste: (options) =>
       applyMutation((state) => {
         const { clipboard } = state;
         if (!clipboard) return null;
-        const lastPasted = state.lastPasteId
-          ? (state.instances.find((instance) => instance.id === state.lastPasteId) ?? null)
-          : null;
-        const base = lastPasted ?? clipboard;
         const newId = `${clipboard.type}-${state.nextInstanceId}`;
+        let x: number;
+        let y: number;
+        if (options?.at !== undefined) {
+          x = options.at.x - clipboard.width / 2;
+          y = options.at.y - clipboard.height / 2;
+        } else {
+          const lastPasted = state.lastPasteId
+            ? (state.instances.find((instance) => instance.id === state.lastPasteId) ?? null)
+            : null;
+          const base = lastPasted ?? clipboard;
+          x = base.x + PASTE_OFFSET;
+          y = base.y + PASTE_OFFSET;
+        }
         const clone = {
           ...clipboard,
           id: newId,
-          x: base.x + PASTE_OFFSET,
-          y: base.y + PASTE_OFFSET,
+          x,
+          y,
         } as ComponentInstance;
         return {
           instances: [...state.instances, clone],

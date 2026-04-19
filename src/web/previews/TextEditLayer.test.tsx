@@ -4,6 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useEditorStore } from '../state/editor.ts';
 import { useTextEditStore } from '../state/text-edit.ts';
 import { PreviewWrapper } from './PreviewWrapper.tsx';
@@ -33,12 +34,14 @@ describe('TextEditLayer', () => {
   it('hosts the editor above the table, not inside a cell', async () => {
     const user = userEvent.setup();
     render(
-      <Canvas>
-        <PreviewWrapper id="table-1">
-          <Table id="table-1" />
-        </PreviewWrapper>
-        <TextEditLayer />
-      </Canvas>,
+      <ContextMenuProvider>
+        <Canvas>
+          <PreviewWrapper id="table-1">
+            <Table id="table-1" />
+          </PreviewWrapper>
+          <TextEditLayer />
+        </Canvas>
+      </ContextMenuProvider>,
     );
 
     await user.dblClick(screen.getByText('Ada'));

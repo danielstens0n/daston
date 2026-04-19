@@ -35,6 +35,8 @@ export type CardProps = LayoutProps &
   TextColorProps & {
     title: string;
     body: string;
+    titleFont: string;
+    bodyFont: string;
   };
 
 // Size lives on the instance root alongside x/y — resize handles on the
@@ -54,6 +56,7 @@ export type ButtonProps = FillProps &
   BorderProps &
   ShadowProps & {
     label: string;
+    labelFont: string;
     textColor: string;
     paddingX: number;
     paddingY: number;
@@ -81,6 +84,8 @@ export type TableProps = {
   borderRadius: number;
   headerTextColor: string;
   bodyTextColor: string;
+  headerFont: string;
+  bodyFont: string;
   columns: string[];
   rows: string[][];
 };
@@ -101,6 +106,8 @@ export type LandingProps = ShadowProps & {
   ctaLabel: string;
   featuresTitle: string;
   features: string[];
+  headingFont: string;
+  bodyFont: string;
   accentColor: string;
   pageFill: string;
   heroFill: string;

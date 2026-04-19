@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react';
-import { useInstance } from '../state/editor.ts';
+import type { MouseEvent, ReactNode } from 'react';
+import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
+import { buildInstanceMenuItems } from '../context-menu/items.ts';
+import { useEditorStore, useInstance } from '../state/editor.ts';
 import { useInstanceInteraction } from './useInstanceInteraction.ts';
 import { type ResizeCorner, useResizeInteraction } from './useResizeInteraction.ts';
 import './preview-wrapper.css';
@@ -18,9 +20,22 @@ const CORNERS: readonly ResizeCorner[] = ['nw', 'ne', 'sw', 'se'];
 export function PreviewWrapper({ id, children }: Props) {
   const instance = useInstance(id);
   const { isSelected, handlers } = useInstanceInteraction(id);
+  const { openMenu } = useContextMenuHost();
   if (!instance) return null;
 
+  function onContextMenu(event: MouseEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    useEditorStore.getState().select(id);
+    openMenu({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items: buildInstanceMenuItems(id),
+    });
+  }
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles drag + instance context menu
     <div
       className="preview-wrapper"
       data-selected={isSelected || undefined}
@@ -30,6 +45,7 @@ export function PreviewWrapper({ id, children }: Props) {
         height: `${instance.height}px`,
       }}
       {...handlers}
+      onContextMenu={onContextMenu}
     >
       {children}
       {isSelected ? CORNERS.map((corner) => <ResizeHandle key={corner} id={id} corner={corner} />) : null}

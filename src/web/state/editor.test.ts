@@ -27,6 +27,8 @@ const baselineA: CardInstance = {
     body: 'Card body',
     titleColor: '#18181b',
     bodyColor: '#52525b',
+    titleFont: 'inter',
+    bodyFont: 'inter',
   },
 };
 
@@ -503,6 +505,33 @@ describe('paste', () => {
       definitionId: 'imported-def-9',
       x: importedBaseline.x + 20,
       y: importedBaseline.y + 20,
+    });
+  });
+
+  it('centers the pasted clone on `at` when provided', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste({ at: { x: 500, y: 400 } });
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'card',
+      x: 500 - baselineA.width / 2,
+      y: 400 - baselineA.height / 2,
+      width: baselineA.width,
+      height: baselineA.height,
+    });
+  });
+
+  it('sets lastPasteId after paste with `at` so the next paste cascades from the new instance', () => {
+    useEditorStore.getState().copy('a');
+    useEditorStore.getState().paste({ at: { x: 1000, y: 1000 } });
+    const firstId = useEditorStore.getState().lastPasteId;
+    useEditorStore.getState().paste();
+    const second = useEditorStore.getState().instances.at(-1);
+    const first = useEditorStore.getState().instances.find((i) => i.id === firstId);
+    expect(first).toBeDefined();
+    expect(second).toMatchObject({
+      x: (first?.x ?? 0) + 20,
+      y: (first?.y ?? 0) + 20,
     });
   });
 });

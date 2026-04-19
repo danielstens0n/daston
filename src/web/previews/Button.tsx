@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { getFontStack } from '../lib/fonts.ts';
 import { useButtonProps, useEditorStore } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './button.css';
@@ -20,6 +21,7 @@ export function Button({ id }: Props) {
     '--button-padding-y': `${p.paddingY}px`,
     '--button-text-color': p.textColor,
     '--button-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
+    '--button-label-font': getFontStack(p.labelFont),
   };
 
   return (

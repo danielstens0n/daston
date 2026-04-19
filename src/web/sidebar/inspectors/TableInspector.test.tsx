@@ -60,4 +60,16 @@ describe('TableInspector', () => {
       ],
     });
   });
+
+  it('patches header font from typography', async () => {
+    const user = userEvent.setup();
+    const onPatch = vi.fn();
+    render(<TableInspector id="table-1" onPatch={onPatch} />);
+
+    await user.click(screen.getByRole('button', { name: 'Table header font' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search fonts' }), 'lora');
+    await user.click(screen.getByRole('option', { name: 'Lora' }));
+
+    expect(onPatch).toHaveBeenCalledWith({ headerFont: 'lora' });
+  });
 });

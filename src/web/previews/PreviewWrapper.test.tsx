@@ -2,6 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useEditorStore } from '../state/editor.ts';
 import { PreviewWrapper } from './PreviewWrapper.tsx';
 
@@ -33,6 +34,8 @@ beforeEach(() => {
           shadowOffsetY: 4,
           titleColor: '#18181b',
           bodyColor: '#52525b',
+          titleFont: 'inter',
+          bodyFont: 'inter',
         },
       },
     ],
@@ -49,11 +52,13 @@ beforeEach(() => {
 describe('PreviewWrapper', () => {
   it('selects but does not start a drag for interactive descendants', () => {
     const { container } = render(
-      <PreviewWrapper id="card-1">
-        <button type="button" data-preview-interactive="true">
-          Editable text
-        </button>
-      </PreviewWrapper>,
+      <ContextMenuProvider>
+        <PreviewWrapper id="card-1">
+          <button type="button" data-preview-interactive="true">
+            Editable text
+          </button>
+        </PreviewWrapper>
+      </ContextMenuProvider>,
     );
 
     fireEvent.pointerDown(screen.getByRole('button', { name: 'Editable text' }), {

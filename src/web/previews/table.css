@@ -6,7 +6,6 @@
   border: var(--table-border-width, 1px) solid var(--table-border-color, var(--color-border));
   border-radius: var(--table-border-radius, 8px);
   overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -34,11 +33,13 @@
 .preview-table-el th {
   background: var(--table-header-fill, var(--color-surface-subtle));
   color: var(--table-header-text, var(--color-text-primary));
+  font-family: var(--table-header-font, system-ui, sans-serif);
   font-weight: 600;
 }
 
 .preview-table-el td {
   color: var(--table-body-text, var(--color-text-secondary));
+  font-family: var(--table-body-font, system-ui, sans-serif);
 }
 
 .preview-table-text {

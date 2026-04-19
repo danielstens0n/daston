@@ -8,7 +8,6 @@
   background: var(--card-fill, var(--color-surface));
   border: var(--card-border-width, 1px) solid var(--card-border-color, var(--color-border));
   border-radius: var(--card-border-radius, 12px);
-  font-family: system-ui, -apple-system, sans-serif;
   overflow: hidden;
 }
 
@@ -20,6 +19,7 @@
 
 .preview-card-title {
   margin: 0 0 8px;
+  font-family: var(--card-title-font, system-ui, sans-serif);
   font-size: 16px;
   font-weight: 600;
   color: var(--card-title-color, var(--color-text-primary));
@@ -27,6 +27,7 @@
 
 .preview-card-body {
   margin: 0;
+  font-family: var(--card-body-font, system-ui, sans-serif);
   font-size: 13px;
   line-height: 1.5;
   color: var(--card-body-color, var(--color-text-secondary));

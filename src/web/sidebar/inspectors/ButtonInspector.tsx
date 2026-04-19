@@ -2,6 +2,7 @@ import { useButtonProps } from '../../state/editor.ts';
 import type { ButtonProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
+import { FontField } from '../fields/FontField.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
@@ -26,6 +27,15 @@ export function ButtonInspector({ id, onPatch }: Props) {
         </FieldRow>
         <FieldRow label="Text">
           <ColorField value={props.textColor} onChange={(value) => onPatch({ textColor: value })} />
+        </FieldRow>
+      </Section>
+      <Section title="Typography">
+        <FieldRow label="Label">
+          <FontField
+            value={props.labelFont}
+            onChange={(value) => onPatch({ labelFont: value })}
+            ariaLabel="Label font"
+          />
         </FieldRow>
       </Section>
       <Section title="Layout">

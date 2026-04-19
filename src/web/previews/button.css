@@ -9,7 +9,6 @@
   background: var(--button-fill, var(--color-accent));
   border: var(--button-border-width, 1px) solid var(--button-border-color, var(--color-border));
   border-radius: var(--button-border-radius, 8px);
-  font-family: system-ui, -apple-system, sans-serif;
   overflow: hidden;
 }
 
@@ -18,6 +17,7 @@
 }
 
 .preview-button-label {
+  font-family: var(--button-label-font, system-ui, sans-serif);
   font-size: 14px;
   font-weight: 600;
   color: var(--button-text-color, var(--color-text-primary));

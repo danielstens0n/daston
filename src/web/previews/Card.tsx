@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { getFontStack } from '../lib/fonts.ts';
 import { useCardProps, useEditorStore } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './card.css';
@@ -23,6 +24,8 @@ export function Card({ id }: Props) {
     '--card-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
     '--card-title-color': p.titleColor,
     '--card-body-color': p.bodyColor,
+    '--card-title-font': getFontStack(p.titleFont),
+    '--card-body-font': getFontStack(p.bodyFont),
   };
 
   return (

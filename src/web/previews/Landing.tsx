@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { getFontStack } from '../lib/fonts.ts';
 import { useEditorStore, useLandingProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './landing.css';
@@ -18,6 +19,8 @@ export function Landing({ id }: Props) {
     '--landing-accent': p.accentColor,
     '--landing-border-radius': `${p.borderRadius}px`,
     '--landing-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
+    '--landing-heading-font': getFontStack(p.headingFont),
+    '--landing-body-font': getFontStack(p.bodyFont),
   };
 
   return (

@@ -2,6 +2,7 @@ import { useLandingProps } from '../../state/editor.ts';
 import type { LandingProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
+import { FontField } from '../fields/FontField.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
@@ -47,6 +48,22 @@ export function LandingInspector({ id, onPatch }: Props) {
             />
           </FieldRow>
         ))}
+      </Section>
+      <Section title="Typography">
+        <FieldRow label="Heading">
+          <FontField
+            value={props.headingFont}
+            onChange={(value) => onPatch({ headingFont: value })}
+            ariaLabel="Landing heading font"
+          />
+        </FieldRow>
+        <FieldRow label="Body">
+          <FontField
+            value={props.bodyFont}
+            onChange={(value) => onPatch({ bodyFont: value })}
+            ariaLabel="Landing body font"
+          />
+        </FieldRow>
       </Section>
       <Section title="Colors">
         <FieldRow label="Accent">

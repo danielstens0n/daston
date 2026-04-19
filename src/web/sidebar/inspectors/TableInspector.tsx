@@ -2,6 +2,7 @@ import { useTableProps } from '../../state/editor.ts';
 import type { TableProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
+import { FontField } from '../fields/FontField.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
@@ -128,6 +129,22 @@ export function TableInspector({ id, onPatch }: Props) {
           <ColorField
             value={tableProps.bodyTextColor}
             onChange={(value) => onPatch({ bodyTextColor: value })}
+          />
+        </FieldRow>
+      </Section>
+      <Section title="Typography">
+        <FieldRow label="Header">
+          <FontField
+            value={tableProps.headerFont}
+            onChange={(value) => onPatch({ headerFont: value })}
+            ariaLabel="Table header font"
+          />
+        </FieldRow>
+        <FieldRow label="Body">
+          <FontField
+            value={tableProps.bodyFont}
+            onChange={(value) => onPatch({ bodyFont: value })}
+            ariaLabel="Table body font"
           />
         </FieldRow>
       </Section>

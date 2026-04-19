@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useKeyboardShortcuts } from '../keyboard/useKeyboardShortcuts.ts';
 import { LayersSidebar } from '../layers/LayersSidebar.tsx';
 import { Button } from '../previews/Button.tsx';
@@ -30,18 +31,20 @@ function CanvasRoute() {
   // prop edits — each PreviewSlot pulls its own instance data.
   const instanceIds = useInstanceIds();
   return (
-    <div className="route-shell">
-      <LayersSidebar />
-      <div className="route-canvas">
-        <Canvas overlay={<CanvasToolbar />}>
-          {instanceIds.map((id) => (
-            <PreviewSlot key={id} id={id} />
-          ))}
-          <TextEditLayer />
-        </Canvas>
+    <ContextMenuProvider>
+      <div className="route-shell">
+        <LayersSidebar />
+        <div className="route-canvas">
+          <Canvas overlay={<CanvasToolbar />}>
+            {instanceIds.map((id) => (
+              <PreviewSlot key={id} id={id} />
+            ))}
+            <TextEditLayer />
+          </Canvas>
+        </div>
+        <Sidebar />
       </div>
-      <Sidebar />
-    </div>
+    </ContextMenuProvider>
   );
 }
 

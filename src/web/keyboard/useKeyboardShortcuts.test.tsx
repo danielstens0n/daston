@@ -32,6 +32,8 @@ const baselineA: CardInstance = {
     body: 'Card body',
     titleColor: '#18181b',
     bodyColor: '#52525b',
+    titleFont: 'inter',
+    bodyFont: 'inter',
   },
 };
 
