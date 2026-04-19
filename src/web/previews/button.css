@@ -18,8 +18,10 @@
 
 .preview-button-label {
   font-family: var(--button-label-font, system-ui, sans-serif);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--button-label-size, 14px);
+  font-weight: var(--button-label-weight, 600);
+  font-style: var(--button-label-style, normal);
+  text-decoration-line: var(--button-label-decoration-line, none);
   color: var(--button-text-color, var(--color-text-primary));
   text-align: center;
   white-space: nowrap;

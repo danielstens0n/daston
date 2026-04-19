@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { getFontStack } from '../lib/fonts.ts';
+import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
 import { useCardProps, useEditorStore } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './card.css';
@@ -8,9 +8,7 @@ type Props = {
   id: string;
 };
 
-// Body-only: the PreviewWrapper owns position, drag handlers, and the
-// selection outline. Card just subscribes to its own CardProps by id and
-// projects them onto the element via CSS custom properties.
+// CardProps → CSS variables; PreviewWrapper owns layout and selection chrome.
 export function Card({ id }: Props) {
   const p = useCardProps(id);
   if (!p) return null;
@@ -24,8 +22,34 @@ export function Card({ id }: Props) {
     '--card-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
     '--card-title-color': p.titleColor,
     '--card-body-color': p.bodyColor,
-    '--card-title-font': getFontStack(p.titleFont),
-    '--card-body-font': getFontStack(p.bodyFont),
+    ...previewTypographyVars(
+      {
+        font: '--card-title-font',
+        size: '--card-title-size',
+        weight: '--card-title-weight',
+        style: '--card-title-style',
+        decorationLine: '--card-title-decoration-line',
+      },
+      p.titleFont,
+      p.titleFontSize,
+      p.titleFontWeight,
+      p.titleItalic,
+      p.titleDecoration,
+    ),
+    ...previewTypographyVars(
+      {
+        font: '--card-body-font',
+        size: '--card-body-size',
+        weight: '--card-body-weight',
+        style: '--card-body-style',
+        decorationLine: '--card-body-decoration-line',
+      },
+      p.bodyFont,
+      p.bodyFontSize,
+      p.bodyFontWeight,
+      p.bodyItalic,
+      p.bodyDecoration,
+    ),
   };
 
   return (

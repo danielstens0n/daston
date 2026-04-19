@@ -376,3 +376,55 @@
 .sidebar-font-field-option-active {
   background: color-mix(in srgb, var(--color-chrome-focus) 18%, transparent);
 }
+
+.sidebar-weight-field {
+  min-width: 0;
+}
+
+.sidebar-weight-field-select {
+  box-sizing: border-box;
+  width: 100%;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.sidebar-weight-field-select:focus {
+  border-color: var(--color-chrome-focus);
+}
+
+.sidebar-decoration-field {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.sidebar-decoration-option {
+  flex: 1;
+  margin: 0;
+  padding: 4px 2px;
+  font-size: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  outline: none;
+}
+
+.sidebar-decoration-option:hover {
+  border-color: var(--color-chrome-focus);
+}
+
+.sidebar-decoration-option-active {
+  border-color: var(--color-chrome-focus);
+  background: color-mix(in srgb, var(--color-chrome-focus) 14%, transparent);
+  color: var(--color-text-primary);
+}

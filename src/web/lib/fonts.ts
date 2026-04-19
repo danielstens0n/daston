@@ -172,7 +172,7 @@ export function getFontLabel(id: string): string {
 export function googleFontFamilyParams(): string[] {
   return FONTS.filter((f) => f.loadFromGoogle).map((f) => {
     const apiName = f.label.replace(/ /g, '+');
-    return `family=${apiName}:wght@400;600;700`;
+    return `family=${apiName}:ital,wght@0,400..700;1,400..700`;
   });
 }
 

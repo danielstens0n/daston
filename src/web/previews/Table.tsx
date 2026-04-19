@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { getFontStack } from '../lib/fonts.ts';
+import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
 import { useEditorStore, useTableProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './table.css';
@@ -22,8 +22,34 @@ export function Table({ id }: Props) {
     '--table-row-fill-alt': p.rowFillAlt,
     '--table-header-text': p.headerTextColor,
     '--table-body-text': p.bodyTextColor,
-    '--table-header-font': getFontStack(p.headerFont),
-    '--table-body-font': getFontStack(p.bodyFont),
+    ...previewTypographyVars(
+      {
+        font: '--table-header-font',
+        size: '--table-header-font-size',
+        weight: '--table-header-font-weight',
+        style: '--table-header-font-style',
+        decorationLine: '--table-header-decoration-line',
+      },
+      p.headerFont,
+      p.headerFontSize,
+      p.headerFontWeight,
+      p.headerItalic,
+      p.headerDecoration,
+    ),
+    ...previewTypographyVars(
+      {
+        font: '--table-body-font',
+        size: '--table-body-font-size',
+        weight: '--table-body-font-weight',
+        style: '--table-body-font-style',
+        decorationLine: '--table-body-decoration-line',
+      },
+      p.bodyFont,
+      p.bodyFontSize,
+      p.bodyFontWeight,
+      p.bodyItalic,
+      p.bodyDecoration,
+    ),
   };
 
   return (

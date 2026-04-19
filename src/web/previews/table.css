@@ -20,7 +20,6 @@
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  font-size: 12px;
 }
 
 .preview-table-el th,
@@ -34,12 +33,19 @@
   background: var(--table-header-fill, var(--color-surface-subtle));
   color: var(--table-header-text, var(--color-text-primary));
   font-family: var(--table-header-font, system-ui, sans-serif);
-  font-weight: 600;
+  font-size: var(--table-header-font-size, 12px);
+  font-weight: var(--table-header-font-weight, 600);
+  font-style: var(--table-header-font-style, normal);
+  text-decoration-line: var(--table-header-decoration-line, none);
 }
 
 .preview-table-el td {
   color: var(--table-body-text, var(--color-text-secondary));
   font-family: var(--table-body-font, system-ui, sans-serif);
+  font-size: var(--table-body-font-size, 12px);
+  font-weight: var(--table-body-font-weight, 400);
+  font-style: var(--table-body-font-style, normal);
+  text-decoration-line: var(--table-body-decoration-line, none);
 }
 
 .preview-table-text {

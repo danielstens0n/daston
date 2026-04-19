@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { getFontStack } from '../lib/fonts.ts';
+import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
 import { useEditorStore, useLandingProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './landing.css';
@@ -19,8 +19,34 @@ export function Landing({ id }: Props) {
     '--landing-accent': p.accentColor,
     '--landing-border-radius': `${p.borderRadius}px`,
     '--landing-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
-    '--landing-heading-font': getFontStack(p.headingFont),
-    '--landing-body-font': getFontStack(p.bodyFont),
+    ...previewTypographyVars(
+      {
+        font: '--landing-heading-font',
+        size: '--landing-heading-size',
+        weight: '--landing-heading-weight',
+        style: '--landing-heading-style',
+        decorationLine: '--landing-heading-decoration-line',
+      },
+      p.headingFont,
+      p.headingFontSize,
+      p.headingFontWeight,
+      p.headingItalic,
+      p.headingDecoration,
+    ),
+    ...previewTypographyVars(
+      {
+        font: '--landing-body-font',
+        size: '--landing-body-size',
+        weight: '--landing-body-weight',
+        style: '--landing-body-style',
+        decorationLine: '--landing-body-decoration-line',
+      },
+      p.bodyFont,
+      p.bodyFontSize,
+      p.bodyFontWeight,
+      p.bodyItalic,
+      p.bodyDecoration,
+    ),
   };
 
   return (

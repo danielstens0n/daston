@@ -33,7 +33,15 @@ const cardA: CardInstance = {
     titleColor: '#18181b',
     bodyColor: '#52525b',
     titleFont: 'inter',
+    titleFontSize: 16,
+    titleFontWeight: 600,
+    titleItalic: false,
+    titleDecoration: 'none',
     bodyFont: 'inter',
+    bodyFontSize: 13,
+    bodyFontWeight: 400,
+    bodyItalic: false,
+    bodyDecoration: 'none',
   },
 };
 

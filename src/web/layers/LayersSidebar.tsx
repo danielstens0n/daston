@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildInstanceMenuItems } from '../context-menu/items.ts';
 import { componentTypeLabel } from '../state/component-type-label.ts';
@@ -33,7 +33,7 @@ function LayersSidebarBody() {
   const rows = useLayerRows();
   const selectedId = useEditorStore((state) => state.selectedId);
   const { openMenu } = useContextMenuHost();
-  const reversedRows = [...rows].reverse();
+  const reversedRows = useMemo(() => [...rows].reverse(), [rows]);
 
   return (
     <div className="layers-sidebar-body">

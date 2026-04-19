@@ -72,4 +72,13 @@ describe('TableInspector', () => {
 
     expect(onPatch).toHaveBeenCalledWith({ headerFont: 'lora' });
   });
+
+  it('patches table body font weight from typography', async () => {
+    const user = userEvent.setup();
+    const onPatch = vi.fn();
+    render(<TableInspector id="table-1" onPatch={onPatch} />);
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Table body weight' }), '700');
+    expect(onPatch).toHaveBeenCalledWith({ bodyFontWeight: 700 });
+  });
 });

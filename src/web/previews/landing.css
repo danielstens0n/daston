@@ -23,8 +23,10 @@
 .preview-landing-title {
   margin: 0 0 8px;
   font-family: var(--landing-heading-font, system-ui, sans-serif);
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--landing-heading-size, 18px);
+  font-weight: var(--landing-heading-weight, 700);
+  font-style: var(--landing-heading-style, normal);
+  text-decoration-line: var(--landing-heading-decoration-line, none);
   color: var(--color-text-primary);
   line-height: 1.2;
 }
@@ -32,7 +34,10 @@
 .preview-landing-body {
   margin: 0 0 14px;
   font-family: var(--landing-body-font, system-ui, sans-serif);
-  font-size: 13px;
+  font-size: var(--landing-body-size, 13px);
+  font-weight: var(--landing-body-weight, 400);
+  font-style: var(--landing-body-style, normal);
+  text-decoration-line: var(--landing-body-decoration-line, none);
   line-height: 1.45;
   color: var(--color-text-secondary);
 }
@@ -44,8 +49,10 @@
   padding: 8px 16px;
   border-radius: 8px;
   font-family: var(--landing-heading-font, system-ui, sans-serif);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--landing-heading-size, 18px);
+  font-weight: var(--landing-heading-weight, 700);
+  font-style: var(--landing-heading-style, normal);
+  text-decoration-line: var(--landing-heading-decoration-line, none);
   color: #ffffff;
   background: var(--landing-accent, var(--color-accent));
   border: none;
@@ -62,8 +69,10 @@
 .preview-landing-features-title {
   margin: 0 0 10px;
   font-family: var(--landing-heading-font, system-ui, sans-serif);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--landing-heading-size, 18px);
+  font-weight: var(--landing-heading-weight, 700);
+  font-style: var(--landing-heading-style, normal);
+  text-decoration-line: var(--landing-heading-decoration-line, none);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
@@ -80,7 +89,10 @@
 
 .preview-landing-feature {
   font-family: var(--landing-body-font, system-ui, sans-serif);
-  font-size: 12px;
+  font-size: var(--landing-body-size, 13px);
+  font-weight: var(--landing-body-weight, 400);
+  font-style: var(--landing-body-style, normal);
+  text-decoration-line: var(--landing-body-decoration-line, none);
   color: var(--color-text-secondary);
   padding: 8px 10px;
   background: var(--color-surface);

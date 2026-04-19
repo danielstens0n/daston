@@ -20,15 +20,20 @@
 .preview-card-title {
   margin: 0 0 8px;
   font-family: var(--card-title-font, system-ui, sans-serif);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--card-title-size, 16px);
+  font-weight: var(--card-title-weight, 600);
+  font-style: var(--card-title-style, normal);
+  text-decoration-line: var(--card-title-decoration-line, none);
   color: var(--card-title-color, var(--color-text-primary));
 }
 
 .preview-card-body {
   margin: 0;
   font-family: var(--card-body-font, system-ui, sans-serif);
-  font-size: 13px;
+  font-size: var(--card-body-size, 13px);
+  font-weight: var(--card-body-weight, 400);
+  font-style: var(--card-body-style, normal);
+  text-decoration-line: var(--card-body-decoration-line, none);
   line-height: 1.5;
   color: var(--card-body-color, var(--color-text-secondary));
 }

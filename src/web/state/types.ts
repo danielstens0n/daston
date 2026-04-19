@@ -28,6 +28,9 @@ export type TextColorProps = {
   bodyColor: string;
 };
 
+export type FontWeight = 400 | 500 | 600 | 700;
+export type TextDecoration = 'none' | 'underline' | 'strikethrough';
+
 export type CardProps = LayoutProps &
   FillProps &
   BorderProps &
@@ -36,7 +39,15 @@ export type CardProps = LayoutProps &
     title: string;
     body: string;
     titleFont: string;
+    titleFontSize: number;
+    titleFontWeight: FontWeight;
+    titleItalic: boolean;
+    titleDecoration: TextDecoration;
     bodyFont: string;
+    bodyFontSize: number;
+    bodyFontWeight: FontWeight;
+    bodyItalic: boolean;
+    bodyDecoration: TextDecoration;
   };
 
 // Size lives on the instance root alongside x/y — resize handles on the
@@ -57,6 +68,10 @@ export type ButtonProps = FillProps &
   ShadowProps & {
     label: string;
     labelFont: string;
+    labelFontSize: number;
+    labelFontWeight: FontWeight;
+    labelItalic: boolean;
+    labelDecoration: TextDecoration;
     textColor: string;
     paddingX: number;
     paddingY: number;
@@ -85,7 +100,15 @@ export type TableProps = {
   headerTextColor: string;
   bodyTextColor: string;
   headerFont: string;
+  headerFontSize: number;
+  headerFontWeight: FontWeight;
+  headerItalic: boolean;
+  headerDecoration: TextDecoration;
   bodyFont: string;
+  bodyFontSize: number;
+  bodyFontWeight: FontWeight;
+  bodyItalic: boolean;
+  bodyDecoration: TextDecoration;
   columns: string[];
   rows: string[][];
 };
@@ -107,7 +130,15 @@ export type LandingProps = ShadowProps & {
   featuresTitle: string;
   features: string[];
   headingFont: string;
+  headingFontSize: number;
+  headingFontWeight: FontWeight;
+  headingItalic: boolean;
+  headingDecoration: TextDecoration;
   bodyFont: string;
+  bodyFontSize: number;
+  bodyFontWeight: FontWeight;
+  bodyItalic: boolean;
+  bodyDecoration: TextDecoration;
   accentColor: string;
   pageFill: string;
   heroFill: string;

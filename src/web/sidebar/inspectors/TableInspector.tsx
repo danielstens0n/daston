@@ -1,12 +1,15 @@
 import { useTableProps } from '../../state/editor.ts';
 import type { TableProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
+import { DecorationField } from '../fields/DecorationField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
 import { FontField } from '../fields/FontField.tsx';
+import { INSPECTOR_FONT_SIZE_FIELD } from '../fields/inspectorFontSizeProps.ts';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
 import { ToggleField } from '../fields/ToggleField.tsx';
+import { WeightField } from '../fields/WeightField.tsx';
 
 type Props = {
   id: string;
@@ -14,69 +17,66 @@ type Props = {
 };
 
 export function TableInspector({ id, onPatch }: Props) {
-  const props = useTableProps(id);
-  if (!props) return null;
-  const tableProps = props;
+  const table = useTableProps(id);
+  if (!table) return null;
 
-  const canRemoveColumn = tableProps.columns.length > 1;
+  const canRemoveColumn = table.columns.length > 1;
 
-  function patchColumn(columnIndex: number, value: string) {
+  const patchColumn = (columnIndex: number, value: string) => {
     onPatch({
-      columns: tableProps.columns.map((entry, index) => (index === columnIndex ? value : entry)),
+      columns: table.columns.map((entry, index) => (index === columnIndex ? value : entry)),
     });
-  }
+  };
 
-  function patchCell(rowIndex: number, columnIndex: number, value: string) {
+  const patchCell = (rowIndex: number, columnIndex: number, value: string) => {
     onPatch({
-      rows: tableProps.rows.map((row, index) =>
+      rows: table.rows.map((row, index) =>
         index === rowIndex
-          ? tableProps.columns.map((_, cellIndex) =>
-              cellIndex === columnIndex ? value : (row[cellIndex] ?? ''),
-            )
+          ? table.columns.map((_, cellIndex) => (cellIndex === columnIndex ? value : (row[cellIndex] ?? '')))
           : row,
       ),
     });
-  }
+  };
 
-  function addColumn() {
+  const addColumn = () => {
     onPatch({
-      columns: [...tableProps.columns, `Column ${tableProps.columns.length + 1}`],
-      rows: tableProps.rows.map((row) => [...row, '']),
+      columns: [...table.columns, `Column ${table.columns.length + 1}`],
+      rows: table.rows.map((row) => [...row, '']),
     });
-  }
+  };
 
-  function removeColumn(columnIndex: number) {
+  const removeColumn = (columnIndex: number) => {
     if (!canRemoveColumn) return;
     onPatch({
-      columns: tableProps.columns.filter((_, index) => index !== columnIndex),
-      rows: tableProps.rows.map((row) => row.filter((_, index) => index !== columnIndex)),
+      columns: table.columns.filter((_, index) => index !== columnIndex),
+      rows: table.rows.map((row) => row.filter((_, index) => index !== columnIndex)),
     });
-  }
+  };
 
-  function addRow() {
+  const addRow = () => {
     onPatch({
-      rows: [...tableProps.rows, tableProps.columns.map(() => '')],
+      rows: [...table.rows, table.columns.map(() => '')],
     });
-  }
+  };
 
-  function removeRow(rowIndex: number) {
+  const removeRow = (rowIndex: number) => {
     onPatch({
-      rows: tableProps.rows.filter((_, index) => index !== rowIndex),
+      rows: table.rows.filter((_, index) => index !== rowIndex),
     });
-  }
+  };
 
   return (
     <>
       <Section title="Table">
         <FieldRow label="Header row">
-          <ToggleField value={tableProps.showHeader} onChange={(value) => onPatch({ showHeader: value })} />
+          <ToggleField value={table.showHeader} onChange={(value) => onPatch({ showHeader: value })} />
         </FieldRow>
         <FieldRow label="Zebra">
-          <ToggleField value={tableProps.zebra} onChange={(value) => onPatch({ zebra: value })} />
+          <ToggleField value={table.zebra} onChange={(value) => onPatch({ zebra: value })} />
         </FieldRow>
         <FieldRow label="Cell pad">
           <NumberField
-            value={tableProps.cellPadding}
+            value={table.cellPadding}
             onChange={(value) => onPatch({ cellPadding: value })}
             min={0}
             max={32}
@@ -86,22 +86,22 @@ export function TableInspector({ id, onPatch }: Props) {
       </Section>
       <Section title="Fills">
         <FieldRow label="Header">
-          <ColorField value={tableProps.headerFill} onChange={(value) => onPatch({ headerFill: value })} />
+          <ColorField value={table.headerFill} onChange={(value) => onPatch({ headerFill: value })} />
         </FieldRow>
         <FieldRow label="Row">
-          <ColorField value={tableProps.rowFill} onChange={(value) => onPatch({ rowFill: value })} />
+          <ColorField value={table.rowFill} onChange={(value) => onPatch({ rowFill: value })} />
         </FieldRow>
         <FieldRow label="Alt row">
-          <ColorField value={tableProps.rowFillAlt} onChange={(value) => onPatch({ rowFillAlt: value })} />
+          <ColorField value={table.rowFillAlt} onChange={(value) => onPatch({ rowFillAlt: value })} />
         </FieldRow>
       </Section>
       <Section title="Border">
         <FieldRow label="Color">
-          <ColorField value={tableProps.borderColor} onChange={(value) => onPatch({ borderColor: value })} />
+          <ColorField value={table.borderColor} onChange={(value) => onPatch({ borderColor: value })} />
         </FieldRow>
         <FieldRow label="Width">
           <NumberField
-            value={tableProps.borderWidth}
+            value={table.borderWidth}
             onChange={(value) => onPatch({ borderWidth: value })}
             min={0}
             max={12}
@@ -110,7 +110,7 @@ export function TableInspector({ id, onPatch }: Props) {
         </FieldRow>
         <FieldRow label="Radius">
           <NumberField
-            value={tableProps.borderRadius}
+            value={table.borderRadius}
             onChange={(value) => onPatch({ borderRadius: value })}
             min={0}
             max={32}
@@ -121,36 +121,79 @@ export function TableInspector({ id, onPatch }: Props) {
       <Section title="Text">
         <FieldRow label="Header">
           <ColorField
-            value={tableProps.headerTextColor}
+            value={table.headerTextColor}
             onChange={(value) => onPatch({ headerTextColor: value })}
           />
         </FieldRow>
         <FieldRow label="Body">
-          <ColorField
-            value={tableProps.bodyTextColor}
-            onChange={(value) => onPatch({ bodyTextColor: value })}
-          />
+          <ColorField value={table.bodyTextColor} onChange={(value) => onPatch({ bodyTextColor: value })} />
         </FieldRow>
       </Section>
       <Section title="Typography">
         <FieldRow label="Header">
           <FontField
-            value={tableProps.headerFont}
+            value={table.headerFont}
             onChange={(value) => onPatch({ headerFont: value })}
             ariaLabel="Table header font"
           />
         </FieldRow>
+        <FieldRow label="Size">
+          <NumberField
+            value={table.headerFontSize}
+            onChange={(value) => onPatch({ headerFontSize: value })}
+            {...INSPECTOR_FONT_SIZE_FIELD}
+          />
+        </FieldRow>
+        <FieldRow label="Weight">
+          <WeightField
+            value={table.headerFontWeight}
+            onChange={(value) => onPatch({ headerFontWeight: value })}
+            ariaLabel="Table header weight"
+          />
+        </FieldRow>
+        <FieldRow label="Italic">
+          <ToggleField value={table.headerItalic} onChange={(value) => onPatch({ headerItalic: value })} />
+        </FieldRow>
+        <FieldRow label="Deco">
+          <DecorationField
+            value={table.headerDecoration}
+            onChange={(value) => onPatch({ headerDecoration: value })}
+          />
+        </FieldRow>
         <FieldRow label="Body">
           <FontField
-            value={tableProps.bodyFont}
+            value={table.bodyFont}
             onChange={(value) => onPatch({ bodyFont: value })}
             ariaLabel="Table body font"
+          />
+        </FieldRow>
+        <FieldRow label="Size">
+          <NumberField
+            value={table.bodyFontSize}
+            onChange={(value) => onPatch({ bodyFontSize: value })}
+            {...INSPECTOR_FONT_SIZE_FIELD}
+          />
+        </FieldRow>
+        <FieldRow label="Weight">
+          <WeightField
+            value={table.bodyFontWeight}
+            onChange={(value) => onPatch({ bodyFontWeight: value })}
+            ariaLabel="Table body weight"
+          />
+        </FieldRow>
+        <FieldRow label="Italic">
+          <ToggleField value={table.bodyItalic} onChange={(value) => onPatch({ bodyItalic: value })} />
+        </FieldRow>
+        <FieldRow label="Deco">
+          <DecorationField
+            value={table.bodyDecoration}
+            onChange={(value) => onPatch({ bodyDecoration: value })}
           />
         </FieldRow>
       </Section>
       <Section title="Columns">
         <div className="sidebar-table-editor-list">
-          {tableProps.columns.map((column, columnIndex) => (
+          {table.columns.map((column, columnIndex) => (
             <div key={`column-${column}`} className="sidebar-table-editor-row">
               <TextField
                 value={column}
@@ -178,7 +221,7 @@ export function TableInspector({ id, onPatch }: Props) {
       </Section>
       <Section title="Rows">
         <div className="sidebar-table-row-list">
-          {tableProps.rows.map((row, rowIndex) => (
+          {table.rows.map((row, rowIndex) => (
             <div key={`row-${row.join('|')}`} className="sidebar-table-row-card">
               <div className="sidebar-table-row-header">
                 <span className="sidebar-table-row-title">Row {rowIndex + 1}</span>
@@ -187,7 +230,7 @@ export function TableInspector({ id, onPatch }: Props) {
                 </button>
               </div>
               <div className="sidebar-table-grid">
-                {tableProps.columns.map((column, columnIndex) => (
+                {table.columns.map((column, columnIndex) => (
                   <div key={`row-${column}-${row[columnIndex] ?? ''}`} className="sidebar-table-grid-cell">
                     <span className="sidebar-table-grid-label">{column || `Column ${columnIndex + 1}`}</span>
                     <TextField
