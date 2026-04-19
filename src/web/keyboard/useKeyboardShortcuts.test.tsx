@@ -44,6 +44,9 @@ beforeEach(() => {
     nextInstanceId: 2,
     clipboard: null,
     lastPasteId: null,
+    past: [],
+    future: [],
+    historyBatch: null,
   });
 });
 
@@ -88,6 +91,19 @@ describe('useKeyboardShortcuts', () => {
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'ArrowRight', shiftKey: true, bubbles: true });
     expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 20, y: 20 });
+  });
+
+  it('undos on mod+z and redoes on mod+shift+z', () => {
+    render(<Harness />);
+    useEditorStore.getState().duplicate('a');
+    expect(useEditorStore.getState().instances).toHaveLength(3);
+
+    fireEvent.keyDown(document.body, { key: 'z', metaKey: true, bubbles: true });
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+
+    fireEvent.keyDown(document.body, { key: 'Z', metaKey: true, shiftKey: true, bubbles: true });
+    expect(useEditorStore.getState().instances).toHaveLength(3);
+    expect(useEditorStore.getState().instances.at(-1)).toMatchObject({ id: 'card-2', type: 'card' });
   });
 
   it('does not run canvas shortcuts while a text field is focused', () => {

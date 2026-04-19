@@ -21,6 +21,18 @@ export function useKeyboardShortcuts(): void {
   useEffect(() => {
     const shortcuts: Shortcut[] = [
       {
+        combo: 'mod+shift+z',
+        run: () => {
+          useEditorStore.getState().redo();
+        },
+      },
+      {
+        combo: 'mod+z',
+        run: () => {
+          useEditorStore.getState().undo();
+        },
+      },
+      {
         combo: 'mod+c',
         run: () => {
           const { selectedId, copy } = useEditorStore.getState();

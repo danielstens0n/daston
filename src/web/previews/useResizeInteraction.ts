@@ -27,12 +27,7 @@ type DragState = {
 // The key invariant: the *opposite* corner of the one being dragged does not
 // move. When the drag would shrink past MIN_SIZE, the dragged corner pins
 // at MIN_SIZE away from the anchor instead of continuing to slide.
-export function resizeRect(
-  rect: ResizeRect,
-  corner: ResizeCorner,
-  dx: number,
-  dy: number,
-): ResizeRect {
+export function resizeRect(rect: ResizeRect, corner: ResizeCorner, dx: number, dy: number): ResizeRect {
   switch (corner) {
     case 'se':
       return {
@@ -94,6 +89,7 @@ export function useResizeInteraction(id: string, corner: ResizeCorner) {
     const instance = store.instances.find((i) => i.id === id);
     if (!instance) return;
     store.select(id);
+    store.beginHistoryBatch();
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
       pointerId: event.pointerId,
@@ -123,6 +119,7 @@ export function useResizeInteraction(id: string, corner: ResizeCorner) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dragRef.current = null;
+    useEditorStore.getState().endHistoryBatch();
   }
 
   return {

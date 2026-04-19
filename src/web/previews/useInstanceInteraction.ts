@@ -59,6 +59,8 @@ export function useInstanceInteraction(id: string) {
     const instance = store.instances.find((i) => i.id === id);
     if (!instance) return;
     store.select(id);
+    if (isInteractiveTarget(event.target)) return;
+    store.beginHistoryBatch();
     event.currentTarget.setPointerCapture(event.pointerId);
 
     let targetId = id;
@@ -66,6 +68,7 @@ export function useInstanceInteraction(id: string) {
     if (event.altKey) {
       const cloneId = store.duplicateInPlaceForDrag(id);
       if (!cloneId) {
+        store.endHistoryBatch();
         event.currentTarget.releasePointerCapture(event.pointerId);
         return;
       }
@@ -121,6 +124,7 @@ export function useInstanceInteraction(id: string) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dragRef.current = null;
+    useEditorStore.getState().endHistoryBatch();
     event.currentTarget.removeAttribute('data-dragging');
   }
 
@@ -133,4 +137,8 @@ export function useInstanceInteraction(id: string) {
       onPointerCancel: endDrag,
     },
   };
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && target.closest('[data-preview-interactive="true"]') !== null;
 }
