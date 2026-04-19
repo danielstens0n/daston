@@ -1,6 +1,17 @@
 import { useEffect } from 'react';
 import { useEditorStore } from '../state/editor.ts';
-import { isEditableTarget, matchCombo, type Shortcut } from './match.ts';
+import { isEditableTarget, isShortcutBlockTarget, matchCombo, type Shortcut } from './match.ts';
+
+const NUDGE_PX = 1;
+const NUDGE_SHIFT_PX = 10;
+
+function nudgeSelected(dx: number, dy: number): void {
+  const { selectedId, instances, move } = useEditorStore.getState();
+  if (!selectedId) return;
+  const instance = instances.find((i) => i.id === selectedId);
+  if (!instance) return;
+  move(selectedId, { x: instance.x + dx, y: instance.y + dy });
+}
 
 // Canvas-level keyboard shortcuts. Mounted once from `CanvasRoute`.
 // The shortcut table is declared inside the hook so each `run` can call
@@ -52,6 +63,44 @@ export function useKeyboardShortcuts(): void {
           if (selectedId) remove(selectedId);
         },
       },
+      {
+        combo: 'escape',
+        run: () => {
+          useEditorStore.getState().select(null);
+        },
+      },
+      {
+        combo: 'shift+arrowleft',
+        run: () => nudgeSelected(-NUDGE_SHIFT_PX, 0),
+      },
+      {
+        combo: 'arrowleft',
+        run: () => nudgeSelected(-NUDGE_PX, 0),
+      },
+      {
+        combo: 'shift+arrowright',
+        run: () => nudgeSelected(NUDGE_SHIFT_PX, 0),
+      },
+      {
+        combo: 'arrowright',
+        run: () => nudgeSelected(NUDGE_PX, 0),
+      },
+      {
+        combo: 'shift+arrowup',
+        run: () => nudgeSelected(0, -NUDGE_SHIFT_PX),
+      },
+      {
+        combo: 'arrowup',
+        run: () => nudgeSelected(0, -NUDGE_PX),
+      },
+      {
+        combo: 'shift+arrowdown',
+        run: () => nudgeSelected(0, NUDGE_SHIFT_PX),
+      },
+      {
+        combo: 'arrowdown',
+        run: () => nudgeSelected(0, NUDGE_PX),
+      },
     ];
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -61,6 +110,7 @@ export function useKeyboardShortcuts(): void {
       // browser owns every key, including ⌘D (which would bookmark the
       // page). That matches normal web behavior for focused inputs.
       if (isEditableTarget(event.target)) return;
+      if (isShortcutBlockTarget(event.target)) return;
 
       const match = shortcuts.find((shortcut) => matchCombo(event, shortcut.combo));
       if (!match) return;

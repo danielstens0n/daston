@@ -63,3 +63,10 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return target.matches('input, textarea, [contenteditable=""], [contenteditable="true"]');
 }
+
+// Surfaces that should keep canvas-level shortcuts from firing while the user
+// interacts with them (e.g. modal shells where focus may land on a button).
+export function isShortcutBlockTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest('[data-canvas-shortcuts-block]'));
+}

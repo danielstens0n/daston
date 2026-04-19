@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
-import { isEditableTarget, matchCombo } from './match.ts';
+import { isEditableTarget, isShortcutBlockTarget, matchCombo } from './match.ts';
 
 // Small factory — lets each test spell out exactly the keystroke it cares
 // about without repeating the `new KeyboardEvent('keydown', { ... })` noise.
@@ -42,6 +42,22 @@ describe('matchCombo', () => {
     expect(matchCombo(keyEvent({ key: 'Backspace' }), 'backspace')).toBe(true);
   });
 
+  it('handles `escape`', () => {
+    expect(matchCombo(keyEvent({ key: 'Escape' }), 'escape')).toBe(true);
+  });
+
+  it('handles arrow keys', () => {
+    expect(matchCombo(keyEvent({ key: 'ArrowLeft' }), 'arrowleft')).toBe(true);
+    expect(matchCombo(keyEvent({ key: 'ArrowRight' }), 'arrowright')).toBe(true);
+    expect(matchCombo(keyEvent({ key: 'ArrowUp' }), 'arrowup')).toBe(true);
+    expect(matchCombo(keyEvent({ key: 'ArrowDown' }), 'arrowdown')).toBe(true);
+  });
+
+  it('handles shift+arrow combos', () => {
+    expect(matchCombo(keyEvent({ key: 'ArrowLeft', shiftKey: true }), 'shift+arrowleft')).toBe(true);
+    expect(matchCombo(keyEvent({ key: 'ArrowLeft' }), 'shift+arrowleft')).toBe(false);
+  });
+
   it('compares the key case-insensitively', () => {
     expect(matchCombo(keyEvent({ key: 'D', metaKey: true }), 'mod+d')).toBe(true);
   });
@@ -70,5 +86,23 @@ describe('isEditableTarget', () => {
 
   it('is false for null', () => {
     expect(isEditableTarget(null)).toBe(false);
+  });
+});
+
+describe('isShortcutBlockTarget', () => {
+  it('is true inside a canvas shortcut block root', () => {
+    const root = document.createElement('div');
+    root.setAttribute('data-canvas-shortcuts-block', '');
+    const inner = document.createElement('button');
+    root.appendChild(inner);
+    expect(isShortcutBlockTarget(inner)).toBe(true);
+  });
+
+  it('is false outside the block', () => {
+    expect(isShortcutBlockTarget(document.createElement('div'))).toBe(false);
+  });
+
+  it('is false for null', () => {
+    expect(isShortcutBlockTarget(null)).toBe(false);
   });
 });
