@@ -254,6 +254,45 @@ describe('duplicate', () => {
   });
 });
 
+describe('duplicateInPlaceForDrag', () => {
+  it('clones at the same x and y as the source', () => {
+    const id = useEditorStore.getState().duplicateInPlaceForDrag('a');
+    expect(id).toBe('card-2');
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      id: 'card-2',
+      type: 'card',
+      x: baselineA.x,
+      y: baselineA.y,
+      width: baselineA.width,
+      height: baselineA.height,
+      props: baselineA.props,
+    });
+  });
+
+  it('returns null and leaves state unchanged when the id is unknown', () => {
+    const id = useEditorStore.getState().duplicateInPlaceForDrag('missing');
+    expect(id).toBeNull();
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().nextInstanceId).toBe(2);
+  });
+
+  it('selects the clone and bumps nextInstanceId', () => {
+    useEditorStore.getState().duplicateInPlaceForDrag('a');
+    const state = useEditorStore.getState();
+    expect(state.selectedId).toBe('card-2');
+    expect(state.nextInstanceId).toBe(3);
+  });
+
+  it('does not touch clipboard or lastPasteId', () => {
+    useEditorStore.setState({ clipboard: baselineB, lastPasteId: 'b' });
+    useEditorStore.getState().duplicateInPlaceForDrag('a');
+    const state = useEditorStore.getState();
+    expect(state.clipboard).toBe(baselineB);
+    expect(state.lastPasteId).toBe('b');
+  });
+});
+
 describe('copy', () => {
   it('stores a snapshot in clipboard', () => {
     useEditorStore.getState().copy('a');

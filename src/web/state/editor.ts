@@ -51,6 +51,8 @@ type EditorStore = {
   updateProps: (id: string, patch: Record<string, unknown>) => void;
   remove: (id: string) => void;
   duplicate: (id: string) => void;
+  /** Clone at the source's current x/y (no paste offset). Returns the new id. */
+  duplicateInPlaceForDrag: (id: string) => string | null;
   copy: (id: string) => void;
   cut: (id: string) => void;
   paste: () => void;
@@ -282,6 +284,22 @@ export const useEditorStore = create<EditorStore>((set) => ({
         nextInstanceId: state.nextInstanceId + 1,
       };
     }),
+  duplicateInPlaceForDrag: (id) => {
+    let createdId: string | null = null;
+    set((state) => {
+      const src = state.instances.find((instance) => instance.id === id);
+      if (!src) return state;
+      const cloneId = `${src.type}-${state.nextInstanceId}`;
+      createdId = cloneId;
+      const clone = { ...src, id: cloneId } as ComponentInstance;
+      return {
+        instances: [...state.instances, clone],
+        selectedId: cloneId,
+        nextInstanceId: state.nextInstanceId + 1,
+      };
+    });
+    return createdId;
+  },
   copy: (id) =>
     set((state) => {
       const src = state.instances.find((instance) => instance.id === id);
