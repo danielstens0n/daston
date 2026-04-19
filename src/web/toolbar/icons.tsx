@@ -63,3 +63,13 @@ export function LandingIcon() {
     </svg>
   );
 }
+
+export function PlusIcon() {
+  return (
+    <svg {...base}>
+      <title>Import component</title>
+      <line x1="10" y1="4" x2="10" y2="16" />
+      <line x1="4" y1="10" x2="16" y2="10" />
+    </svg>
+  );
+}

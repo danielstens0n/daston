@@ -1,7 +1,8 @@
-import { useEditorStore, useSelectedInstanceMeta } from '../state/editor.ts';
+import { type SelectedInstanceMeta, useEditorStore, useSelectedInstanceMeta } from '../state/editor.ts';
 import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../state/types.ts';
 import { ButtonInspector } from './inspectors/ButtonInspector.tsx';
 import { CardInspector } from './inspectors/CardInspector.tsx';
+import { ImportedInspector } from './inspectors/ImportedInspector.tsx';
 import { LandingInspector } from './inspectors/LandingInspector.tsx';
 import { TableInspector } from './inspectors/TableInspector.tsx';
 import './fields/fields.css';
@@ -25,10 +26,9 @@ export function Sidebar() {
 
 // Dispatch by type. Each inspector pulls its own props by id rather than
 // receiving them drilled through here — keeps Sidebar decoupled from the
-// prop shape of each component type. When ComponentInstance becomes a union
-// of 2+ types, add a `default` branch with `const _: never = meta` so
-// missing cases are a compile error.
-function renderInspector(meta: { id: string; type: ComponentInstance['type'] }) {
+// prop shape of each component type. The `never` default forces this switch
+// to stay in sync with the ComponentInstance union.
+function renderInspector(meta: SelectedInstanceMeta) {
   switch (meta.type) {
     case 'card':
       return <CardInspector id={meta.id} onPatch={patcher<CardProps>(meta.id)} />;
@@ -39,7 +39,11 @@ function renderInspector(meta: { id: string; type: ComponentInstance['type'] }) 
     case 'landing':
       return <LandingInspector id={meta.id} onPatch={patcher<LandingProps>(meta.id)} />;
     case 'imported':
-      return <div className="sidebar-empty">Imported components are not editable here.</div>;
+      return <ImportedInspector id={meta.id} />;
+    default: {
+      const _exhaustive: never = meta;
+      return _exhaustive;
+    }
   }
 }
 
@@ -55,6 +59,10 @@ function titleFor(type: ComponentInstance['type']): string {
       return 'Landing page';
     case 'imported':
       return 'Imported';
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
   }
 }
 

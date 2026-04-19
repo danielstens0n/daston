@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { useLandingProps } from '../state/editor.ts';
+import { useEditorStore, useLandingProps } from '../state/editor.ts';
+import { EditableText } from './EditableText.tsx';
 import './landing.css';
 
 type Props = {
@@ -22,16 +23,51 @@ export function Landing({ id }: Props) {
   return (
     <div className="preview-landing" style={style}>
       <div className="preview-landing-hero" data-shadow={p.shadowEnabled || undefined}>
-        <h2 className="preview-landing-title">{p.heroTitle}</h2>
-        <p className="preview-landing-body">{p.heroBody}</p>
-        <span className="preview-landing-cta">{p.ctaLabel}</span>
+        <h2 className="preview-landing-title">
+          <EditableText
+            value={p.heroTitle}
+            onChange={(heroTitle) => useEditorStore.getState().updateProps(id, { heroTitle })}
+            multiline
+          />
+        </h2>
+        <p className="preview-landing-body">
+          <EditableText
+            value={p.heroBody}
+            onChange={(heroBody) => useEditorStore.getState().updateProps(id, { heroBody })}
+            multiline
+          />
+        </p>
+        <span className="preview-landing-cta">
+          <EditableText
+            value={p.ctaLabel}
+            onChange={(ctaLabel) => useEditorStore.getState().updateProps(id, { ctaLabel })}
+          />
+        </span>
       </div>
       <div className="preview-landing-features">
-        <p className="preview-landing-features-title">Features</p>
+        <p className="preview-landing-features-title">
+          <EditableText
+            value={p.featuresTitle}
+            onChange={(featuresTitle) => useEditorStore.getState().updateProps(id, { featuresTitle })}
+            multiline
+          />
+        </p>
         <ul className="preview-landing-feature-list">
-          <li className="preview-landing-feature">Theme tokens synced with your stack</li>
-          <li className="preview-landing-feature">Preview components on the canvas</li>
-          <li className="preview-landing-feature">Export-ready handoff</li>
+          {p.features.map((feature, index) => (
+            <li key={`${id}-feature-${feature}`} className="preview-landing-feature">
+              <EditableText
+                value={feature}
+                onChange={(nextFeature) =>
+                  useEditorStore.getState().updateProps(id, {
+                    features: p.features.map((entry, featureIndex) =>
+                      featureIndex === index ? nextFeature : entry,
+                    ),
+                  })
+                }
+                multiline
+              />
+            </li>
+          ))}
         </ul>
       </div>
     </div>

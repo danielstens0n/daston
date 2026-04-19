@@ -1,17 +1,11 @@
 import type { CSSProperties } from 'react';
-import { useTableProps } from '../state/editor.ts';
+import { useEditorStore, useTableProps } from '../state/editor.ts';
+import { EditableText } from './EditableText.tsx';
 import './table.css';
 
 type Props = {
   id: string;
 };
-
-const SAMPLE_ROWS = [
-  { a: 'Ada', b: 'Engineer', c: 'Active' },
-  { a: 'Bob', b: 'Designer', c: 'Away' },
-  { a: 'Cara', b: 'PM', c: 'Active' },
-  { a: 'Dan', b: 'QA', c: 'Active' },
-];
 
 export function Table({ id }: Props) {
   const p = useTableProps(id);
@@ -36,20 +30,54 @@ export function Table({ id }: Props) {
           {p.showHeader ? (
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Status</th>
+                {p.columns.map((column, columnIndex) => (
+                  <th key={`${id}-column-${column}`}>
+                    <EditableText
+                      value={column}
+                      onChange={(nextColumn) =>
+                        useEditorStore.getState().updateProps(id, {
+                          columns: p.columns.map((entry, index) =>
+                            index === columnIndex ? nextColumn : entry,
+                          ),
+                        })
+                      }
+                      className="preview-table-text"
+                      inputClassName="preview-table-text preview-inline-text-input"
+                    />
+                  </th>
+                ))}
               </tr>
             </thead>
           ) : null}
           <tbody>
-            {SAMPLE_ROWS.map((row, i) => {
-              const rowBg = p.zebra ? (i % 2 === 1 ? p.rowFillAlt : p.rowFill) : p.rowFill;
+            {p.rows.map((row, rowIndex) => {
+              const rowBg = p.zebra ? (rowIndex % 2 === 1 ? p.rowFillAlt : p.rowFill) : p.rowFill;
               return (
-                <tr key={row.a} className="preview-table-row" style={{ background: rowBg }}>
-                  <td>{row.a}</td>
-                  <td>{row.b}</td>
-                  <td>{row.c}</td>
+                <tr
+                  key={`${id}-row-${row.join('|')}`}
+                  className="preview-table-row"
+                  style={{ background: rowBg }}
+                >
+                  {p.columns.map((column, columnIndex) => (
+                    <td key={`${id}-cell-${column}-${row[columnIndex] ?? ''}`}>
+                      <EditableText
+                        value={row[columnIndex] ?? ''}
+                        onChange={(nextCell) =>
+                          useEditorStore.getState().updateProps(id, {
+                            rows: p.rows.map((entry, entryIndex) =>
+                              entryIndex === rowIndex
+                                ? p.columns.map((__, cellIndex) =>
+                                    cellIndex === columnIndex ? nextCell : (entry[cellIndex] ?? ''),
+                                  )
+                                : entry,
+                            ),
+                          })
+                        }
+                        className="preview-table-text"
+                        inputClassName="preview-table-text preview-inline-text-input"
+                      />
+                    </td>
+                  ))}
                 </tr>
               );
             })}

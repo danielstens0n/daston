@@ -29,6 +29,25 @@ export function LandingInspector({ id, onPatch }: Props) {
           <TextField value={props.ctaLabel} onChange={(value) => onPatch({ ctaLabel: value })} />
         </FieldRow>
       </Section>
+      <Section title="Features">
+        <FieldRow label="Title">
+          <TextField value={props.featuresTitle} onChange={(value) => onPatch({ featuresTitle: value })} />
+        </FieldRow>
+        {props.features.map((feature, index) => (
+          <FieldRow key={`feature-${feature}`} label={`Item ${index + 1}`}>
+            <TextField
+              value={feature}
+              onChange={(value) =>
+                onPatch({
+                  features: props.features.map((entry, featureIndex) =>
+                    featureIndex === index ? value : entry,
+                  ),
+                })
+              }
+            />
+          </FieldRow>
+        ))}
+      </Section>
       <Section title="Colors">
         <FieldRow label="Accent">
           <ColorField value={props.accentColor} onChange={(value) => onPatch({ accentColor: value })} />

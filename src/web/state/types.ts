@@ -28,7 +28,14 @@ export type TextColorProps = {
   bodyColor: string;
 };
 
-export type CardProps = LayoutProps & FillProps & BorderProps & ShadowProps & TextColorProps;
+export type CardProps = LayoutProps &
+  FillProps &
+  BorderProps &
+  ShadowProps &
+  TextColorProps & {
+    title: string;
+    body: string;
+  };
 
 // Size lives on the instance root alongside x/y — resize handles on the
 // wrapper read and write width/height directly, symmetric with how drag
@@ -74,6 +81,8 @@ export type TableProps = {
   borderRadius: number;
   headerTextColor: string;
   bodyTextColor: string;
+  columns: string[];
+  rows: string[][];
 };
 
 export type TableInstance = {
@@ -90,6 +99,8 @@ export type LandingProps = ShadowProps & {
   heroTitle: string;
   heroBody: string;
   ctaLabel: string;
+  featuresTitle: string;
+  features: string[];
   accentColor: string;
   pageFill: string;
   heroFill: string;

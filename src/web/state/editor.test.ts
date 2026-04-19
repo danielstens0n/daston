@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useEditorStore } from './editor.ts';
-import type { CardInstance } from './types.ts';
+import type { CardInstance, ImportedInstance } from './types.ts';
 
 // Reset the store to a known two-instance baseline before each test. We
 // exercise the store via its direct get/setters (no React) — selector hooks
@@ -23,12 +23,24 @@ const baselineA: CardInstance = {
     shadowColor: '#0000001a',
     shadowBlur: 12,
     shadowOffsetY: 4,
+    title: 'Card',
+    body: 'Card body',
     titleColor: '#18181b',
     bodyColor: '#52525b',
   },
 };
 
 const baselineB: CardInstance = { ...baselineA, id: 'b', x: 200, y: 200 };
+const importedBaseline: ImportedInstance = {
+  id: 'imported-1',
+  type: 'imported',
+  definitionId: 'imported-def-9',
+  x: 40,
+  y: 50,
+  width: 320,
+  height: 220,
+  props: {},
+};
 
 beforeEach(() => {
   useEditorStore.setState({
@@ -37,6 +49,9 @@ beforeEach(() => {
     nextInstanceId: 2,
     clipboard: null,
     lastPasteId: null,
+    past: [],
+    future: [],
+    historyBatch: null,
   });
 });
 
@@ -60,6 +75,22 @@ describe('move', () => {
   it('leaves props untouched on the moved instance', () => {
     useEditorStore.getState().move('a', { x: 1, y: 1 });
     expect(useEditorStore.getState().instances[0]?.props).toEqual(baselineA.props);
+  });
+
+  it('coalesces a batched drag into one undo step', () => {
+    const store = useEditorStore.getState();
+    store.beginHistoryBatch();
+    store.move('a', { x: 30, y: 40 });
+    store.move('a', { x: 50, y: 60 });
+    store.endHistoryBatch();
+
+    expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 50, y: 60 });
+
+    useEditorStore.getState().undo();
+    expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 10, y: 20 });
+
+    useEditorStore.getState().redo();
+    expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 50, y: 60 });
   });
 });
 
@@ -158,6 +189,28 @@ describe('addInstance', () => {
   });
 });
 
+describe('addImportedInstance', () => {
+  it('centers a new imported component at the given world point', () => {
+    useEditorStore.getState().addImportedInstance('imported-def-1', { x: 400, y: 300 });
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'imported',
+      definitionId: 'imported-def-1',
+      x: 400 - 320 / 2,
+      y: 300 - 220 / 2,
+      width: 320,
+      height: 220,
+    });
+  });
+
+  it('selects the new imported instance and bumps the counter', () => {
+    useEditorStore.getState().addImportedInstance('imported-def-2', { x: 0, y: 0 });
+    const state = useEditorStore.getState();
+    expect(state.selectedId).toBe(state.instances.at(-1)?.id);
+    expect(state.nextInstanceId).toBe(3);
+  });
+});
+
 describe('updateProps', () => {
   it('merges partial patches without overwriting other keys', () => {
     useEditorStore.getState().updateProps('a', { fill: '#ff0000', borderRadius: 8 });
@@ -252,6 +305,24 @@ describe('duplicate', () => {
     expect(state.instances).toEqual([baselineA, baselineB]);
     expect(state.nextInstanceId).toBe(2);
   });
+
+  it('preserves definitionId when duplicating an imported component', () => {
+    useEditorStore.setState({
+      instances: [baselineA, importedBaseline],
+      selectedId: null,
+      nextInstanceId: 2,
+      clipboard: null,
+      lastPasteId: null,
+    });
+    useEditorStore.getState().duplicate('imported-1');
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'imported',
+      definitionId: 'imported-def-9',
+      x: importedBaseline.x + 20,
+      y: importedBaseline.y + 20,
+    });
+  });
 });
 
 describe('duplicateInPlaceForDrag', () => {
@@ -336,6 +407,19 @@ describe('cut', () => {
     expect(state.clipboard).toBeNull();
     expect(state.instances).toEqual([baselineA, baselineB]);
   });
+
+  it('restores the canvas and clipboard on undo, then reapplies on redo', () => {
+    useEditorStore.getState().cut('a');
+    expect(useEditorStore.getState().instances).toEqual([baselineB]);
+
+    useEditorStore.getState().undo();
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().clipboard).toBeNull();
+
+    useEditorStore.getState().redo();
+    expect(useEditorStore.getState().instances).toEqual([baselineB]);
+    expect(useEditorStore.getState().clipboard).toEqual(baselineA);
+  });
 });
 
 describe('paste', () => {
@@ -398,5 +482,50 @@ describe('paste', () => {
     useEditorStore.getState().paste();
     const added = useEditorStore.getState().instances.at(-1);
     expect(added).toMatchObject({ x: baselineB.x + 20, y: baselineB.y + 20 });
+  });
+
+  it('preserves definitionId when pasting an imported component', () => {
+    useEditorStore.setState({
+      instances: [baselineA, importedBaseline],
+      selectedId: null,
+      nextInstanceId: 2,
+      clipboard: null,
+      lastPasteId: null,
+      past: [],
+      future: [],
+      historyBatch: null,
+    });
+    useEditorStore.getState().copy('imported-1');
+    useEditorStore.getState().paste();
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'imported',
+      definitionId: 'imported-def-9',
+      x: importedBaseline.x + 20,
+      y: importedBaseline.y + 20,
+    });
+  });
+});
+
+describe('undo/redo', () => {
+  it('undoes and redoes addInstance', () => {
+    useEditorStore.getState().addInstance('card', { x: 400, y: 300 });
+    expect(useEditorStore.getState().instances).toHaveLength(3);
+
+    useEditorStore.getState().undo();
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+
+    useEditorStore.getState().redo();
+    expect(useEditorStore.getState().instances).toHaveLength(3);
+    expect(useEditorStore.getState().instances.at(-1)).toMatchObject({ id: 'card-2', type: 'card' });
+  });
+
+  it('clears redo history when a new mutation happens after undo', () => {
+    useEditorStore.getState().duplicate('a');
+    useEditorStore.getState().undo();
+    useEditorStore.getState().move('b', { x: 250, y: 260 });
+    useEditorStore.getState().redo();
+
+    expect(useEditorStore.getState().instances).toEqual([baselineA, { ...baselineB, x: 250, y: 260 }]);
   });
 });

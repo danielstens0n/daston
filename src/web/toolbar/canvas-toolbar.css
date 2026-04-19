@@ -78,3 +78,209 @@
 .canvas-toolbar-button:focus-visible::after {
   opacity: 1;
 }
+
+.import-dialog-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.import-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgb(15 23 42 / 0.2);
+  padding: 0;
+}
+
+.import-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(720px, calc(100% - 32px));
+  max-height: min(620px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-elevated);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.import-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--color-surface-subtle);
+}
+
+.import-dialog-title {
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+
+.import-dialog-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.import-dialog-close,
+.import-dialog-tab,
+.import-dialog-library-item,
+.import-dialog-primary,
+.import-dialog-secondary {
+  font: inherit;
+}
+
+.import-dialog-close,
+.import-dialog-secondary {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.import-dialog-close {
+  padding: 8px 10px;
+}
+
+.import-dialog-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px 0;
+}
+
+.import-dialog-tab {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
+.import-dialog-tab[data-active] {
+  border-color: var(--color-selection);
+  background: color-mix(in srgb, var(--color-selection) 14%, transparent);
+  color: var(--color-text-primary);
+}
+
+.import-dialog-error {
+  margin: 14px 20px 0;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #9f1239;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.import-dialog-library,
+.import-dialog-form {
+  padding: 18px 20px 20px;
+}
+
+.import-dialog-library {
+  display: grid;
+  gap: 12px;
+  overflow: auto;
+}
+
+.import-dialog-library-item {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 16px;
+  cursor: pointer;
+}
+
+.import-dialog-library-item:hover:not(:disabled) {
+  border-color: var(--color-selection);
+  background: color-mix(in srgb, var(--color-selection) 10%, transparent);
+}
+
+.import-dialog-library-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.import-dialog-library-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.import-dialog-form {
+  display: grid;
+  gap: 14px;
+}
+
+.import-dialog-label {
+  display: grid;
+  gap: 8px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+
+.import-dialog-label > input,
+.import-dialog-label > textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.import-dialog-label > input:focus,
+.import-dialog-label > textarea:focus {
+  outline: none;
+  border-color: var(--color-selection);
+}
+
+.import-dialog-label > textarea {
+  min-height: 280px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.import-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.import-dialog-secondary,
+.import-dialog-primary {
+  padding: 10px 14px;
+}
+
+.import-dialog-primary {
+  border: none;
+  border-radius: 10px;
+  background: var(--color-selection);
+  color: var(--color-surface);
+  cursor: pointer;
+}
+
+.import-dialog-primary:disabled,
+.import-dialog-library-item:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

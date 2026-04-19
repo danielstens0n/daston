@@ -42,7 +42,15 @@ export const TOOLBAR_ITEMS: readonly ToolbarItem[] = [
     tooltip: 'Import component',
     active: false,
   },
-  { kind: 'component', id: 'card', label: 'Card', Icon: CardIcon, enabled: true, tooltip: 'Card', active: false },
+  {
+    kind: 'component',
+    id: 'card',
+    label: 'Card',
+    Icon: CardIcon,
+    enabled: true,
+    tooltip: 'Card',
+    active: false,
+  },
   {
     kind: 'component',
     id: 'button',

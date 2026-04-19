@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { useCardProps } from '../state/editor.ts';
+import { useCardProps, useEditorStore } from '../state/editor.ts';
+import { EditableText } from './EditableText.tsx';
 import './card.css';
 
 type Props = {
@@ -26,8 +27,20 @@ export function Card({ id }: Props) {
 
   return (
     <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style}>
-      <h3 className="preview-card-title">Card</h3>
-      <p className="preview-card-body">A simple card preview. Drag me around the canvas.</p>
+      <h3 className="preview-card-title">
+        <EditableText
+          value={p.title}
+          onChange={(title) => useEditorStore.getState().updateProps(id, { title })}
+          multiline
+        />
+      </h3>
+      <p className="preview-card-body">
+        <EditableText
+          value={p.body}
+          onChange={(body) => useEditorStore.getState().updateProps(id, { body })}
+          multiline
+        />
+      </p>
     </div>
   );
 }

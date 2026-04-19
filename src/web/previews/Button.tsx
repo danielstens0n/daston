@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { useButtonProps } from '../state/editor.ts';
+import { useButtonProps, useEditorStore } from '../state/editor.ts';
+import { EditableText } from './EditableText.tsx';
 import './button.css';
 
 type Props = {
@@ -23,7 +24,12 @@ export function Button({ id }: Props) {
 
   return (
     <div className="preview-button" data-shadow={p.shadowEnabled || undefined} style={style}>
-      <span className="preview-button-label">{p.label}</span>
+      <EditableText
+        value={p.label}
+        onChange={(label) => useEditorStore.getState().updateProps(id, { label })}
+        className="preview-button-label"
+        inputClassName="preview-button-label preview-inline-text-input"
+      />
     </div>
   );
 }

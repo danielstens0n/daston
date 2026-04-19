@@ -1,14 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { useKeyboardShortcuts } from '../keyboard/useKeyboardShortcuts.ts';
 import { Button } from '../previews/Button.tsx';
 import { Card } from '../previews/Card.tsx';
-import { ImportedPlaceholder } from '../previews/ImportedPlaceholder.tsx';
+import { ImportedPreview } from '../previews/ImportedPreview.tsx';
 import { Landing } from '../previews/Landing.tsx';
 import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
 import { Table } from '../previews/Table.tsx';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
 import { useInstance, useInstanceIds } from '../state/editor.ts';
+import { useImportedComponentsStore } from '../state/imported-components.ts';
 import type { ComponentInstance } from '../state/types.ts';
 import { CanvasToolbar } from '../toolbar/CanvasToolbar.tsx';
 import './route.css';
@@ -19,6 +21,9 @@ export const Route = createFileRoute('/')({
 
 function CanvasRoute() {
   useKeyboardShortcuts();
+  useEffect(() => {
+    void useImportedComponentsStore.getState().load();
+  }, []);
   // Subscribing only to the id list keeps the route stable across drags and
   // prop edits — each PreviewSlot pulls its own instance data.
   const instanceIds = useInstanceIds();
@@ -38,9 +43,8 @@ function CanvasRoute() {
 
 // PreviewWrapper owns position, drag, and the rectangular selection outline
 // for every type. The body inside is picked by dispatching on instance.type
-// (each body subscribes to its own props by id). When ComponentInstance
-// becomes a union of 2+ types, add a `default` branch with
-// `const _: never = instance` to make forgetting a case a compile error.
+// (each body subscribes to its own props by id), and the `never` default keeps
+// future union members from silently rendering nothing.
 function PreviewSlot({ id }: { id: string }) {
   const instance = useInstance(id);
   if (!instance) return null;
@@ -62,6 +66,10 @@ function PreviewBody({ instance }: { instance: ComponentInstance }) {
     case 'landing':
       return <Landing id={instance.id} />;
     case 'imported':
-      return <ImportedPlaceholder id={instance.id} />;
+      return <ImportedPreview id={instance.id} />;
+    default: {
+      const _exhaustive: never = instance;
+      return _exhaustive;
+    }
   }
 }
