@@ -1,0 +1,29 @@
+.preview-button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: var(--button-padding-y, 10px) var(--button-padding-x, 20px);
+  background: var(--button-fill, var(--color-accent));
+  border: var(--button-border-width, 1px) solid var(--button-border-color, var(--color-border));
+  border-radius: var(--button-border-radius, 8px);
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+.preview-button[data-shadow] {
+  box-shadow: var(--button-shadow, var(--shadow-card));
+}
+
+.preview-button-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--button-text-color, var(--color-text-primary));
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

@@ -1,0 +1,45 @@
+.preview-table-root {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: var(--table-border-width, 1px) solid var(--table-border-color, var(--color-border));
+  border-radius: var(--table-border-radius, 8px);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.preview-table-el {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.preview-table-el th,
+.preview-table-el td {
+  padding: var(--table-cell-padding, 10px);
+  text-align: left;
+  border-bottom: 1px solid var(--table-border-color, var(--color-border));
+}
+
+.preview-table-el th {
+  background: var(--table-header-fill, var(--color-surface-subtle));
+  color: var(--table-header-text, var(--color-text-primary));
+  font-weight: 600;
+}
+
+.preview-table-el td {
+  color: var(--table-body-text, var(--color-text-secondary));
+}
+
+.preview-table-el tbody tr:last-child td {
+  border-bottom: none;
+}

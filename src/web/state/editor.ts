@@ -1,7 +1,18 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import type { ComponentId } from '../../shared/types.ts';
-import type { CardInstance, CardProps, ComponentInstance } from './types.ts';
+import type {
+  ButtonInstance,
+  ButtonProps,
+  CardInstance,
+  CardProps,
+  ComponentInstance,
+  ImportedInstance,
+  LandingInstance,
+  LandingProps,
+  TableInstance,
+  TableProps,
+} from './types.ts';
 
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
@@ -34,6 +45,7 @@ type EditorStore = {
   move: (id: string, pos: Point) => void;
   resize: (id: string, rect: Rect) => void;
   addInstance: (type: ComponentId, worldCenter: Point) => void;
+  addImportedInstance: (definitionId: string, worldCenter: Point) => void;
   // Generic at the store level. Type safety for specific props lives at the
   // call site (see Sidebar.tsx), where the instance has been narrowed.
   updateProps: (id: string, patch: Record<string, unknown>) => void;
@@ -62,6 +74,58 @@ const defaultCardProps: CardProps = {
 
 const DEFAULT_CARD_WIDTH = 280;
 const DEFAULT_CARD_HEIGHT = 180;
+const DEFAULT_BUTTON_WIDTH = 160;
+const DEFAULT_BUTTON_HEIGHT = 44;
+const DEFAULT_TABLE_WIDTH = 320;
+const DEFAULT_TABLE_HEIGHT = 220;
+const DEFAULT_LANDING_WIDTH = 360;
+const DEFAULT_LANDING_HEIGHT = 480;
+const DEFAULT_IMPORTED_WIDTH = 320;
+const DEFAULT_IMPORTED_HEIGHT = 220;
+
+const defaultButtonProps: ButtonProps = {
+  label: 'Button',
+  textColor: '#ffffff',
+  fill: '#3b82f6',
+  borderColor: '#2563eb',
+  borderWidth: 1,
+  borderRadius: 8,
+  paddingX: 20,
+  paddingY: 10,
+  shadowEnabled: true,
+  shadowColor: '#00000026',
+  shadowBlur: 8,
+  shadowOffsetY: 2,
+};
+
+const defaultTableProps: TableProps = {
+  showHeader: true,
+  zebra: true,
+  cellPadding: 10,
+  headerFill: '#f4f4f5',
+  rowFill: '#ffffff',
+  rowFillAlt: '#fafafa',
+  borderColor: '#e4e4e7',
+  borderWidth: 1,
+  borderRadius: 8,
+  headerTextColor: '#18181b',
+  bodyTextColor: '#52525b',
+};
+
+const defaultLandingProps: LandingProps = {
+  heroTitle: 'Build faster',
+  heroBody: 'Ship polished UI with your design tokens.',
+  ctaLabel: 'Get started',
+  accentColor: '#3b82f6',
+  pageFill: '#f7f7f8',
+  heroFill: '#ffffff',
+  featuresFill: '#f4f4f5',
+  borderRadius: 12,
+  shadowEnabled: true,
+  shadowColor: '#0000001a',
+  shadowBlur: 16,
+  shadowOffsetY: 4,
+};
 
 const defaultCard: CardInstance = {
   id: 'card-1',
@@ -116,13 +180,77 @@ export const useEditorStore = create<EditorStore>((set) => ({
             nextInstanceId: state.nextInstanceId + 1,
           };
         }
-        // The toolbar disables button/table/landing today, so addInstance is
-        // never called for them. If a future caller forgets, fail loudly.
-        case 'button':
-        case 'table':
-        case 'landing':
-          throw new Error(`addInstance: component type "${type}" is not implemented yet`);
+        case 'button': {
+          const id = `${type}-${state.nextInstanceId}`;
+          const instance: ButtonInstance = {
+            id,
+            type: 'button',
+            x: worldCenter.x - DEFAULT_BUTTON_WIDTH / 2,
+            y: worldCenter.y - DEFAULT_BUTTON_HEIGHT / 2,
+            width: DEFAULT_BUTTON_WIDTH,
+            height: DEFAULT_BUTTON_HEIGHT,
+            props: defaultButtonProps,
+          };
+          return {
+            instances: [...state.instances, instance],
+            selectedId: id,
+            nextInstanceId: state.nextInstanceId + 1,
+          };
+        }
+        case 'table': {
+          const id = `${type}-${state.nextInstanceId}`;
+          const instance: TableInstance = {
+            id,
+            type: 'table',
+            x: worldCenter.x - DEFAULT_TABLE_WIDTH / 2,
+            y: worldCenter.y - DEFAULT_TABLE_HEIGHT / 2,
+            width: DEFAULT_TABLE_WIDTH,
+            height: DEFAULT_TABLE_HEIGHT,
+            props: defaultTableProps,
+          };
+          return {
+            instances: [...state.instances, instance],
+            selectedId: id,
+            nextInstanceId: state.nextInstanceId + 1,
+          };
+        }
+        case 'landing': {
+          const id = `${type}-${state.nextInstanceId}`;
+          const instance: LandingInstance = {
+            id,
+            type: 'landing',
+            x: worldCenter.x - DEFAULT_LANDING_WIDTH / 2,
+            y: worldCenter.y - DEFAULT_LANDING_HEIGHT / 2,
+            width: DEFAULT_LANDING_WIDTH,
+            height: DEFAULT_LANDING_HEIGHT,
+            props: defaultLandingProps,
+          };
+          return {
+            instances: [...state.instances, instance],
+            selectedId: id,
+            nextInstanceId: state.nextInstanceId + 1,
+          };
+        }
       }
+    }),
+  addImportedInstance: (definitionId, worldCenter) =>
+    set((state) => {
+      const id = `imported-${state.nextInstanceId}`;
+      const instance: ImportedInstance = {
+        id,
+        type: 'imported',
+        definitionId,
+        x: worldCenter.x - DEFAULT_IMPORTED_WIDTH / 2,
+        y: worldCenter.y - DEFAULT_IMPORTED_HEIGHT / 2,
+        width: DEFAULT_IMPORTED_WIDTH,
+        height: DEFAULT_IMPORTED_HEIGHT,
+        props: {},
+      };
+      return {
+        instances: [...state.instances, instance],
+        selectedId: id,
+        nextInstanceId: state.nextInstanceId + 1,
+      };
     }),
   updateProps: (id, patch) =>
     set((state) => ({
@@ -225,6 +353,30 @@ export function useCardProps(id: string): CardProps | null {
   return useEditorStore((state) => {
     const instance = state.instances.find((i) => i.id === id);
     if (!instance || instance.type !== 'card') return null;
+    return instance.props;
+  });
+}
+
+export function useButtonProps(id: string): ButtonProps | null {
+  return useEditorStore((state) => {
+    const instance = state.instances.find((i) => i.id === id);
+    if (!instance || instance.type !== 'button') return null;
+    return instance.props;
+  });
+}
+
+export function useTableProps(id: string): TableProps | null {
+  return useEditorStore((state) => {
+    const instance = state.instances.find((i) => i.id === id);
+    if (!instance || instance.type !== 'table') return null;
+    return instance.props;
+  });
+}
+
+export function useLandingProps(id: string): LandingProps | null {
+  return useEditorStore((state) => {
+    const instance = state.instances.find((i) => i.id === id);
+    if (!instance || instance.type !== 'landing') return null;
     return instance.props;
   });
 }

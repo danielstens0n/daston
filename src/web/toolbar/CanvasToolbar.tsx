@@ -8,8 +8,7 @@ import './canvas-toolbar.css';
 // Floating pill anchored to the bottom-center of the canvas viewport. Sits
 // in the Canvas overlay slot, so it stays put during pan/zoom. Each button
 // adds a new instance at the world-space center of the currently visible
-// viewport. Disabled items show a "coming soon" tooltip today — only Card
-// has a preview body.
+// viewport. Disabled items show a "coming soon" tooltip.
 export function CanvasToolbar() {
   const handle = useCanvasHandle();
 

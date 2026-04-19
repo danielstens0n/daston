@@ -1,14 +1,13 @@
 import type { ComponentType } from 'react';
 import type { ComponentId } from '../../shared/types.ts';
-import { ButtonIcon, CardIcon, LandingIcon, TableIcon } from './icons.tsx';
+import { ButtonIcon, CardIcon, LandingIcon, PlusIcon, TableIcon } from './icons.tsx';
 
 // Inline catalog for the floating toolbar. Duplicates (id, label) from
 // `src/server/components-catalog.ts` on purpose: the web layer has no other
 // need for the server catalog today, and routing this through an HTTP
 // endpoint would add async + a route + a test for a list of four strings.
 // If a second consumer appears, migrate both to a fetched `/api/components`.
-export type ToolbarItem = {
-  id: ComponentId;
+type ToolbarItemBase = {
   label: string;
   Icon: ComponentType;
   enabled: boolean;
@@ -21,30 +20,54 @@ export type ToolbarItem = {
   active: boolean;
 };
 
+export type ToolbarItem =
+  | (ToolbarItemBase & {
+      kind: 'component';
+      id: ComponentId;
+    })
+  | (ToolbarItemBase & {
+      kind: 'action';
+      id: 'import';
+      action: 'open-import';
+    });
+
 export const TOOLBAR_ITEMS: readonly ToolbarItem[] = [
-  { id: 'card', label: 'Card', Icon: CardIcon, enabled: true, tooltip: 'Card', active: true },
   {
+    kind: 'action',
+    id: 'import',
+    action: 'open-import',
+    label: 'Import component',
+    Icon: PlusIcon,
+    enabled: true,
+    tooltip: 'Import component',
+    active: false,
+  },
+  { kind: 'component', id: 'card', label: 'Card', Icon: CardIcon, enabled: true, tooltip: 'Card', active: false },
+  {
+    kind: 'component',
     id: 'button',
     label: 'Button',
     Icon: ButtonIcon,
-    enabled: false,
-    tooltip: 'Button — coming soon',
+    enabled: true,
+    tooltip: 'Button',
     active: false,
   },
   {
+    kind: 'component',
     id: 'table',
     label: 'Table',
     Icon: TableIcon,
-    enabled: false,
-    tooltip: 'Table — coming soon',
+    enabled: true,
+    tooltip: 'Table',
     active: false,
   },
   {
+    kind: 'component',
     id: 'landing',
     label: 'Landing page',
     Icon: LandingIcon,
-    enabled: false,
-    tooltip: 'Landing page — coming soon',
+    enabled: true,
+    tooltip: 'Landing page',
     active: false,
   },
 ];

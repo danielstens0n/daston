@@ -121,10 +121,40 @@ describe('addInstance', () => {
     expect(state.nextInstanceId).toBe(4);
   });
 
-  it('throws for component types that are not implemented yet', () => {
-    expect(() => useEditorStore.getState().addInstance('button', { x: 0, y: 0 })).toThrow();
-    expect(() => useEditorStore.getState().addInstance('table', { x: 0, y: 0 })).toThrow();
-    expect(() => useEditorStore.getState().addInstance('landing', { x: 0, y: 0 })).toThrow();
+  it('centers a new button at the given world point', () => {
+    useEditorStore.getState().addInstance('button', { x: 100, y: 80 });
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'button',
+      x: 100 - 160 / 2,
+      y: 80 - 44 / 2,
+      width: 160,
+      height: 44,
+    });
+  });
+
+  it('centers a new table at the given world point', () => {
+    useEditorStore.getState().addInstance('table', { x: 200, y: 150 });
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'table',
+      x: 200 - 320 / 2,
+      y: 150 - 220 / 2,
+      width: 320,
+      height: 220,
+    });
+  });
+
+  it('centers a new landing page at the given world point', () => {
+    useEditorStore.getState().addInstance('landing', { x: 300, y: 240 });
+    const added = useEditorStore.getState().instances.at(-1);
+    expect(added).toMatchObject({
+      type: 'landing',
+      x: 300 - 360 / 2,
+      y: 240 - 480 / 2,
+      width: 360,
+      height: 480,
+    });
   });
 });
 

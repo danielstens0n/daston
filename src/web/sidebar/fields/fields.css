@@ -114,6 +114,22 @@
   border-color: var(--color-accent);
 }
 
+.sidebar-text-field-input {
+  box-sizing: border-box;
+  width: 100%;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.sidebar-text-field-input:focus {
+  border-color: var(--color-accent);
+}
+
 .sidebar-number-field-open .sidebar-number-field-input {
   border-color: var(--color-accent);
 }

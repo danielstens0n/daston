@@ -1,6 +1,9 @@
 import { useEditorStore, useSelectedInstanceMeta } from '../state/editor.ts';
-import type { CardProps, ComponentInstance } from '../state/types.ts';
+import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../state/types.ts';
+import { ButtonInspector } from './inspectors/ButtonInspector.tsx';
 import { CardInspector } from './inspectors/CardInspector.tsx';
+import { LandingInspector } from './inspectors/LandingInspector.tsx';
+import { TableInspector } from './inspectors/TableInspector.tsx';
 import './fields/fields.css';
 import './sidebar.css';
 
@@ -29,6 +32,14 @@ function renderInspector(meta: { id: string; type: ComponentInstance['type'] }) 
   switch (meta.type) {
     case 'card':
       return <CardInspector id={meta.id} onPatch={patcher<CardProps>(meta.id)} />;
+    case 'button':
+      return <ButtonInspector id={meta.id} onPatch={patcher<ButtonProps>(meta.id)} />;
+    case 'table':
+      return <TableInspector id={meta.id} onPatch={patcher<TableProps>(meta.id)} />;
+    case 'landing':
+      return <LandingInspector id={meta.id} onPatch={patcher<LandingProps>(meta.id)} />;
+    case 'imported':
+      return <div className="sidebar-empty">Imported components are not editable here.</div>;
   }
 }
 
@@ -36,6 +47,14 @@ function titleFor(type: ComponentInstance['type']): string {
   switch (type) {
     case 'card':
       return 'Card';
+    case 'button':
+      return 'Button';
+    case 'table':
+      return 'Table';
+    case 'landing':
+      return 'Landing page';
+    case 'imported':
+      return 'Imported';
   }
 }
 

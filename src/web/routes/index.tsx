@@ -1,8 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { useKeyboardShortcuts } from '../keyboard/useKeyboardShortcuts.ts';
+import { Button } from '../previews/Button.tsx';
 import { Card } from '../previews/Card.tsx';
+import { ImportedPlaceholder } from '../previews/ImportedPlaceholder.tsx';
+import { Landing } from '../previews/Landing.tsx';
 import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
+import { Table } from '../previews/Table.tsx';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
 import { useInstance, useInstanceIds } from '../state/editor.ts';
 import type { ComponentInstance } from '../state/types.ts';
@@ -51,5 +55,13 @@ function PreviewBody({ instance }: { instance: ComponentInstance }) {
   switch (instance.type) {
     case 'card':
       return <Card id={instance.id} />;
+    case 'button':
+      return <Button id={instance.id} />;
+    case 'table':
+      return <Table id={instance.id} />;
+    case 'landing':
+      return <Landing id={instance.id} />;
+    case 'imported':
+      return <ImportedPlaceholder id={instance.id} />;
   }
 }
