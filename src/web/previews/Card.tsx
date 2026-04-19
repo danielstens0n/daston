@@ -1,21 +1,19 @@
 import type { CSSProperties } from 'react';
-import type { CardInstance } from '../state/types.ts';
-import { useInstanceInteraction } from './useInstanceInteraction.ts';
+import { useCardProps } from '../state/editor.ts';
 import './card.css';
 
 type Props = {
-  instance: CardInstance;
+  id: string;
 };
 
-// The card renderer is just "apply props as CSS custom properties and render
-// title/body." Drag/selection behavior is in useInstanceInteraction — every
-// preview type will use the same hook.
-export function Card({ instance }: Props) {
-  const { isSelected, handlers } = useInstanceInteraction(instance);
-  const p = instance.props;
+// Body-only: the PreviewWrapper owns position, drag handlers, and the
+// selection outline. Card just subscribes to its own CardProps by id and
+// projects them onto the element via CSS custom properties.
+export function Card({ id }: Props) {
+  const p = useCardProps(id);
+  if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
-    transform: `translate(${instance.x}px, ${instance.y}px)`,
     '--card-fill': p.fill,
     '--card-border-color': p.borderColor,
     '--card-border-width': `${p.borderWidth}px`,
@@ -28,13 +26,7 @@ export function Card({ instance }: Props) {
   };
 
   return (
-    <div
-      className="preview-card"
-      data-selected={isSelected || undefined}
-      data-shadow={p.shadowEnabled || undefined}
-      style={style}
-      {...handlers}
-    >
+    <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style}>
       <h3 className="preview-card-title">Card</h3>
       <p className="preview-card-body">A simple card preview. Drag me around the canvas.</p>
     </div>

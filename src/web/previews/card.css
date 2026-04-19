@@ -1,15 +1,10 @@
 .preview-card {
-  position: absolute;
-  top: 0;
-  left: 0;
   box-sizing: border-box;
   width: var(--card-width, 280px);
   padding: var(--card-padding, 20px) calc(var(--card-padding, 20px) * 1.2);
   background: var(--card-fill, var(--color-surface));
   border: var(--card-border-width, 1px) solid var(--card-border-color, var(--color-border));
   border-radius: var(--card-border-radius, 12px);
-  cursor: grab;
-  user-select: none;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
@@ -17,15 +12,6 @@
    off is a single attribute flip rather than a var override. */
 .preview-card[data-shadow] {
   box-shadow: var(--card-shadow, var(--shadow-card));
-}
-
-.preview-card[data-dragging] {
-  cursor: grabbing;
-}
-
-.preview-card[data-selected] {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
 }
 
 .preview-card-title {

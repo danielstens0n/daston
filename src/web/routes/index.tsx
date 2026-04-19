@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { Card } from '../previews/Card.tsx';
+import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
 import { useInstance, useInstanceIds } from '../state/editor.ts';
+import type { ComponentInstance } from '../state/types.ts';
 import './route.css';
 
 export const Route = createFileRoute('/')({
@@ -27,15 +29,24 @@ function CanvasRoute() {
   );
 }
 
-// Preview dispatch. When ComponentInstance becomes a union of 2+ types, add
-// a `default` branch with `const _: never = instance` to catch missing cases
-// at compile time. With a single-variant union today, TS doesn't narrow the
-// default to `never`, so the check would be noise.
+// PreviewWrapper owns position, drag, and the rectangular selection outline
+// for every type. The body inside is picked by dispatching on instance.type
+// (each body subscribes to its own props by id). When ComponentInstance
+// becomes a union of 2+ types, add a `default` branch with
+// `const _: never = instance` to make forgetting a case a compile error.
 function PreviewSlot({ id }: { id: string }) {
   const instance = useInstance(id);
   if (!instance) return null;
+  return (
+    <PreviewWrapper id={id}>
+      <PreviewBody instance={instance} />
+    </PreviewWrapper>
+  );
+}
+
+function PreviewBody({ instance }: { instance: ComponentInstance }) {
   switch (instance.type) {
     case 'card':
-      return <Card instance={instance} />;
+      return <Card id={instance.id} />;
   }
 }
