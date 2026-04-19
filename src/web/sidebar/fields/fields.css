@@ -80,7 +80,7 @@
 }
 
 .sidebar-color-hex:focus {
-  border-color: var(--color-accent);
+  border-color: var(--color-chrome-focus);
 }
 
 /* Number field: text input (no native spinners) plus optional unit + preset menu. */
@@ -111,7 +111,7 @@
 }
 
 .sidebar-number-field-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--color-chrome-focus);
 }
 
 .sidebar-text-field-input {
@@ -127,11 +127,85 @@
 }
 
 .sidebar-text-field-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--color-chrome-focus);
+}
+
+.sidebar-action-button {
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sidebar-action-button:hover:enabled {
+  background: var(--color-surface-subtle);
+}
+
+.sidebar-action-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sidebar-action-button-full {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.sidebar-table-editor-list,
+.sidebar-table-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-table-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.sidebar-table-editor-input {
+  min-width: 0;
+}
+
+.sidebar-table-row-card {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface-subtle);
+}
+
+.sidebar-table-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sidebar-table-row-title,
+.sidebar-table-grid-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sidebar-table-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar-table-grid-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .sidebar-number-field-open .sidebar-number-field-input {
-  border-color: var(--color-accent);
+  border-color: var(--color-chrome-focus);
 }
 
 .sidebar-number-field-unit {
@@ -173,7 +247,7 @@
 }
 
 .sidebar-number-preset-item-active {
-  background: color-mix(in srgb, var(--color-selection) 18%, transparent);
+  background: color-mix(in srgb, var(--color-chrome-focus) 18%, transparent);
   color: var(--color-text-primary);
   font-weight: 600;
 }

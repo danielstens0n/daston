@@ -15,7 +15,7 @@
    the outline renders as a sharp rectangle regardless of the inner preview's
    shape. `outline` is drawn outside layout, so no reflow on toggle. */
 .preview-wrapper[data-selected] {
-  outline: 1px solid var(--color-selection);
+  outline: 1px solid var(--color-chrome-focus);
   outline-offset: 2px;
 }
 
@@ -26,7 +26,7 @@
   width: 10px;
   height: 10px;
   background: var(--color-surface);
-  border: 1px solid var(--color-selection);
+  border: 1px solid var(--color-chrome-focus);
   border-radius: 2px;
   box-sizing: border-box;
 }

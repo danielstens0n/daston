@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
+import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../shared/chrome-colors.ts';
 import type { ComponentId } from '../../shared/types.ts';
 import type {
   ButtonInstance,
@@ -137,8 +138,8 @@ function createDefaultButtonProps(): ButtonProps {
   return {
     label: 'Button',
     textColor: '#ffffff',
-    fill: '#3b82f6',
-    borderColor: '#2563eb',
+    fill: ACCENT_HEX,
+    borderColor: ACCENT_BORDER_HEX,
     borderWidth: 1,
     borderRadius: 8,
     paddingX: 20,
@@ -184,7 +185,7 @@ function createDefaultLandingProps(): LandingProps {
       'Preview components on the canvas',
       'Export-ready handoff',
     ],
-    accentColor: '#3b82f6',
+    accentColor: ACCENT_HEX,
     pageFill: '#f7f7f8',
     heroFill: '#ffffff',
     featuresFill: '#f4f4f5',

@@ -5,7 +5,6 @@
   margin: 0;
   padding: 0;
   border: none;
-  border-bottom: 1px solid transparent;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -23,14 +22,14 @@
   margin: 0;
   padding: 0;
   border: none;
-  border-bottom: 1px solid var(--color-selection);
+  outline: 1px solid var(--color-chrome-focus);
+  outline-offset: 2px;
   border-radius: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   line-height: inherit;
   text-align: inherit;
-  outline: none;
   user-select: text;
   cursor: text;
   caret-color: currentColor;

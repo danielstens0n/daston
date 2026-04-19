@@ -1,3 +1,4 @@
+import { CHROME_SELECTION_HEX } from '../shared/chrome-colors.ts';
 import type { ImportedLibraryComponent, ImportedLibraryComponentId } from '../shared/types.ts';
 
 type LibraryComponentTemplate = ImportedLibraryComponent & {
@@ -83,7 +84,7 @@ const PRICING_PANEL_SOURCE = `export default function PricingPanel() {
             border: 'none',
             borderRadius: 12,
             padding: '12px 16px',
-            background: '#60a5fa',
+            background: '${CHROME_SELECTION_HEX}',
             color: '#0f172a',
             fontWeight: 700,
             fontSize: 14,

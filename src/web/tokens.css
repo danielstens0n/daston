@@ -1,7 +1,14 @@
 /* Semantic color + shadow tokens. Every component CSS file references these
    via var(--...) instead of hardcoding hex, so a single edit here re-themes
    the app. Add a [data-theme='dark'] block (or similar) when dark mode
-   lands. */
+   lands.
+
+   Chrome vs preview blues:
+   - `--color-chrome-focus` (alias of `--color-selection`): shell focus rings,
+     selection outlines, active tool, dialogs — anything that answers “what is
+     selected or focused in the editor chrome?”
+   - `--color-accent`: default preview fills (button/landing fallbacks in CSS);
+     user-editable; keep in sync with `src/shared/chrome-colors.ts` ACCENT_HEX. */
 
 :root {
   --color-canvas-bg: #f7f7f8;
@@ -18,6 +25,7 @@
 
   --color-accent: #3b82f6;
   --color-selection: #60a5fa;
+  --color-chrome-focus: var(--color-selection);
 
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.14);
@@ -38,4 +46,10 @@ body {
 
 body {
   margin: 0;
+}
+
+::selection,
+::-moz-selection {
+  background: color-mix(in srgb, var(--color-chrome-focus) 38%, transparent);
+  color: var(--color-text-primary);
 }
