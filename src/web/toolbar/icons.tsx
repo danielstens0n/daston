@@ -73,17 +73,13 @@ export function PlusIcon() {
   );
 }
 
-export function SidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
+export function SidebarToggleIcon({ collapsed, title }: { collapsed: boolean; title: string }) {
   return (
     <svg {...base}>
-      <title>{collapsed ? 'Expand layers sidebar' : 'Collapse layers sidebar'}</title>
+      <title>{title}</title>
       <rect x="3" y="3" width="14" height="14" rx="1.5" />
       <line x1="7" y1="3" x2="7" y2="17" />
-      {collapsed ? (
-        <polyline points="10,7 13,10 10,13" />
-      ) : (
-        <polyline points="13,7 10,10 13,13" />
-      )}
+      {collapsed ? <polyline points="10,7 13,10 10,13" /> : <polyline points="13,7 10,10 13,13" />}
     </svg>
   );
 }

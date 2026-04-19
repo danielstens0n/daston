@@ -52,13 +52,17 @@ beforeEach(() => {
   });
 });
 
+function renderLayersSidebar() {
+  return render(
+    <ContextMenuProvider>
+      <LayersSidebar />
+    </ContextMenuProvider>,
+  );
+}
+
 describe('LayersSidebar', () => {
   it('lists every instance with front-most first and selects on row click', () => {
-    render(
-      <ContextMenuProvider>
-        <LayersSidebar />
-      </ContextMenuProvider>,
-    );
+    renderLayersSidebar();
 
     const list = screen.getByRole('list');
     const rows = within(list).getAllByRole('button');
@@ -79,11 +83,7 @@ describe('LayersSidebar', () => {
   });
 
   it('collapses into a slim rail and can expand again', () => {
-    render(
-      <ContextMenuProvider>
-        <LayersSidebar />
-      </ContextMenuProvider>,
-    );
+    renderLayersSidebar();
 
     const collapseButton = screen.getByRole('button', { name: 'Collapse layers sidebar' });
     expect(collapseButton).toHaveAttribute('aria-expanded', 'true');
@@ -100,20 +100,12 @@ describe('LayersSidebar', () => {
 
   it('shows an empty state when there are no instances', () => {
     useEditorStore.setState({ instances: [] });
-    render(
-      <ContextMenuProvider>
-        <LayersSidebar />
-      </ContextMenuProvider>,
-    );
+    renderLayersSidebar();
     expect(screen.getByText('No instances on the canvas.')).toBeInTheDocument();
   });
 
   it('opens context menu on row right-click and deletes from the menu', () => {
-    render(
-      <ContextMenuProvider>
-        <LayersSidebar />
-      </ContextMenuProvider>,
-    );
+    renderLayersSidebar();
 
     const list = screen.getByRole('list');
     const rows = within(list).getAllByRole('button');
