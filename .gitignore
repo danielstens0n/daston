@@ -6,3 +6,5 @@ src/web/routeTree.gen.ts
 *.log
 .DS_Store
 .claude/settings.local.json
+CLAUDE.md
+TODO.md
