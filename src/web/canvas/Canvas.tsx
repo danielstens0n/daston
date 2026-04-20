@@ -271,7 +271,7 @@ export function Canvas({ children, overlay }: Props) {
       <div
         ref={viewportRef}
         className="canvas-viewport"
-        style={{ background: canvasBackgroundColor }}
+        style={{ backgroundColor: canvasBackgroundColor }}
         data-active-tool={activeTool !== 'select' ? activeTool : undefined}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
