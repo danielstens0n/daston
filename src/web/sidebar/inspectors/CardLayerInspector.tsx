@@ -1,21 +1,15 @@
+import type { CardLayerId } from '../../state/component-registry-data.ts';
 import { useCardProps } from '../../state/editor.ts';
 import type { CardProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
-import { DecorationField } from '../fields/DecorationField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
-import { FontField } from '../fields/FontField.tsx';
-import { INSPECTOR_FONT_SIZE_FIELD } from '../fields/inspectorFontSizeProps.ts';
-import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
-import { ToggleField } from '../fields/ToggleField.tsx';
-import { WeightField } from '../fields/WeightField.tsx';
+import { TypographyStyleRows } from '../fields/TypographyStyleRows.tsx';
 import { BorderSection } from '../sections/BorderSection.tsx';
 import { FillSection } from '../sections/FillSection.tsx';
 import { LayoutSection } from '../sections/LayoutSection.tsx';
 import { ShadowSection } from '../sections/ShadowSection.tsx';
-
-type CardLayerId = 'surface' | 'title' | 'body';
 
 type Props = {
   id: string;
@@ -125,21 +119,21 @@ function CardTextLayerFields({
         </FieldRow>
       </Section>
       <Section title="Typography">
-        <FieldRow label="Font">
-          <FontField value={font} onChange={onFontChange} ariaLabel={`${label} font`} />
-        </FieldRow>
-        <FieldRow label="Size">
-          <NumberField value={fontSize} onChange={onFontSizeChange} {...INSPECTOR_FONT_SIZE_FIELD} />
-        </FieldRow>
-        <FieldRow label="Weight">
-          <WeightField value={fontWeight} onChange={onFontWeightChange} ariaLabel={`${label} weight`} />
-        </FieldRow>
-        <FieldRow label="Italic">
-          <ToggleField value={italic} onChange={onItalicChange} />
-        </FieldRow>
-        <FieldRow label="Deco">
-          <DecorationField value={decoration} onChange={onDecorationChange} />
-        </FieldRow>
+        <TypographyStyleRows
+          font={font}
+          onFontChange={onFontChange}
+          fontSize={fontSize}
+          onFontSizeChange={onFontSizeChange}
+          fontWeight={fontWeight}
+          onFontWeightChange={onFontWeightChange}
+          italic={italic}
+          onItalicChange={onItalicChange}
+          decoration={decoration}
+          onDecorationChange={onDecorationChange}
+          fontRowLabel="Font"
+          fontAriaLabel={`${label} font`}
+          weightAriaLabel={`${label} weight`}
+        />
       </Section>
       <Section title="Text">
         <FieldRow label="Color">

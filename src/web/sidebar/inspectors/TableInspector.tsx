@@ -1,15 +1,12 @@
 import { useTableProps } from '../../state/editor.ts';
 import type { TableProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
-import { DecorationField } from '../fields/DecorationField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
-import { FontField } from '../fields/FontField.tsx';
-import { INSPECTOR_FONT_SIZE_FIELD } from '../fields/inspectorFontSizeProps.ts';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
 import { ToggleField } from '../fields/ToggleField.tsx';
-import { WeightField } from '../fields/WeightField.tsx';
+import { TypographyStyleRows } from '../fields/TypographyStyleRows.tsx';
 
 type Props = {
   id: string;
@@ -130,66 +127,36 @@ export function TableInspector({ id, onPatch }: Props) {
         </FieldRow>
       </Section>
       <Section title="Typography">
-        <FieldRow label="Header">
-          <FontField
-            value={table.headerFont}
-            onChange={(value) => onPatch({ headerFont: value })}
-            ariaLabel="Table header font"
-          />
-        </FieldRow>
-        <FieldRow label="Size">
-          <NumberField
-            value={table.headerFontSize}
-            onChange={(value) => onPatch({ headerFontSize: value })}
-            {...INSPECTOR_FONT_SIZE_FIELD}
-          />
-        </FieldRow>
-        <FieldRow label="Weight">
-          <WeightField
-            value={table.headerFontWeight}
-            onChange={(value) => onPatch({ headerFontWeight: value })}
-            ariaLabel="Table header weight"
-          />
-        </FieldRow>
-        <FieldRow label="Italic">
-          <ToggleField value={table.headerItalic} onChange={(value) => onPatch({ headerItalic: value })} />
-        </FieldRow>
-        <FieldRow label="Deco">
-          <DecorationField
-            value={table.headerDecoration}
-            onChange={(value) => onPatch({ headerDecoration: value })}
-          />
-        </FieldRow>
-        <FieldRow label="Body">
-          <FontField
-            value={table.bodyFont}
-            onChange={(value) => onPatch({ bodyFont: value })}
-            ariaLabel="Table body font"
-          />
-        </FieldRow>
-        <FieldRow label="Size">
-          <NumberField
-            value={table.bodyFontSize}
-            onChange={(value) => onPatch({ bodyFontSize: value })}
-            {...INSPECTOR_FONT_SIZE_FIELD}
-          />
-        </FieldRow>
-        <FieldRow label="Weight">
-          <WeightField
-            value={table.bodyFontWeight}
-            onChange={(value) => onPatch({ bodyFontWeight: value })}
-            ariaLabel="Table body weight"
-          />
-        </FieldRow>
-        <FieldRow label="Italic">
-          <ToggleField value={table.bodyItalic} onChange={(value) => onPatch({ bodyItalic: value })} />
-        </FieldRow>
-        <FieldRow label="Deco">
-          <DecorationField
-            value={table.bodyDecoration}
-            onChange={(value) => onPatch({ bodyDecoration: value })}
-          />
-        </FieldRow>
+        <TypographyStyleRows
+          font={table.headerFont}
+          onFontChange={(value) => onPatch({ headerFont: value })}
+          fontSize={table.headerFontSize}
+          onFontSizeChange={(value) => onPatch({ headerFontSize: value })}
+          fontWeight={table.headerFontWeight}
+          onFontWeightChange={(value) => onPatch({ headerFontWeight: value })}
+          italic={table.headerItalic}
+          onItalicChange={(value) => onPatch({ headerItalic: value })}
+          decoration={table.headerDecoration}
+          onDecorationChange={(value) => onPatch({ headerDecoration: value })}
+          fontRowLabel="Header"
+          fontAriaLabel="Table header font"
+          weightAriaLabel="Table header weight"
+        />
+        <TypographyStyleRows
+          font={table.bodyFont}
+          onFontChange={(value) => onPatch({ bodyFont: value })}
+          fontSize={table.bodyFontSize}
+          onFontSizeChange={(value) => onPatch({ bodyFontSize: value })}
+          fontWeight={table.bodyFontWeight}
+          onFontWeightChange={(value) => onPatch({ bodyFontWeight: value })}
+          italic={table.bodyItalic}
+          onItalicChange={(value) => onPatch({ bodyItalic: value })}
+          decoration={table.bodyDecoration}
+          onDecorationChange={(value) => onPatch({ bodyDecoration: value })}
+          fontRowLabel="Body"
+          fontAriaLabel="Table body font"
+          weightAriaLabel="Table body weight"
+        />
       </Section>
       <Section title="Columns">
         <div className="sidebar-table-editor-list">

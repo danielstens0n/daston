@@ -1,17 +1,15 @@
 import { useShallow } from 'zustand/react/shallow';
-import { componentTypeLabel } from '../state/component-type-label.ts';
+import {
+  renderImportedInstanceInspector,
+  renderLayerInspector,
+  renderStockInstanceInspector,
+} from '../state/component-registry.tsx';
+import { componentTypeLabel } from '../state/component-registry-data.ts';
 import { type SelectedTargetMeta, useEditorStore, useSelectedTargetMeta } from '../state/editor.ts';
-import { buildLayerTree, findLayerNode, isCardLayerId } from '../state/layers.ts';
-import type { ButtonProps, CardProps, LandingProps, TableProps } from '../state/types.ts';
+import { getLayerLabel } from '../state/layers.ts';
 import { ColorField } from './fields/ColorField.tsx';
 import { FieldRow } from './fields/FieldRow.tsx';
 import { Section } from './fields/Section.tsx';
-import { ButtonInspector } from './inspectors/ButtonInspector.tsx';
-import { CardInspector } from './inspectors/CardInspector.tsx';
-import { CardLayerInspector } from './inspectors/CardLayerInspector.tsx';
-import { ImportedInspector } from './inspectors/ImportedInspector.tsx';
-import { LandingInspector } from './inspectors/LandingInspector.tsx';
-import { TableInspector } from './inspectors/TableInspector.tsx';
 import './fields/fields.css';
 import './sidebar.css';
 
@@ -42,8 +40,8 @@ export function Sidebar() {
         <p className="sidebar-header-subtitle">{description?.subtitle ?? 'Select a component to edit'}</p>
       </header>
       <CanvasBackgroundSection />
-      {meta && description ? (
-        renderInspector(meta, description)
+      {meta ? (
+        renderInspector(meta, description?.title ?? 'Layer')
       ) : (
         <div className="sidebar-empty">Nothing selected.</div>
       )}
@@ -51,45 +49,23 @@ export function Sidebar() {
   );
 }
 
-// Dispatch by selection target. Whole components keep their current
-// inspectors; focused layer rows can narrow to layer-specific controls.
-function renderInspector(meta: SelectedTargetMeta, description: { title: string; subtitle: string }) {
+function renderInspector(meta: SelectedTargetMeta, selectedLabel: string) {
+  const onPatch = patcher(meta.instanceId);
   if (meta.kind === 'layer') {
-    if (meta.type === 'card' && isCardLayerId(meta.layerId)) {
-      return (
-        <CardLayerInspector
-          id={meta.instanceId}
-          layerId={meta.layerId}
-          onPatch={patcher<CardProps>(meta.instanceId)}
-        />
-      );
-    }
-    return <LayerInspectorFallback label={description.title} />;
+    return renderLayerInspector(
+      { type: meta.type, instanceId: meta.instanceId, layerId: meta.layerId },
+      selectedLabel,
+      onPatch,
+    );
   }
-
-  switch (meta.type) {
-    case 'card':
-      return <CardInspector id={meta.instanceId} onPatch={patcher<CardProps>(meta.instanceId)} />;
-    case 'button':
-      return <ButtonInspector id={meta.instanceId} onPatch={patcher<ButtonProps>(meta.instanceId)} />;
-    case 'table':
-      return <TableInspector id={meta.instanceId} onPatch={patcher<TableProps>(meta.instanceId)} />;
-    case 'landing':
-      return <LandingInspector id={meta.instanceId} onPatch={patcher<LandingProps>(meta.instanceId)} />;
-    case 'imported':
-      return <ImportedInspector id={meta.instanceId} />;
-    default: {
-      const _exhaustive: never = meta.type;
-      return _exhaustive;
-    }
+  if (meta.type === 'imported') {
+    return renderImportedInstanceInspector(meta.instanceId);
   }
+  return renderStockInstanceInspector(meta.type, meta.instanceId, onPatch);
 }
 
-// Creates a typed patch function bound to a single instance id. Using
-// `getState()` here means this module writes to the store without
-// subscribing to it.
-function patcher<P>(id: string): (patch: Partial<P>) => void {
-  return (patch) => useEditorStore.getState().updateProps(id, patch as Record<string, unknown>);
+function patcher(id: string): (patch: Record<string, unknown>) => void {
+  return (patch) => useEditorStore.getState().updateProps(id, patch);
 }
 
 function describeSelection(meta: SelectedTargetMeta | null): { title: string; subtitle: string } | null {
@@ -105,14 +81,5 @@ function describeSelection(meta: SelectedTargetMeta | null): { title: string; su
 
 function describeSelectionTitle(meta: SelectedTargetMeta): string {
   if (meta.kind === 'instance') return componentTypeLabel(meta.type);
-  const root = buildLayerTree({ type: meta.type, instanceId: meta.instanceId });
-  return findLayerNode(root, meta.layerId)?.label ?? 'Layer';
-}
-
-function LayerInspectorFallback({ label }: { label: string }) {
-  return (
-    <Section title="Layer">
-      <p className="sidebar-help-text">{label} editing is not available yet.</p>
-    </Section>
-  );
+  return getLayerLabel({ type: meta.type, instanceId: meta.instanceId }, meta.layerId) ?? 'Layer';
 }

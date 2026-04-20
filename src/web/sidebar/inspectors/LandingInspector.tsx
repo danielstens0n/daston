@@ -1,15 +1,11 @@
 import { useLandingProps } from '../../state/editor.ts';
 import type { LandingProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
-import { DecorationField } from '../fields/DecorationField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
-import { FontField } from '../fields/FontField.tsx';
-import { INSPECTOR_FONT_SIZE_FIELD } from '../fields/inspectorFontSizeProps.ts';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { TextField } from '../fields/TextField.tsx';
-import { ToggleField } from '../fields/ToggleField.tsx';
-import { WeightField } from '../fields/WeightField.tsx';
+import { TypographyStyleRows } from '../fields/TypographyStyleRows.tsx';
 import { ShadowSection } from '../sections/ShadowSection.tsx';
 
 type Props = {
@@ -54,66 +50,36 @@ export function LandingInspector({ id, onPatch }: Props) {
         ))}
       </Section>
       <Section title="Typography">
-        <FieldRow label="Heading">
-          <FontField
-            value={props.headingFont}
-            onChange={(value) => onPatch({ headingFont: value })}
-            ariaLabel="Landing heading font"
-          />
-        </FieldRow>
-        <FieldRow label="Size">
-          <NumberField
-            value={props.headingFontSize}
-            onChange={(value) => onPatch({ headingFontSize: value })}
-            {...INSPECTOR_FONT_SIZE_FIELD}
-          />
-        </FieldRow>
-        <FieldRow label="Weight">
-          <WeightField
-            value={props.headingFontWeight}
-            onChange={(value) => onPatch({ headingFontWeight: value })}
-            ariaLabel="Landing heading weight"
-          />
-        </FieldRow>
-        <FieldRow label="Italic">
-          <ToggleField value={props.headingItalic} onChange={(value) => onPatch({ headingItalic: value })} />
-        </FieldRow>
-        <FieldRow label="Deco">
-          <DecorationField
-            value={props.headingDecoration}
-            onChange={(value) => onPatch({ headingDecoration: value })}
-          />
-        </FieldRow>
-        <FieldRow label="Body">
-          <FontField
-            value={props.bodyFont}
-            onChange={(value) => onPatch({ bodyFont: value })}
-            ariaLabel="Landing body font"
-          />
-        </FieldRow>
-        <FieldRow label="Size">
-          <NumberField
-            value={props.bodyFontSize}
-            onChange={(value) => onPatch({ bodyFontSize: value })}
-            {...INSPECTOR_FONT_SIZE_FIELD}
-          />
-        </FieldRow>
-        <FieldRow label="Weight">
-          <WeightField
-            value={props.bodyFontWeight}
-            onChange={(value) => onPatch({ bodyFontWeight: value })}
-            ariaLabel="Landing body weight"
-          />
-        </FieldRow>
-        <FieldRow label="Italic">
-          <ToggleField value={props.bodyItalic} onChange={(value) => onPatch({ bodyItalic: value })} />
-        </FieldRow>
-        <FieldRow label="Deco">
-          <DecorationField
-            value={props.bodyDecoration}
-            onChange={(value) => onPatch({ bodyDecoration: value })}
-          />
-        </FieldRow>
+        <TypographyStyleRows
+          font={props.headingFont}
+          onFontChange={(value) => onPatch({ headingFont: value })}
+          fontSize={props.headingFontSize}
+          onFontSizeChange={(value) => onPatch({ headingFontSize: value })}
+          fontWeight={props.headingFontWeight}
+          onFontWeightChange={(value) => onPatch({ headingFontWeight: value })}
+          italic={props.headingItalic}
+          onItalicChange={(value) => onPatch({ headingItalic: value })}
+          decoration={props.headingDecoration}
+          onDecorationChange={(value) => onPatch({ headingDecoration: value })}
+          fontRowLabel="Heading"
+          fontAriaLabel="Landing heading font"
+          weightAriaLabel="Landing heading weight"
+        />
+        <TypographyStyleRows
+          font={props.bodyFont}
+          onFontChange={(value) => onPatch({ bodyFont: value })}
+          fontSize={props.bodyFontSize}
+          onFontSizeChange={(value) => onPatch({ bodyFontSize: value })}
+          fontWeight={props.bodyFontWeight}
+          onFontWeightChange={(value) => onPatch({ bodyFontWeight: value })}
+          italic={props.bodyItalic}
+          onItalicChange={(value) => onPatch({ bodyItalic: value })}
+          decoration={props.bodyDecoration}
+          onDecorationChange={(value) => onPatch({ bodyDecoration: value })}
+          fontRowLabel="Body"
+          fontAriaLabel="Landing body font"
+          weightAriaLabel="Landing body weight"
+        />
       </Section>
       <Section title="Colors">
         <FieldRow label="Accent">
