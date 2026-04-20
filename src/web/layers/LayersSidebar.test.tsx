@@ -20,6 +20,7 @@ const cardA: CardInstance = {
   y: 20,
   width: 280,
   height: 180,
+  parentId: null,
   props: {
     padding: 20,
     fill: '#ffffff',
@@ -148,6 +149,7 @@ describe('LayersSidebar', () => {
       y: 0,
       width: 320,
       height: 220,
+      parentId: null,
       props: createDefaultTableProps(),
     };
     useEditorStore.setState({ instances: [table], selectedTarget: null });
@@ -175,4 +177,98 @@ describe('LayersSidebar', () => {
     expect(useEditorStore.getState().instances).toHaveLength(1);
     expect(useEditorStore.getState().instances[0]?.id).toBe('a');
   });
+
+  it('drags a root row onto another to reparent it', () => {
+    renderLayersSidebar();
+
+    const list = screen.getByRole('list', { name: 'Layers tree' });
+    const shells = Array.from(list.querySelectorAll<HTMLElement>(':scope > li > .layers-row-shell'));
+    const topShell = shells.at(0);
+    const bottomShell = shells.at(1);
+    if (!topShell || !bottomShell) throw new Error('expected two root shells');
+    bottomShell.getBoundingClientRect = rectAt(100, 40);
+
+    const dataTransfer = makeDataTransfer();
+
+    dispatchDragEvent('dragstart', topShell, { clientY: 0, dataTransfer });
+    dispatchDragEvent('dragover', bottomShell, { clientY: 120, dataTransfer });
+    dispatchDragEvent('drop', bottomShell, { clientY: 120, dataTransfer });
+
+    const moved = useEditorStore.getState().instances.find((i) => i.id === 'b');
+    expect(moved?.parentId).toBe('a');
+  });
+
+  it('drops a sibling-child onto another sibling center — reorders, never reparents', () => {
+    // Two children under a shared parent. When the user drags one onto its
+    // sibling, the middle "onto" zone should collapse to nearest-edge so the
+    // drop reorders z-index instead of nesting a sibling into its sibling
+    // (which is almost never the user's intent).
+    const c1: CardInstance = { ...cardA, id: 'c1', parentId: 'a', x: 20, y: 20 };
+    const c2: CardInstance = { ...cardA, id: 'c2', parentId: 'a', x: 40, y: 40 };
+    useEditorStore.setState({ instances: [cardA, c1, c2], selectedTarget: null });
+
+    renderLayersSidebar();
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.layers-row-shell'));
+    const rowFor = (id: string) =>
+      rows.find((r) => r.querySelector('.layers-row-secondary')?.textContent === id);
+    const c1Row = rowFor('c1');
+    const c2Row = rowFor('c2');
+    if (!c1Row || !c2Row) throw new Error('expected child shells');
+
+    c2Row.getBoundingClientRect = rectAt(100, 40);
+    const dataTransfer = makeDataTransfer();
+
+    // Drop in the lower half of c2 (previously "onto" → reparent). Now it
+    // resolves to "below" because the target is a direct sibling.
+    dispatchDragEvent('dragstart', c1Row, { clientY: 0, dataTransfer });
+    dispatchDragEvent('dragover', c2Row, { clientY: 128, dataTransfer });
+    dispatchDragEvent('drop', c2Row, { clientY: 128, dataTransfer });
+
+    const c1After = useEditorStore.getState().instances.find((i) => i.id === 'c1');
+    expect(c1After?.parentId).toBe('a');
+    const ids = useEditorStore.getState().instances.map((i) => i.id);
+    expect(ids.indexOf('c1')).toBeGreaterThan(ids.indexOf('c2'));
+  });
 });
+
+function rectAt(top: number, height: number): () => DOMRect {
+  return () => ({
+    top,
+    bottom: top + height,
+    left: 0,
+    right: 200,
+    width: 200,
+    height,
+    x: 0,
+    y: top,
+    toJSON: () => ({}),
+  });
+}
+
+function makeDataTransfer() {
+  return {
+    data: new Map<string, string>(),
+    setData(type: string, value: string) {
+      this.data.set(type, value);
+    },
+    getData(type: string) {
+      return this.data.get(type) ?? '';
+    },
+    dropEffect: 'none',
+    effectAllowed: 'none',
+  };
+}
+
+// jsdom's synthetic drag events don't carry MouseEvent fields like clientY, so
+// we dispatch a native Event with them manually defined.
+function dispatchDragEvent(
+  type: string,
+  target: HTMLElement,
+  init: { clientY: number; dataTransfer: unknown },
+) {
+  const ev = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperty(ev, 'clientY', { value: init.clientY });
+  Object.defineProperty(ev, 'clientX', { value: 0 });
+  Object.defineProperty(ev, 'dataTransfer', { value: init.dataTransfer });
+  target.dispatchEvent(ev);
+}
