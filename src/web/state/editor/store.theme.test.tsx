@@ -24,6 +24,7 @@ describe('applyInitialThemeFromServer', () => {
       future: [],
       historyBatch: null,
       canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+      themeConfig: null,
       activeTool: 'select',
       pendingTextEditInstanceId: null,
     });
@@ -51,6 +52,7 @@ describe('applyInitialThemeFromServer', () => {
       expect(title.props.textColor).toBe('#222222');
     }
     expect(getResolvedThemeConfig()).toEqual(theme);
+    expect(useEditorStore.getState().themeConfig).toEqual(theme);
   });
 
   it('does not overwrite instances when not pristine', () => {
@@ -81,5 +83,6 @@ describe('applyInitialThemeFromServer', () => {
       expect(card.props).toEqual(baseCardProps());
     }
     expect(getResolvedThemeConfig()).toEqual(theme);
+    expect(useEditorStore.getState().themeConfig).toEqual(theme);
   });
 });

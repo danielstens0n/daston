@@ -20,6 +20,19 @@ export async function fetchTheme(): Promise<ThemeConfig> {
   return readJson<ThemeConfig>('/api/theme');
 }
 
+export type ThemePatch = {
+  fonts?: Partial<ThemeConfig['fonts']>;
+  colors?: Record<string, string>;
+};
+
+export async function patchTheme(patch: ThemePatch): Promise<ThemeConfig> {
+  return readJson<ThemeConfig>('/api/theme', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+}
+
 export async function fetchImportedLibrary(): Promise<ImportedLibraryComponent[]> {
   const body = await readJson<{ components: ImportedLibraryComponent[] }>('/api/imported-components/library');
   return body.components;

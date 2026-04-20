@@ -27,6 +27,10 @@ beforeEach(() => {
     future: [],
     historyBatch: null,
     canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+    themeConfig: null,
+    activeTool: 'select',
+    pendingTextEditInstanceId: null,
+    dropTargetId: null,
   });
 });
 
@@ -35,7 +39,7 @@ describe('Sidebar', () => {
     render(<Sidebar />);
     expect(screen.getAllByRole('heading', { name: 'Canvas' })).toHaveLength(2);
     expect(screen.getByText('Edit canvas background')).toBeInTheDocument();
-    expect(screen.getAllByDisplayValue(DEFAULT_CANVAS_BACKGROUND)).toHaveLength(2);
+    expect(screen.getAllByDisplayValue(DEFAULT_CANVAS_BACKGROUND)).toHaveLength(1);
     expect(screen.queryByRole('heading', { name: 'Frame' })).not.toBeInTheDocument();
   });
 

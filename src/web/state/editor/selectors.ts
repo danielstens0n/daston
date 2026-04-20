@@ -19,6 +19,8 @@ import type {
 } from '../types.ts';
 import { useEditorStore } from './store.ts';
 
+const EMPTY_THEME_COLORS: Record<string, string> = {};
+
 /**
  * Render order: parents first, then each subtree depth-first. Children land
  * after their ancestor in the DOM so later-nested elements paint on top
@@ -172,4 +174,9 @@ export function useIsLayerSelected(target: SelectedTarget): boolean {
       [target],
     ),
   );
+}
+
+/** Theme color variables from the last server theme (for the color picker). */
+export function useThemeColors(): Record<string, string> {
+  return useEditorStore((state) => state.themeConfig?.colors ?? EMPTY_THEME_COLORS);
 }

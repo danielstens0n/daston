@@ -96,6 +96,7 @@ beforeEach(() => {
     future: [],
     historyBatch: null,
     canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+    themeConfig: null,
     activeTool: 'select',
     pendingTextEditInstanceId: null,
   });

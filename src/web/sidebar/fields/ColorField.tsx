@@ -1,19 +1,19 @@
-import { type ChangeEvent, type KeyboardEvent, useState } from 'react';
+import { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
+import { ColorPicker } from './color-picker/ColorPicker.tsx';
+import { ColorPickerProvider } from './color-picker/ColorPickerContext.tsx';
+import { HEX_6_OR_8_RE } from './color-picker/color-math.ts';
 
 type Props = {
   value: string;
   onChange: (value: string) => void;
 };
 
-// Accept 6-char hex (#rrggbb) and 8-char hex (#rrggbbaa). The native color
-// picker only speaks 6-char hex, so picking via the swatch drops any alpha —
-// users who want alpha enter the 8-char form in the text field.
-const HEX_RE = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
-
 export function ColorField({ value, onChange }: Props) {
-  // Draft lets the user type incomplete/invalid hex without snapping back.
-  // External `value` changes (theme swap, reset) are synced during render —
-  // not in an effect — per React's "adjusting state on prop change" guide.
+  const swatchRef = useRef<HTMLButtonElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+
+  // Draft hex + sync from `value` on external updates (render, not effect).
   const [draft, setDraft] = useState(value);
   const [lastValue, setLastValue] = useState(value);
   if (lastValue !== value) {
@@ -21,23 +21,25 @@ export function ColorField({ value, onChange }: Props) {
     setDraft(value);
   }
 
+  const closePicker = useCallback(() => setPickerOpen(false), []);
+
+  const onPickerChange = useCallback(
+    (next: string) => {
+      setDraft(next);
+      onChange(next);
+    },
+    [onChange],
+  );
+
   function onTextChange(event: ChangeEvent<HTMLInputElement>) {
     const next = event.target.value;
     setDraft(next);
-    // Live-commit when the draft is a valid hex. Keeps preview feedback
-    // instant; blur/Enter canonicalizes or reverts.
-    if (HEX_RE.test(next)) onChange(next.toLowerCase());
+    if (HEX_6_OR_8_RE.test(next)) onChange(next.toLowerCase());
   }
 
   function onBlur() {
-    if (HEX_RE.test(draft)) onChange(draft.toLowerCase());
+    if (HEX_6_OR_8_RE.test(draft)) onChange(draft.toLowerCase());
     else setDraft(value);
-  }
-
-  function onPickerChange(event: ChangeEvent<HTMLInputElement>) {
-    const next = event.target.value;
-    setDraft(next);
-    onChange(next);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -49,20 +51,33 @@ export function ColorField({ value, onChange }: Props) {
     }
   }
 
-  // The picker only understands 6-char hex — strip any alpha suffix for its
-  // value so it opens on the correct swatch.
-  const pickerValue = value.length >= 7 ? value.slice(0, 7) : value;
+  function onSwatchClick() {
+    if (pickerOpen) {
+      setPickerOpen(false);
+      return;
+    }
+    const el = swatchRef.current;
+    if (el) setAnchorRect(el.getBoundingClientRect());
+    setPickerOpen(true);
+  }
+
+  const pickerSession = useMemo(
+    () => (anchorRect ? { value, onChange: onPickerChange, onClose: closePicker, anchorRect } : null),
+    [anchorRect, closePicker, onPickerChange, value],
+  );
 
   return (
     <div className="sidebar-color-field">
       <button
+        ref={swatchRef}
         className="sidebar-color-swatch"
         style={{ background: value }}
         type="button"
         aria-label="Open color picker"
-      >
-        <input type="color" value={pickerValue} onChange={onPickerChange} />
-      </button>
+        aria-expanded={pickerOpen}
+        data-color-picker-anchor
+        onClick={onSwatchClick}
+      />
       <input
         className="sidebar-color-hex"
         type="text"
@@ -72,6 +87,11 @@ export function ColorField({ value, onChange }: Props) {
         onKeyDown={onKeyDown}
         spellCheck={false}
       />
+      {pickerOpen && pickerSession ? (
+        <ColorPickerProvider session={pickerSession}>
+          <ColorPicker />
+        </ColorPickerProvider>
+      ) : null}
     </div>
   );
 }

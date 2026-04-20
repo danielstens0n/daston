@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { ComponentId, ThemeConfig } from '../../../shared/types.ts';
+import { patchTheme } from '../../lib/api.ts';
 import { setResolvedThemeConfig } from '../../lib/theme-defaults-context.ts';
 import { instanceSelection, type SelectedTarget } from '../layers.ts';
 import {
@@ -82,7 +83,10 @@ type EditorStoreActions = {
   dropTargetId: string | null;
   setDropTargetId: (id: string | null) => void;
   setCanvasBackgroundColor: (color: string) => void;
+  /** Last theme from server; drives color variables in the picker. */
+  themeConfig: ThemeConfig | null;
   applyInitialThemeFromServer: (theme: ThemeConfig) => void;
+  upsertThemeColor: (name: string, hex: string) => Promise<void>;
   select: (id: string | null) => void;
   selectLayer: (target: Extract<SelectedTarget, { kind: 'layer' }>) => void;
   beginHistoryBatch: () => void;
@@ -144,6 +148,7 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     future: [],
     historyBatch: null,
     canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+    themeConfig: null,
     activeTool: 'select',
     setActiveTool: (tool) => set({ activeTool: tool }),
     pendingTextEditInstanceId: null,
@@ -154,12 +159,14 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     applyInitialThemeFromServer: (theme) =>
       set((state) => {
         setResolvedThemeConfig(theme);
+        const base = { themeConfig: theme };
         const snapshot = pickEditorSnapshot(state);
         if (!isPristineDefaultCanvas(snapshot)) {
-          return {};
+          return base;
         }
         const { root, titleText, bodyText } = DEFAULT_SEED_CARD_INSTANCE_IDS;
         return {
+          ...base,
           instances: state.instances.map((inst) => {
             if (inst.id === root && inst.type === 'card') {
               return { ...inst, props: createDefaultCardProps(theme) };
@@ -174,6 +181,14 @@ export const useEditorStore = create<FullEditorStore>((set) => {
           }),
         };
       }),
+    upsertThemeColor: async (name, hex) => {
+      const key = name.trim();
+      if (!key) return;
+      const normalized = hex.trim().toLowerCase();
+      const updated = await patchTheme({ colors: { [key]: normalized } });
+      setResolvedThemeConfig(updated);
+      set({ themeConfig: updated });
+    },
     select: (id) =>
       set({
         selectedId: id,
