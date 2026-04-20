@@ -232,10 +232,6 @@ function ButtonRootInspector({ id }: { id: string }) {
   if (!props) return null;
   return (
     <>
-      <FillSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
-      <BorderSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
-      <RadiusSection value={props.borderRadius} onChange={(value) => onPatch({ borderRadius: value })} />
-      <ShadowSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
       <Section title="Layout">
         <FieldRow label="Pad X">
           <NumberField
@@ -256,6 +252,10 @@ function ButtonRootInspector({ id }: { id: string }) {
           />
         </FieldRow>
       </Section>
+      <FillSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
+      <BorderSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
+      <RadiusSection value={props.borderRadius} onChange={(value) => onPatch({ borderRadius: value })} />
+      <ShadowSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
     </>
   );
 }
@@ -272,6 +272,17 @@ function TableRootInspector({ id }: { id: string }) {
         </FieldRow>
         <FieldRow label="Zebra">
           <ToggleField value={props.zebra} onChange={(value) => onPatch({ zebra: value })} />
+        </FieldRow>
+      </Section>
+      <Section title="Layout">
+        <FieldRow label="Cell pad">
+          <NumberField
+            value={props.cellPadding}
+            onChange={(value) => onPatch({ cellPadding: value })}
+            min={0}
+            max={32}
+            unit="px"
+          />
         </FieldRow>
       </Section>
       <Section title="Fills">
@@ -291,17 +302,6 @@ function TableRootInspector({ id }: { id: string }) {
         onChange={(value) => onPatch({ borderRadius: value })}
         max={32}
       />
-      <Section title="Layout">
-        <FieldRow label="Cell pad">
-          <NumberField
-            value={props.cellPadding}
-            onChange={(value) => onPatch({ cellPadding: value })}
-            min={0}
-            max={32}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
       <TextStyleOverviewSection
         id={id}
         items={[
