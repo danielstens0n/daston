@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from './editor.ts';
+import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../editor.ts';
 import {
   buildLayerTreeFromSignature,
   encodeLayerTreeSignature,
   instanceSelection,
   layerSelection,
-} from './layers.ts';
-import type { CardInstance, ImportedInstance } from './types.ts';
+} from '../layers.ts';
+import type { CardInstance, ImportedInstance } from '../types.ts';
 
 // Reset the store to a known two-instance baseline before each test. We
 // exercise the store via its direct get/setters (no React) — selector hooks

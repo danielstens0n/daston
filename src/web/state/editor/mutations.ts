@@ -1,5 +1,7 @@
-import type { ComponentId } from '../../shared/types.ts';
-import type { EditorSnapshot } from './editor-history.ts';
+import type { ComponentId } from '../../../shared/types.ts';
+import { instanceSelection } from '../layers.ts';
+import type { ComponentInstance } from '../types.ts';
+import type { EditorSnapshot } from './history.ts';
 import {
   createDefaultButtonProps,
   createDefaultCardProps,
@@ -16,8 +18,6 @@ import {
   DEFAULT_TABLE_HEIGHT,
   DEFAULT_TABLE_WIDTH,
 } from './instance-defaults.ts';
-import { instanceSelection } from './layers.ts';
-import type { ComponentInstance } from './types.ts';
 
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };

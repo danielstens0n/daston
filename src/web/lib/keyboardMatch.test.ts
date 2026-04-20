@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
-import { isEditableTarget, isShortcutBlockTarget, matchCombo } from './match.ts';
+import { isEditableTarget, isShortcutBlockTarget, matchCombo } from './keyboardMatch.ts';
 
 // Small factory — lets each test spell out exactly the keystroke it cares
 // about without repeating the `new KeyboardEvent('keydown', { ... })` noise.

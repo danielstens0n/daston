@@ -1,8 +1,8 @@
 import { type CSSProperties, type KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useCanvasHandle } from '../canvas/Canvas.tsx';
 import { useEditorStore } from '../state/editor.ts';
 import { elementRectToWorldRect, useTextEditStore, type WorldRect } from '../state/text-edit.ts';
-import './editable-text.css';
+import { useCanvasHandle } from './Canvas.tsx';
+import '../previews/editable-text.css';
 import './text-edit-layer.css';
 
 type TypographyStyle = Pick<

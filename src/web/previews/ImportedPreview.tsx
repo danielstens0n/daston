@@ -1,5 +1,5 @@
 import { useInstance } from '../state/editor.ts';
-import { useImportedDefinition } from '../state/imported-components.ts';
+import { useImportedDefinition } from '../state/registry/imported.ts';
 import './imported-preview.css';
 
 type Props = {

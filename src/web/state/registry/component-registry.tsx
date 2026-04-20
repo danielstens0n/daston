@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
-import { Button } from '../previews/Button.tsx';
-import { Card } from '../previews/Card.tsx';
-import { ImportedPreview } from '../previews/ImportedPreview.tsx';
-import { Landing } from '../previews/Landing.tsx';
-import { Table } from '../previews/Table.tsx';
-import { Section } from '../sidebar/fields/Section.tsx';
-import { ButtonInspector } from '../sidebar/inspectors/ButtonInspector.tsx';
-import { CardInspector } from '../sidebar/inspectors/CardInspector.tsx';
-import { CardLayerInspector } from '../sidebar/inspectors/CardLayerInspector.tsx';
-import { ImportedInspector } from '../sidebar/inspectors/ImportedInspector.tsx';
-import { LandingInspector } from '../sidebar/inspectors/LandingInspector.tsx';
-import { TableInspector } from '../sidebar/inspectors/TableInspector.tsx';
-import { isCardLayerId } from './component-registry-data.ts';
-import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from './types.ts';
+import { Button } from '../../previews/Button.tsx';
+import { Card } from '../../previews/Card.tsx';
+import { ImportedPreview } from '../../previews/ImportedPreview.tsx';
+import { Landing } from '../../previews/Landing.tsx';
+import { Table } from '../../previews/Table.tsx';
+import { Section } from '../../sidebar/fields/Section.tsx';
+import { ButtonInspector } from '../../sidebar/inspectors/ButtonInspector.tsx';
+import { CardInspector } from '../../sidebar/inspectors/CardInspector.tsx';
+import { CardLayerInspector } from '../../sidebar/inspectors/CardLayerInspector.tsx';
+import { ImportedInspector } from '../../sidebar/inspectors/ImportedInspector.tsx';
+import { LandingInspector } from '../../sidebar/inspectors/LandingInspector.tsx';
+import { TableInspector } from '../../sidebar/inspectors/TableInspector.tsx';
+import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../types.ts';
+import { isCardLayerId } from './data.ts';
 
 export function renderPreviewBody(instance: ComponentInstance): ReactNode {
   switch (instance.type) {

@@ -49,18 +49,40 @@ daston/
 │   ├── web/                   # Vite + React + TanStack Router
 │   │   ├── index.html
 │   │   ├── main.tsx
+│   │   ├── tokens.css
 │   │   ├── routeTree.gen.ts   # generated, gitignored
-│   │   ├── routes/
+│   │   ├── routes/            # TanStack Router (file-based)
 │   │   │   ├── __root.tsx
-│   │   │   └── index.tsx      # canvas
-│   │   ├── canvas/            # pan/zoom, selection, rendering
-│   │   ├── previews/          # themed Button/Card/Table samples
-│   │   ├── state/             # theme, canvas, selection stores
-│   │   ├── assets/            # fonts, icons
-│   │   └── lib/api.ts
+│   │   │   └── index.tsx      # mounts the canvas + chrome
+│   │   ├── canvas/            # pan/zoom viewport, PreviewWrapper, TextEditLayer, interaction hooks
+│   │   ├── previews/          # themed Button/Card/Table/Landing samples rendered inside the canvas
+│   │   ├── sidebar/           # right-hand inspector (fields, sections, inspectors)
+│   │   ├── layers/            # left-hand layers panel
+│   │   ├── toolbar/           # top-of-canvas toolbar + import dialog
+│   │   ├── context-menu/      # right-click menu
+│   │   ├── state/             # Zustand stores (see layout below)
+│   │   │   ├── editor.ts      # barrel for the editor store + selectors
+│   │   │   ├── editor/        # store, mutations, selectors, history, instance defaults
+│   │   │   ├── registry/      # component registry + imported-components store
+│   │   │   ├── layers.ts      # layer-tree helpers (shared by editor and sidebar)
+│   │   │   ├── text-edit.ts   # separate store for in-canvas text editing sessions
+│   │   │   └── types.ts       # ComponentInstance + props types
+│   │   └── lib/               # api client, fonts, keyboard shortcut hook, CSS utils
 │   └── shared/
 │       └── types.ts           # type-only; no runtime imports
 └── dist/                      # published to npm
     ├── bin/daston.js          # package.json#bin target
     └── web/                   # prebuilt SPA served by Hono
 ```
+
+## A note on `src/web/` layout (vs Next.js)
+
+`src/web/` is organized by **feature**, not by role. There is no top-level
+`components/` bucket; instead each surface of the app (`canvas/`, `sidebar/`,
+`layers/`, `toolbar/`, `context-menu/`, `previews/`) owns its components,
+CSS, hooks, and tests together. Cross-cutting pieces live in `state/` (Zustand
+stores) and `lib/` (api client, fonts, keyboard shortcut hook, CSS helpers).
+
+`routes/` only exists because TanStack Router is file-based; this is a
+single-page canvas app, so `routes/index.tsx` just composes the feature
+folders and `__root.tsx` is the outer layout.

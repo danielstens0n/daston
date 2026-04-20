@@ -4,7 +4,7 @@ import type {
   ImportedComponentDefinition,
   ImportedLibraryComponent,
   UpdateImportedComponentRequest,
-} from '../../shared/types.ts';
+} from '../../../shared/types.ts';
 import {
   createImportedDefinition,
   deleteImportedDefinition,
@@ -12,7 +12,7 @@ import {
   fetchImportedLibrary,
   revalidateImportedDefinition,
   updateImportedDefinition,
-} from '../lib/api.ts';
+} from '../../lib/api.ts';
 
 type ImportedComponentsStore = {
   definitions: ImportedComponentDefinition[];

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useEditorStore } from '../state/editor.ts';
-import { isEditableTarget, isShortcutBlockTarget, matchCombo, type Shortcut } from './match.ts';
+import { isEditableTarget, isShortcutBlockTarget, matchCombo, type Shortcut } from './keyboardMatch.ts';
 
 const NUDGE_PX = 1;
 const NUDGE_SHIFT_PX = 10;

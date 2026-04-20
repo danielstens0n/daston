@@ -5,11 +5,11 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { TextEditLayer } from '../canvas/TextEditLayer.tsx';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useEditorStore } from '../state/editor.ts';
 import { useTextEditStore } from '../state/text-edit.ts';
 import { EditableText } from './EditableText.tsx';
-import { TextEditLayer } from './TextEditLayer.tsx';
 
 afterEach(() => {
   cleanup();

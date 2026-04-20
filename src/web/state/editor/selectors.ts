@@ -1,12 +1,12 @@
 import { useShallow } from 'zustand/react/shallow';
-import { useEditorStore } from './editor-store-impl.ts';
 import {
   buildLayerTreeFromSignature,
   encodeLayerTreeSignature,
   type LayerNode,
   type SelectedTarget,
-} from './layers.ts';
-import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from './types.ts';
+} from '../layers.ts';
+import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../types.ts';
+import { useEditorStore } from './store.ts';
 
 export function useInstanceIds(): string[] {
   return useEditorStore(useShallow((state) => state.instances.map((instance) => instance.id)));

@@ -1,5 +1,5 @@
-import type { SelectedTarget } from './layers.ts';
-import type { ComponentInstance } from './types.ts';
+import type { SelectedTarget } from '../layers.ts';
+import type { ComponentInstance } from '../types.ts';
 
 export type EditorSnapshot = {
   instances: ComponentInstance[];

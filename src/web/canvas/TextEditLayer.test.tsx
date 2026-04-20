@@ -3,12 +3,12 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Canvas } from '../canvas/Canvas.tsx';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
+import { Table } from '../previews/Table.tsx';
 import { useEditorStore } from '../state/editor.ts';
 import { useTextEditStore } from '../state/text-edit.ts';
+import { Canvas } from './Canvas.tsx';
 import { PreviewWrapper } from './PreviewWrapper.tsx';
-import { Table } from './Table.tsx';
 import { TextEditLayer } from './TextEditLayer.tsx';
 
 afterEach(() => {

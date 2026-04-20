@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import type { ImportedLibraryComponentId } from '../../shared/types.ts';
-import { useImportedComponentsStore, useImportedLibrary } from '../state/imported-components.ts';
+import { useImportedComponentsStore, useImportedLibrary } from '../state/registry/imported.ts';
 
 type TabId = 'library' | 'paste';
 

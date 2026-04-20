@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  CARD_LAYER_SPECS,
-  componentTypeLabel,
-  isCardLayerId,
-  STOCK_LAYER_ROOT_CHILDREN,
-} from './component-registry-data.ts';
+import { CARD_LAYER_SPECS, componentTypeLabel, isCardLayerId, STOCK_LAYER_ROOT_CHILDREN } from './data.ts';
 
 describe('component-registry-data', () => {
   it('exposes stable display labels', () => {

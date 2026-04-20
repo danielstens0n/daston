@@ -1,6 +1,6 @@
 import { type PointerEvent as ReactPointerEvent, useRef } from 'react';
-import { useCanvasScale } from '../canvas/Canvas.tsx';
 import { useEditorStore, useIsSelected } from '../state/editor.ts';
+import { useCanvasScale } from './Canvas.tsx';
 
 // Tracks the last pointer position + running world position so each frame's
 // screen→world conversion uses the *current* scale. Total-delta-over-scale

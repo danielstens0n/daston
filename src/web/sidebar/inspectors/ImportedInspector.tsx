@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInstance } from '../../state/editor.ts';
-import { useImportedComponentsStore, useImportedDefinition } from '../../state/imported-components.ts';
+import { useImportedComponentsStore, useImportedDefinition } from '../../state/registry/imported.ts';
 
 type Props = {
   id: string;

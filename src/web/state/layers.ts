@@ -3,11 +3,11 @@ import {
   type LayerKind,
   type LayerTemplateNode,
   STOCK_LAYER_ROOT_CHILDREN,
-} from './component-registry-data.ts';
+} from './registry/data.ts';
 import type { ComponentInstance } from './types.ts';
 
-export type { CardLayerId, LayerKind } from './component-registry-data.ts';
-export { CARD_LAYER_SPECS, isCardLayerId } from './component-registry-data.ts';
+export type { CardLayerId, LayerKind } from './registry/data.ts';
+export { CARD_LAYER_SPECS, isCardLayerId } from './registry/data.ts';
 
 export type SelectedTarget =
   | { kind: 'instance'; instanceId: string }

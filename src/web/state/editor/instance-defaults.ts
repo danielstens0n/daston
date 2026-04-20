@@ -1,6 +1,6 @@
-import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../shared/chrome-colors.ts';
-import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../lib/fonts.ts';
-import type { ButtonProps, CardInstance, CardProps, LandingProps, TableProps } from './types.ts';
+import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../../shared/chrome-colors.ts';
+import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../../lib/fonts.ts';
+import type { ButtonProps, CardInstance, CardProps, LandingProps, TableProps } from '../types.ts';
 
 export const DEFAULT_CARD_WIDTH = 280;
 export const DEFAULT_CARD_HEIGHT = 180;

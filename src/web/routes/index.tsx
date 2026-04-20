@@ -1,15 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { PreviewWrapper } from '../canvas/PreviewWrapper.tsx';
+import { TextEditLayer } from '../canvas/TextEditLayer.tsx';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
-import { useKeyboardShortcuts } from '../keyboard/useKeyboardShortcuts.ts';
 import { LayersSidebar } from '../layers/LayersSidebar.tsx';
-import { PreviewWrapper } from '../previews/PreviewWrapper.tsx';
-import { TextEditLayer } from '../previews/TextEditLayer.tsx';
+import { useKeyboardShortcuts } from '../lib/useKeyboardShortcuts.ts';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
-import { renderPreviewBody } from '../state/component-registry.tsx';
 import { useInstance, useInstanceIds } from '../state/editor.ts';
-import { useImportedComponentsStore } from '../state/imported-components.ts';
+import { renderPreviewBody } from '../state/registry/component-registry.tsx';
+import { useImportedComponentsStore } from '../state/registry/imported.ts';
 import { CanvasToolbar } from '../toolbar/CanvasToolbar.tsx';
 import './route.css';
 

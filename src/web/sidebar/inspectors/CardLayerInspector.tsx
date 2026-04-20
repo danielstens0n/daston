@@ -1,5 +1,5 @@
-import type { CardLayerId } from '../../state/component-registry-data.ts';
 import { useCardProps } from '../../state/editor.ts';
+import type { CardLayerId } from '../../state/registry/data.ts';
 import type { CardProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';

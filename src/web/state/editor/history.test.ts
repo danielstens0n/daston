@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createSnapshot, mergeSnapshot, pickEditorSnapshot, snapshotsEqual } from './editor-history.ts';
-import { instanceSelection } from './layers.ts';
-import type { CardInstance } from './types.ts';
+import { instanceSelection } from '../layers.ts';
+import type { CardInstance } from '../types.ts';
+import { createSnapshot, mergeSnapshot, pickEditorSnapshot, snapshotsEqual } from './history.ts';
 
 const seedCard: CardInstance = {
   id: 'card-1',

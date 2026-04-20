@@ -1,6 +1,6 @@
 import { type PointerEvent as ReactPointerEvent, useRef } from 'react';
-import { useCanvasScale } from '../canvas/Canvas.tsx';
 import { useEditorStore } from '../state/editor.ts';
+import { useCanvasScale } from './Canvas.tsx';
 
 // Which corner of the preview's bounding box is being dragged. Each corner
 // mutates a different subset of x/y/width/height — see resizeRect.

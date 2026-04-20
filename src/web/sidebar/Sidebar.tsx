@@ -1,12 +1,12 @@
 import { useShallow } from 'zustand/react/shallow';
+import { type SelectedTargetMeta, useEditorStore, useSelectedTargetMeta } from '../state/editor.ts';
+import { getLayerLabel } from '../state/layers.ts';
 import {
   renderImportedInstanceInspector,
   renderLayerInspector,
   renderStockInstanceInspector,
-} from '../state/component-registry.tsx';
-import { componentTypeLabel } from '../state/component-registry-data.ts';
-import { type SelectedTargetMeta, useEditorStore, useSelectedTargetMeta } from '../state/editor.ts';
-import { getLayerLabel } from '../state/layers.ts';
+} from '../state/registry/component-registry.tsx';
+import { componentTypeLabel } from '../state/registry/data.ts';
 import { ColorField } from './fields/ColorField.tsx';
 import { FieldRow } from './fields/FieldRow.tsx';
 import { Section } from './fields/Section.tsx';

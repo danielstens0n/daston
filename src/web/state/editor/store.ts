@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { ComponentId } from '../../shared/types.ts';
+import type { ComponentId } from '../../../shared/types.ts';
+import { instanceSelection, type SelectedTarget } from '../layers.ts';
 import {
   createSnapshot,
   type EditorSnapshot,
@@ -7,7 +8,8 @@ import {
   pickEditorSnapshot,
   restoreSnapshotKeepingCanvas,
   snapshotsEqual,
-} from './editor-history.ts';
+} from './history.ts';
+import { defaultCard } from './instance-defaults.ts';
 import {
   mutationAddImportedInstance,
   mutationAddInstance,
@@ -19,9 +21,7 @@ import {
   mutationRemove,
   mutationResize,
   mutationUpdateProps,
-} from './editor-mutations.ts';
-import { defaultCard } from './instance-defaults.ts';
-import { instanceSelection, type SelectedTarget } from './layers.ts';
+} from './mutations.ts';
 
 /** Canvas viewport fill (Figma-style); independent of app chrome theme. */
 export const DEFAULT_CANVAS_BACKGROUND = '#f7f7f8';
