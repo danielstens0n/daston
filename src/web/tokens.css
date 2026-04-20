@@ -1,6 +1,6 @@
 /* Semantic color + shadow tokens. Every component CSS file references these
    via var(--...) instead of hardcoding hex, so a single edit here re-themes
-   the app. Switch themes with data-theme="light" | "dark" on <html>.
+   the app. Light is the default; set data-theme="dark" on <html> to opt in.
 
    Chrome vs preview blues:
    - `--color-chrome-focus` (alias of `--color-selection`): shell focus rings,
@@ -10,6 +10,36 @@
      user-editable; keep in sync with `src/shared/chrome-colors.ts` ACCENT_HEX. */
 
 :root,
+[data-theme='light'] {
+  --color-canvas-bg: #e5e5e5;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #ededef;
+
+  --color-border: #e4e4e7;
+  --color-border-strong: #d4d4d8;
+
+  --color-text-primary: #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-tertiary: #71717a;
+  --color-text-muted: #a1a1aa;
+
+  --color-accent: #0162ff;
+  --color-accent-hover: #217ce5;
+  --color-selection: var(--color-accent);
+  --color-chrome-focus: var(--color-accent);
+  --color-chrome-focus-hover: var(--color-accent-hover);
+  --color-text-on-accent: #ffffff;
+
+  --color-success-text: #166534;
+  --color-danger-text: #9f1239;
+  --color-danger-bg: #fff1f2;
+  --color-danger-border: #fecaca;
+  --color-overlay-scrim: rgb(15 23 42 / 0.2);
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
 [data-theme='dark'] {
   --color-canvas-bg: #0e0f12;
   --color-surface: #17181c;
@@ -38,36 +68,6 @@
 
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
   --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-
-[data-theme='light'] {
-  --color-canvas-bg: #f7f7f8;
-  --color-surface: #ffffff;
-  --color-surface-subtle: #ededef;
-
-  --color-border: #e4e4e7;
-  --color-border-strong: #d4d4d8;
-
-  --color-text-primary: #18181b;
-  --color-text-secondary: #52525b;
-  --color-text-tertiary: #71717a;
-  --color-text-muted: #a1a1aa;
-
-  --color-accent: #0162ff;
-  --color-accent-hover: #217ce5;
-  --color-selection: var(--color-accent);
-  --color-chrome-focus: var(--color-accent);
-  --color-chrome-focus-hover: var(--color-accent-hover);
-  --color-text-on-accent: #ffffff;
-
-  --color-success-text: #166534;
-  --color-danger-text: #9f1239;
-  --color-danger-bg: #fff1f2;
-  --color-danger-border: #fecaca;
-  --color-overlay-scrim: rgb(15 23 42 / 0.2);
-
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 
 html,

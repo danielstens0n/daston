@@ -65,7 +65,7 @@ import {
  */
 
 /** Canvas viewport fill (Figma-style); independent of app chrome theme. */
-export const DEFAULT_CANVAS_BACKGROUND = '#3a3d43';
+export const DEFAULT_CANVAS_BACKGROUND = '#e5e5e5';
 
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
