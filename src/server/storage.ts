@@ -1,6 +1,9 @@
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
+import { runProjectAnalysis } from '../project-analysis/run.ts';
+import { themeSeedToThemeConfig } from '../project-analysis/theme-from-seed.ts';
 import type { ThemeConfig } from '../shared/types.ts';
 
 const SCHEMA_VERSION = 1;
@@ -23,13 +26,11 @@ export function defaultThemeConfig(): ThemeConfig {
 
 export async function readThemeConfig(cwd: string = process.cwd()): Promise<ThemeConfig> {
   const path = projectConfigPath(cwd);
-  let raw: string;
-  try {
-    raw = await readFile(path, 'utf8');
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return defaultThemeConfig();
-    throw err;
+  if (!existsSync(path)) {
+    const analysis = await runProjectAnalysis(cwd);
+    return themeSeedToThemeConfig(analysis.themeSeed);
   }
+  const raw = await readFile(path, 'utf8');
   const parsed = JSON.parse(raw) as ThemeConfig;
   // TODO: when SCHEMA_VERSION > 1, branch on parsed.version and migrate.
   return parsed;

@@ -99,7 +99,7 @@ npm run lint
 ## Stack
 
 - **CLI** — Node + [Commander](https://github.com/tj/commander.js), bundled with [tsup](https://tsup.egoist.dev/).
-- **Server** — [Hono](https://hono.dev/) on `@hono/node-server`. Serves the built SPA and a thin `/api/{theme,components,imported-components,prompt}` surface.
+- **Server** — [Hono](https://hono.dev/) on `@hono/node-server`. Serves the built SPA and a thin `/api/{theme,project-analysis,components,imported-components,prompt}` surface.
 - **Frontend** — [Vite](https://vitejs.dev/) + React 19 + [TanStack Router](https://tanstack.com/router) (file-based). State via [Zustand](https://zustand.docs.pmnd.rs/).
 - **Storage** — plain JSON on disk, schema-versioned from day one.
 

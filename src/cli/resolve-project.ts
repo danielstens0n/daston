@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { dependencyNames } from '../shared/package-json.ts';
 
 export type ResolveProjectResult =
   | { ok: true; projectRoot: string }
@@ -21,24 +22,11 @@ const APP_SIGNAL_DEPS = [
   'nuxt',
 ];
 
-const DEP_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'] as const;
-
 async function readPackageJson(dir: string): Promise<Record<string, unknown> | null> {
   const pkgPath = join(dir, 'package.json');
   if (!existsSync(pkgPath)) return null;
   const raw = await readFile(pkgPath, 'utf8');
   return JSON.parse(raw) as Record<string, unknown>;
-}
-
-function dependencyNames(pkg: Record<string, unknown>): string[] {
-  const names: string[] = [];
-  for (const field of DEP_FIELDS) {
-    const value = pkg[field];
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      names.push(...Object.keys(value as Record<string, unknown>));
-    }
-  }
-  return names;
 }
 
 export async function isLikelyAppPackage(dir: string): Promise<boolean> {

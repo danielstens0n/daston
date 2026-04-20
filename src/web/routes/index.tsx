@@ -1,13 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { PreviewWrapper } from '../canvas/PreviewWrapper.tsx';
 import { TextEditLayer } from '../canvas/TextEditLayer.tsx';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { LayersSidebar } from '../layers/LayersSidebar.tsx';
+import { fetchTheme } from '../lib/api.ts';
 import { useKeyboardShortcuts } from '../lib/useKeyboardShortcuts.ts';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
-import { useInstance, useInstanceIds } from '../state/editor.ts';
+import { useEditorStore, useInstance, useInstanceIds } from '../state/editor.ts';
 import { renderPreviewBody } from '../state/registry/component-registry.tsx';
 import { useImportedComponentsStore } from '../state/registry/imported.ts';
 import { CanvasToolbar } from '../toolbar/CanvasToolbar.tsx';
@@ -19,6 +20,11 @@ export const Route = createFileRoute('/')({
 
 function CanvasRoute() {
   useKeyboardShortcuts();
+  useLayoutEffect(() => {
+    void fetchTheme().then((theme) => {
+      useEditorStore.getState().applyInitialThemeFromServer(theme);
+    });
+  }, []);
   useEffect(() => {
     void useImportedComponentsStore.getState().load();
   }, []);

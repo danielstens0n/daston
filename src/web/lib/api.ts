@@ -2,6 +2,7 @@ import type {
   CreateImportedComponentRequest,
   ImportedComponentDefinition,
   ImportedLibraryComponent,
+  ThemeConfig,
   UpdateImportedComponentRequest,
 } from '../../shared/types.ts';
 
@@ -15,8 +16,8 @@ async function readJson<T>(input: RequestInfo | URL, init?: RequestInit): Promis
   return res.json() as Promise<T>;
 }
 
-export async function fetchTheme(): Promise<unknown> {
-  return readJson('/api/theme');
+export async function fetchTheme(): Promise<ThemeConfig> {
+  return readJson<ThemeConfig>('/api/theme');
 }
 
 export async function fetchImportedLibrary(): Promise<ImportedLibraryComponent[]> {

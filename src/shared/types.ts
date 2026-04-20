@@ -6,8 +6,16 @@ export interface ThemeConfig {
   colors: Record<string, string>;
 }
 
-// Stock components the canvas can preview and the user can "Add".
-export type ComponentId = 'button' | 'card' | 'table' | 'landing';
+// Stock components / primitives the canvas can preview and the user can add.
+export type ComponentId =
+  | 'button'
+  | 'card'
+  | 'ellipse'
+  | 'landing'
+  | 'rectangle'
+  | 'table'
+  | 'text'
+  | 'triangle';
 
 export type ImportedComponentsSchemaVersion = 1;
 export type ImportedComponentSourceKind = 'library' | 'paste';
@@ -78,4 +86,37 @@ export type PromptRequest = { kind: 'add-component'; component: ComponentId } | 
 export interface PromptResponse {
   kind: PromptRequest['kind'];
   prompt: string;
+}
+
+export type AnalysisConfidence = 'high' | 'medium' | 'low';
+
+export interface AnalysisSource {
+  path: string;
+  kind: 'package_json' | 'config' | 'router' | 'stylesheet' | 'tailwind' | 'font_file' | 'other';
+}
+
+export interface AnalysisFact<T = unknown> {
+  id: string;
+  value: T;
+  confidence: AnalysisConfidence;
+  sources: AnalysisSource[];
+}
+
+export type DetectedFrameworkKind = 'react' | 'next' | 'tanstack-router' | 'unknown';
+
+export interface ThemeSeed {
+  fonts: { heading: string | null; body: string | null };
+  colors: Record<string, string>;
+}
+
+export interface ProjectAnalysis {
+  projectRoot: string;
+  facts: AnalysisFact[];
+  framework: { kind: DetectedFrameworkKind; confidence: AnalysisConfidence };
+  styling: {
+    tailwind: boolean;
+    cssVariables: boolean;
+    confidence: AnalysisConfidence;
+  };
+  themeSeed: ThemeSeed;
 }

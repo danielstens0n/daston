@@ -27,6 +27,14 @@ describe('createServer', () => {
     expect(await res.json()).toMatchObject({ version: 1 });
   });
 
+  it('serves GET /api/project-analysis', async () => {
+    const app = createServer({ projectRoot, webRoot });
+    const res = await app.request('/api/project-analysis');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { projectRoot: string };
+    expect(body.projectRoot).toBe(projectRoot);
+  });
+
   it('serves static files from webRoot', async () => {
     const app = createServer({ projectRoot, webRoot });
     const res = await app.request('/app.js');

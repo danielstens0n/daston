@@ -1,6 +1,17 @@
 import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../../shared/chrome-colors.ts';
+import type { ThemeConfig } from '../../../shared/types.ts';
 import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../../lib/fonts.ts';
-import type { ButtonProps, CardInstance, CardProps, LandingProps, TableProps } from '../types.ts';
+import { getResolvedThemeConfig } from '../../lib/theme-defaults-context.ts';
+import { themeFontIds } from '../../lib/theme-fonts.ts';
+import type {
+  ButtonProps,
+  CardInstance,
+  CardProps,
+  LandingProps,
+  ShapeProps,
+  TableProps,
+  TextPrimitiveProps,
+} from '../types.ts';
 
 export const DEFAULT_CARD_WIDTH = 280;
 export const DEFAULT_CARD_HEIGHT = 180;
@@ -12,8 +23,13 @@ export const DEFAULT_LANDING_WIDTH = 360;
 export const DEFAULT_LANDING_HEIGHT = 480;
 export const DEFAULT_IMPORTED_WIDTH = 320;
 export const DEFAULT_IMPORTED_HEIGHT = 220;
+/** Default placement size for rectangle / ellipse / triangle tools (click-drop). */
+export const DEFAULT_SHAPE_WIDTH = 160;
+export const DEFAULT_SHAPE_HEIGHT = 100;
+export const DEFAULT_TEXT_WIDTH = 200;
+export const DEFAULT_TEXT_HEIGHT = 44;
 
-export function createDefaultCardProps(): CardProps {
+export function baseCardProps(): CardProps {
   return {
     title: 'Card',
     body: 'A simple card preview. Double-click text to edit.',
@@ -41,8 +57,75 @@ export function createDefaultCardProps(): CardProps {
   };
 }
 
-export function createDefaultButtonProps(): ButtonProps {
+function mergeCard(base: CardProps, theme: ThemeConfig): CardProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
   return {
+    ...base,
+    titleFont: fonts.heading,
+    bodyFont: fonts.body,
+    fill: c.card ?? c.background ?? base.fill,
+    titleColor: c.foreground ?? base.titleColor,
+    bodyColor: c.mutedForeground ?? c.foreground ?? base.bodyColor,
+    borderColor: c.border ?? base.borderColor,
+  };
+}
+
+function mergeButton(base: ButtonProps, theme: ThemeConfig): ButtonProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
+  return {
+    ...base,
+    labelFont: fonts.heading,
+    fill: c.primary ?? base.fill,
+    textColor: c.primaryForeground ?? base.textColor,
+    borderColor: c.border ?? base.borderColor,
+  };
+}
+
+function mergeTable(base: TableProps, theme: ThemeConfig): TableProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
+  return {
+    ...base,
+    headerFont: fonts.heading,
+    bodyFont: fonts.body,
+    headerFill: c.muted ?? base.headerFill,
+    rowFill: c.background ?? base.rowFill,
+    borderColor: c.border ?? base.borderColor,
+    headerTextColor: c.foreground ?? base.headerTextColor,
+    bodyTextColor: c.mutedForeground ?? c.foreground ?? base.bodyTextColor,
+  };
+}
+
+function mergeLanding(base: LandingProps, theme: ThemeConfig): LandingProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
+  return {
+    ...base,
+    headingFont: fonts.heading,
+    bodyFont: fonts.body,
+    accentColor: c.primary ?? base.accentColor,
+    pageFill: c.background ?? base.pageFill,
+    heroFill: c.card ?? c.background ?? base.heroFill,
+    featuresFill: c.muted ?? base.featuresFill,
+  };
+}
+
+function resolveTheme(explicit?: ThemeConfig | null): ThemeConfig | null {
+  if (explicit !== undefined) return explicit;
+  return getResolvedThemeConfig();
+}
+
+export function createDefaultCardProps(theme?: ThemeConfig | null): CardProps {
+  const base = baseCardProps();
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeCard(base, t);
+}
+
+export function createDefaultButtonProps(theme?: ThemeConfig | null): ButtonProps {
+  const base: ButtonProps = {
     label: 'Button',
     labelFont: DEFAULT_HEADING_FONT_ID,
     labelFontSize: 14,
@@ -61,10 +144,13 @@ export function createDefaultButtonProps(): ButtonProps {
     shadowBlur: 8,
     shadowOffsetY: 2,
   };
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeButton(base, t);
 }
 
-export function createDefaultTableProps(): TableProps {
-  return {
+export function createDefaultTableProps(theme?: ThemeConfig | null): TableProps {
+  const base: TableProps = {
     showHeader: true,
     zebra: true,
     cellPadding: 10,
@@ -94,10 +180,48 @@ export function createDefaultTableProps(): TableProps {
       ['Dan', 'QA', 'Active'],
     ],
   };
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeTable(base, t);
 }
 
-export function createDefaultLandingProps(): LandingProps {
+export function createDefaultShapeProps(): ShapeProps {
   return {
+    fill: '#e4e4e7',
+    borderColor: '#a1a1aa',
+    borderWidth: 1,
+    borderRadius: 8,
+    shadowEnabled: false,
+    shadowColor: '#0000001a',
+    shadowBlur: 8,
+    shadowOffsetY: 4,
+  };
+}
+
+export function createDefaultTextPrimitiveProps(theme?: ThemeConfig | null): TextPrimitiveProps {
+  const base: TextPrimitiveProps = {
+    text: 'Text',
+    textColor: '#18181b',
+    textAlign: 'left',
+    textFont: DEFAULT_BODY_FONT_ID,
+    textFontSize: 16,
+    textFontWeight: 500,
+    textItalic: false,
+    textDecoration: 'none',
+  };
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  const fonts = themeFontIds(t);
+  const c = t.colors;
+  return {
+    ...base,
+    textFont: fonts.body,
+    textColor: c.foreground ?? base.textColor,
+  };
+}
+
+export function createDefaultLandingProps(theme?: ThemeConfig | null): LandingProps {
+  const base: LandingProps = {
     heroTitle: 'Build faster',
     heroBody: 'Ship polished UI with your design tokens.',
     ctaLabel: 'Get started',
@@ -127,6 +251,9 @@ export function createDefaultLandingProps(): LandingProps {
     shadowBlur: 16,
     shadowOffsetY: 4,
   };
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeLanding(base, t);
 }
 
 export const defaultCard: CardInstance = {

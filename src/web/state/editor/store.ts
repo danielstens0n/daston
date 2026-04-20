@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { ComponentId } from '../../../shared/types.ts';
+import type { ComponentId, ThemeConfig } from '../../../shared/types.ts';
+import { setResolvedThemeConfig } from '../../lib/theme-defaults-context.ts';
 import { instanceSelection, type SelectedTarget } from '../layers.ts';
 import {
   createSnapshot,
@@ -9,10 +10,11 @@ import {
   restoreSnapshotKeepingCanvas,
   snapshotsEqual,
 } from './history.ts';
-import { defaultCard } from './instance-defaults.ts';
+import { baseCardProps, createDefaultCardProps, defaultCard } from './instance-defaults.ts';
 import {
   mutationAddImportedInstance,
   mutationAddInstance,
+  mutationAddInstanceWithRect,
   mutationCut,
   mutationDuplicate,
   mutationDuplicateInPlaceForDrag,
@@ -35,12 +37,30 @@ export const DEFAULT_CANVAS_BACKGROUND = '#f7f7f8';
 type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
 
+/** Ephemeral toolbar/canvas tool; not part of undo history. */
+export type CanvasTool =
+  | 'select'
+  | Extract<ComponentId, 'ellipse' | 'rectangle' | 'text' | 'triangle'>;
+
+function isPristineDefaultCanvas(snapshot: EditorSnapshot): boolean {
+  if (snapshot.instances.length !== 1) return false;
+  const only = snapshot.instances[0];
+  if (!only || only.type !== 'card' || only.id !== 'card-1') return false;
+  return JSON.stringify(only.props) === JSON.stringify(baseCardProps());
+}
+
 type EditorStoreActions = {
   past: EditorSnapshot[];
   future: EditorSnapshot[];
   historyBatch: EditorSnapshot | null;
   canvasBackgroundColor: string;
+  activeTool: CanvasTool;
+  setActiveTool: (tool: CanvasTool) => void;
+  /** Set by the canvas after creating a text instance; Text preview consumes to open the inline editor. */
+  pendingTextEditInstanceId: string | null;
+  setPendingTextEditInstanceId: (id: string | null) => void;
   setCanvasBackgroundColor: (color: string) => void;
+  applyInitialThemeFromServer: (theme: ThemeConfig) => void;
   select: (id: string | null) => void;
   selectLayer: (target: Extract<SelectedTarget, { kind: 'layer' }>) => void;
   beginHistoryBatch: () => void;
@@ -50,6 +70,7 @@ type EditorStoreActions = {
   move: (id: string, pos: Point) => void;
   resize: (id: string, rect: Rect) => void;
   addInstance: (type: ComponentId, worldCenter: Point) => void;
+  addInstanceWithRect: (type: ComponentId, rect: Rect) => void;
   addImportedInstance: (definitionId: string, worldCenter: Point) => void;
   updateProps: (id: string, patch: Record<string, unknown>) => void;
   remove: (id: string) => void;
@@ -99,7 +120,26 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     future: [],
     historyBatch: null,
     canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+    activeTool: 'select',
+    setActiveTool: (tool) => set({ activeTool: tool }),
+    pendingTextEditInstanceId: null,
+    setPendingTextEditInstanceId: (id) => set({ pendingTextEditInstanceId: id }),
     setCanvasBackgroundColor: (color) => set({ canvasBackgroundColor: color }),
+    applyInitialThemeFromServer: (theme) =>
+      set((state) => {
+        setResolvedThemeConfig(theme);
+        const snapshot = pickEditorSnapshot(state);
+        if (!isPristineDefaultCanvas(snapshot)) {
+          return {};
+        }
+        const only = state.instances[0];
+        if (!only || only.type !== 'card') {
+          return {};
+        }
+        return {
+          instances: [{ ...only, props: createDefaultCardProps(theme) }],
+        };
+      }),
     select: (id) =>
       set({
         selectedId: id,
@@ -154,6 +194,8 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     resize: (id, rect) => applyMutation((snapshot) => mutationResize(snapshot, id, rect)),
     addInstance: (type, worldCenter) =>
       applyMutation((snapshot) => mutationAddInstance(snapshot, type, worldCenter)),
+    addInstanceWithRect: (type, rect) =>
+      applyMutation((snapshot) => mutationAddInstanceWithRect(snapshot, type, rect)),
     addImportedInstance: (definitionId, worldCenter) =>
       applyMutation((snapshot) => mutationAddImportedInstance(snapshot, definitionId, worldCenter)),
     updateProps: (id, patch) => applyMutation((snapshot) => mutationUpdateProps(snapshot, id, patch)),

@@ -4,6 +4,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { components } from './routes/components.ts';
 import { createImportedComponentsRoutes } from './routes/imported-components.ts';
+import { createProjectAnalysisRoutes } from './routes/project-analysis.ts';
 import { createPromptRoutes } from './routes/prompt.ts';
 import { createThemeRoutes } from './routes/theme.ts';
 
@@ -17,6 +18,7 @@ export function createServer({ projectRoot, webRoot }: CreateServerOptions) {
   const indexHtml = readFileSync(join(webRoot, 'index.html'), 'utf8');
   const app = new Hono();
   app.route('/api/theme', createThemeRoutes({ projectRoot }));
+  app.route('/api/project-analysis', createProjectAnalysisRoutes({ projectRoot }));
   app.route('/api/components', components);
   app.route('/api/imported-components', createImportedComponentsRoutes({ projectRoot }));
   app.route('/api/prompt', createPromptRoutes({ projectRoot }));
