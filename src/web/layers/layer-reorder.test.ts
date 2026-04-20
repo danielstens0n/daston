@@ -15,8 +15,10 @@ function rect(id: string, parentId: string | null): RectangleInstance {
     parentId,
     props: {
       fill: '#fff',
+      fillEnabled: true,
       borderColor: '#000',
       borderWidth: 0,
+      borderEnabled: true,
       borderRadius: 0,
       shadowEnabled: false,
       shadowColor: '#000',

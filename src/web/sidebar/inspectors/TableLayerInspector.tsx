@@ -1,10 +1,12 @@
 import { buildTypographyPartial, useTableProps, useUpdateProps } from '../../state/editor.ts';
-import type { TypographyValues } from '../../state/types.ts';
+import type { TableProps, TypographyValues } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { ToggleField } from '../fields/ToggleField.tsx';
+import { BorderSection } from '../sections/BorderSection.tsx';
+import { RadiusSection } from '../sections/RadiusSection.tsx';
 import { TextLayerFields } from '../sections/TextLayerFields.tsx';
 
 type Props = {
@@ -109,29 +111,12 @@ function TableHeaderSurfacePanel({ id }: { id: string }) {
           <ColorField value={table.headerFill} onChange={(value) => updateProps({ headerFill: value })} />
         </FieldRow>
       </Section>
-      <Section title="Border">
-        <FieldRow label="Color">
-          <ColorField value={table.borderColor} onChange={(value) => updateProps({ borderColor: value })} />
-        </FieldRow>
-        <FieldRow label="Width">
-          <NumberField
-            value={table.borderWidth}
-            onChange={(value) => updateProps({ borderWidth: value })}
-            min={0}
-            max={12}
-            unit="px"
-          />
-        </FieldRow>
-        <FieldRow label="Radius">
-          <NumberField
-            value={table.borderRadius}
-            onChange={(value) => updateProps({ borderRadius: value })}
-            min={0}
-            max={32}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
+      <BorderSection props={table} onPatch={updateProps as (patch: Partial<TableProps>) => void} />
+      <RadiusSection
+        value={table.borderRadius}
+        onChange={(value) => updateProps({ borderRadius: value })}
+        max={32}
+      />
       <Section title="Layout">
         <FieldRow label="Cell pad">
           <NumberField
@@ -157,13 +142,11 @@ export function TableLayerInspector({ id, layerId }: Props) {
 
   switch (layerId) {
     case 'header':
+    case 'columns':
       return <TableHeaderPanel id={id} />;
     case 'header-surface':
       return <TableHeaderSurfacePanel id={id} />;
-    case 'columns':
-      return <TableHeaderPanel id={id} />;
     case 'body':
-      return <TableBodyPanel id={id} />;
     case 'rows':
       return <TableBodyPanel id={id} />;
     default:

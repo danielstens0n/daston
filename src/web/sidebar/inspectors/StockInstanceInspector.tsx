@@ -17,6 +17,7 @@ import type {
   CardProps,
   ComponentInstance,
   LandingProps,
+  TableProps,
   TextAlign,
 } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
@@ -28,6 +29,7 @@ import { TypographyStyleRows } from '../fields/TypographyStyleRows.tsx';
 import { BorderSection } from '../sections/BorderSection.tsx';
 import { FillSection } from '../sections/FillSection.tsx';
 import { LayoutSection } from '../sections/LayoutSection.tsx';
+import { RadiusSection } from '../sections/RadiusSection.tsx';
 import { ShadowSection } from '../sections/ShadowSection.tsx';
 import { FrameInspector } from './FrameInspector.tsx';
 
@@ -63,10 +65,10 @@ function renderOverview(type: Props['type'], id: string) {
     case 'landing':
       return <LandingRootInspector id={id} />;
     case 'rectangle':
-      return <ShapeRootInspector id={id} hideRadius={false} />;
+      return <ShapeRootInspector id={id} showRadius />;
     case 'ellipse':
     case 'triangle':
-      return <ShapeRootInspector id={id} hideRadius />;
+      return <ShapeRootInspector id={id} showRadius={false} />;
     case 'text':
       return <TextPrimitiveFields id={id} />;
     default: {
@@ -76,18 +78,17 @@ function renderOverview(type: Props['type'], id: string) {
   }
 }
 
-function ShapeRootInspector({ id, hideRadius }: { id: string; hideRadius: boolean }) {
+function ShapeRootInspector({ id, showRadius }: { id: string; showRadius: boolean }) {
   const props = useShapeProps(id);
   const onPatch = useUpdateProps(id);
   if (!props) return null;
   return (
     <>
       <FillSection props={props} onPatch={onPatch as (patch: Partial<typeof props>) => void} />
-      <BorderSection
-        props={props}
-        hideRadius={hideRadius}
-        onPatch={onPatch as (patch: Partial<typeof props>) => void}
-      />
+      <BorderSection props={props} onPatch={onPatch as (patch: Partial<typeof props>) => void} />
+      {showRadius ? (
+        <RadiusSection value={props.borderRadius} onChange={(value) => onPatch({ borderRadius: value })} />
+      ) : null}
       <ShadowSection props={props} onPatch={onPatch as (patch: Partial<typeof props>) => void} />
     </>
   );
@@ -150,6 +151,7 @@ function CardRootInspector({ id }: { id: string }) {
       <LayoutSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
       <FillSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
       <BorderSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
+      <RadiusSection value={props.borderRadius} onChange={(value) => onPatch({ borderRadius: value })} />
       <ShadowSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
     </>
   );
@@ -163,6 +165,7 @@ function ButtonRootInspector({ id }: { id: string }) {
     <>
       <FillSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
       <BorderSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
+      <RadiusSection value={props.borderRadius} onChange={(value) => onPatch({ borderRadius: value })} />
       <ShadowSection props={props} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />
       <Section title="Layout">
         <FieldRow label="Pad X">
@@ -213,29 +216,12 @@ function TableRootInspector({ id }: { id: string }) {
           <ColorField value={props.rowFillAlt} onChange={(value) => onPatch({ rowFillAlt: value })} />
         </FieldRow>
       </Section>
-      <Section title="Border">
-        <FieldRow label="Color">
-          <ColorField value={props.borderColor} onChange={(value) => onPatch({ borderColor: value })} />
-        </FieldRow>
-        <FieldRow label="Width">
-          <NumberField
-            value={props.borderWidth}
-            onChange={(value) => onPatch({ borderWidth: value })}
-            min={0}
-            max={12}
-            unit="px"
-          />
-        </FieldRow>
-        <FieldRow label="Radius">
-          <NumberField
-            value={props.borderRadius}
-            onChange={(value) => onPatch({ borderRadius: value })}
-            min={0}
-            max={32}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
+      <BorderSection props={props} onPatch={onPatch as (patch: Partial<TableProps>) => void} />
+      <RadiusSection
+        value={props.borderRadius}
+        onChange={(value) => onPatch({ borderRadius: value })}
+        max={32}
+      />
       <Section title="Layout">
         <FieldRow label="Cell pad">
           <NumberField
@@ -278,17 +264,11 @@ function LandingRootInspector({ id }: { id: string }) {
           <ColorField value={props.accentColor} onChange={(value) => onPatch({ accentColor: value })} />
         </FieldRow>
       </Section>
-      <Section title="Shape">
-        <FieldRow label="Radius">
-          <NumberField
-            value={props.borderRadius}
-            onChange={(value) => onPatch({ borderRadius: value })}
-            min={0}
-            max={48}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
+      <RadiusSection
+        value={props.borderRadius}
+        onChange={(value) => onPatch({ borderRadius: value })}
+        max={48}
+      />
       <ShadowSection props={props} onPatch={onPatch as (patch: Partial<LandingProps>) => void} />
       <TextStyleOverviewSection
         id={id}

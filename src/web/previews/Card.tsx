@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { previewBorderWidthCss, previewFillCss } from '../lib/previewSurfaceCss.ts';
 import { useCardProps } from '../state/editor.ts';
 import './card.css';
 
@@ -12,9 +13,9 @@ export function Card({ id }: Props) {
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
-    '--card-fill': p.fill,
+    '--card-fill': previewFillCss(p.fill, p.fillEnabled),
     '--card-border-color': p.borderColor,
-    '--card-border-width': `${p.borderWidth}px`,
+    '--card-border-width': previewBorderWidthCss(p.borderWidth, p.borderEnabled),
     '--card-border-radius': `${p.borderRadius}px`,
     '--card-padding': `${p.padding}px`,
     '--card-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,

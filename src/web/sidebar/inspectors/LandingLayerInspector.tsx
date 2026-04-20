@@ -7,8 +7,8 @@ import {
 import type { LandingProps, TypographyValues } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
-import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
+import { RadiusSection } from '../sections/RadiusSection.tsx';
 import { ShadowSection } from '../sections/ShadowSection.tsx';
 import { TextLayerFields } from '../sections/TextLayerFields.tsx';
 
@@ -39,17 +39,11 @@ function LandingHeroPanel({ id }: { id: string }) {
           <ColorField value={props.pageFill} onChange={(value) => onPatch({ pageFill: value })} />
         </FieldRow>
       </Section>
-      <Section title="Shape">
-        <FieldRow label="Radius">
-          <NumberField
-            value={props.borderRadius}
-            onChange={(value) => onPatch({ borderRadius: value })}
-            min={0}
-            max={48}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
+      <RadiusSection
+        value={props.borderRadius}
+        onChange={(value) => onPatch({ borderRadius: value })}
+        max={48}
+      />
       <ShadowSection props={props} onPatch={onPatch as (patch: Partial<LandingProps>) => void} />
     </>
   );
@@ -66,17 +60,11 @@ function LandingHeroSurfacePanel({ id }: { id: string }) {
           <ColorField value={props.heroFill} onChange={(value) => onPatch({ heroFill: value })} />
         </FieldRow>
       </Section>
-      <Section title="Shape">
-        <FieldRow label="Radius">
-          <NumberField
-            value={props.borderRadius}
-            onChange={(value) => onPatch({ borderRadius: value })}
-            min={0}
-            max={48}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
+      <RadiusSection
+        value={props.borderRadius}
+        onChange={(value) => onPatch({ borderRadius: value })}
+        max={48}
+      />
     </>
   );
 }
@@ -184,17 +172,11 @@ function LandingCtaPanel({ id }: { id: string }) {
           <ColorField value={props.accentColor} onChange={(value) => onPatch({ accentColor: value })} />
         </FieldRow>
       </Section>
-      <Section title="Shape">
-        <FieldRow label="Radius">
-          <NumberField
-            value={props.borderRadius}
-            onChange={(value) => onPatch({ borderRadius: value })}
-            min={0}
-            max={48}
-            unit="px"
-          />
-        </FieldRow>
-      </Section>
+      <RadiusSection
+        value={props.borderRadius}
+        onChange={(value) => onPatch({ borderRadius: value })}
+        max={48}
+      />
     </>
   );
 }

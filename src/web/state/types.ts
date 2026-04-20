@@ -4,11 +4,16 @@
 
 export type FillProps = {
   fill: string;
+  fillEnabled: boolean;
 };
 
 export type BorderProps = {
   borderColor: string;
   borderWidth: number;
+  borderEnabled: boolean;
+};
+
+export type RadiusProps = {
   borderRadius: number;
 };
 
@@ -40,7 +45,7 @@ export type TypographyValues = {
   decoration: TextDecoration;
 };
 
-export type CardProps = LayoutProps & FillProps & BorderProps & ShadowProps;
+export type CardProps = LayoutProps & FillProps & BorderProps & RadiusProps & ShadowProps;
 
 // Shared geometry for every instance. `parentId` is `null` for roots and the
 // owning instance's id for nested elements — world `x`/`y` stay absolute so
@@ -64,6 +69,7 @@ export type CardInstance = InstanceGeometry & {
 
 export type ButtonProps = FillProps &
   BorderProps &
+  RadiusProps &
   ShadowProps & {
     paddingX: number;
     paddingY: number;
@@ -84,6 +90,7 @@ export type TableProps = {
   borderColor: string;
   borderWidth: number;
   borderRadius: number;
+  borderEnabled: boolean;
   headerTextColor: string;
   bodyTextColor: string;
   headerFont: string;
@@ -142,7 +149,7 @@ export type ImportedInstance = InstanceGeometry & {
 };
 
 /** Shared by rectangle, ellipse, triangle previews. */
-export type ShapeProps = FillProps & BorderProps & ShadowProps;
+export type ShapeProps = FillProps & BorderProps & RadiusProps & ShadowProps;
 
 export type RectangleInstance = InstanceGeometry & {
   type: 'rectangle';

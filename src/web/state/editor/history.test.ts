@@ -14,8 +14,10 @@ const seedCard: CardInstance = {
   props: {
     padding: 8,
     fill: '#fff',
+    fillEnabled: true,
     borderColor: '#000',
     borderWidth: 1,
+    borderEnabled: true,
     borderRadius: 4,
     shadowEnabled: false,
     shadowColor: '#000',

@@ -8,13 +8,15 @@ type Props = {
   onPatch: (patch: Partial<FillProps>) => void;
 };
 
-// Any component whose Props extend FillProps can use this section unchanged:
-// structural subtyping lets you pass the wider Props in, and the outer
-// inspector's patcher (which accepts the wider Partial) satisfies the
-// narrower Partial<FillProps> argument by parameter contravariance.
+// Callers often pass a wider `props` + `onPatch`; that still type-checks for Fill fields only.
 export function FillSection({ props, onPatch }: Props) {
   return (
-    <Section title="Fill">
+    <Section
+      title="Fill"
+      enabled={props.fillEnabled}
+      onAdd={() => onPatch({ fillEnabled: true })}
+      onRemove={() => onPatch({ fillEnabled: false })}
+    >
       <FieldRow label="Color">
         <ColorField value={props.fill} onChange={(value) => onPatch({ fill: value })} />
       </FieldRow>

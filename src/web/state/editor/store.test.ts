@@ -15,8 +15,10 @@ import { clipboardPayloadFromRoot, MIN_SIZE } from './mutations.ts';
 const baselineCardProps = {
   padding: 20,
   fill: '#ffffff',
+  fillEnabled: true,
   borderColor: '#e4e4e7',
   borderWidth: 1,
+  borderEnabled: true,
   borderRadius: 12,
   shadowEnabled: true,
   shadowColor: '#0000001a',

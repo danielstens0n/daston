@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { previewBorderWidthCss } from '../lib/previewSurfaceCss.ts';
 import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
 import { useTableProps, useUpdateProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
@@ -15,7 +16,8 @@ export function Table({ id }: Props) {
 
   const style: CSSProperties & Record<string, string> = {
     '--table-border-color': p.borderColor,
-    '--table-border-width': `${p.borderWidth}px`,
+    '--table-border-width': previewBorderWidthCss(p.borderWidth, p.borderEnabled),
+    '--table-cell-border-width': p.borderEnabled ? '1px' : '0px',
     '--table-border-radius': `${p.borderRadius}px`,
     '--table-cell-padding': `${p.cellPadding}px`,
     '--table-header-fill': p.headerFill,

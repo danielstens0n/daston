@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createDefaultCardInstances,
@@ -47,6 +48,7 @@ describe('Sidebar', () => {
     expect(screen.getByRole('heading', { name: 'Layout' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Fill' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Border' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Corner radius' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Shadow' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Text styles' })).not.toBeInTheDocument();
   });
@@ -68,5 +70,38 @@ describe('Sidebar', () => {
     expect(useEditorStore.getState().selectedTarget).toEqual(
       instanceSelection(DEFAULT_SEED_CARD_INSTANCE_IDS.titleText),
     );
+  });
+
+  it('removes and re-adds border from the Border section header', async () => {
+    const user = userEvent.setup();
+    const rootId = DEFAULT_SEED_CARD_INSTANCE_IDS.root;
+    useEditorStore.getState().select(rootId);
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: 'Remove Border' }));
+    expect(useEditorStore.getState().instances.find((i) => i.id === rootId)).toMatchObject({
+      type: 'card',
+      props: expect.objectContaining({ borderEnabled: false }),
+    });
+    expect(screen.getByRole('button', { name: 'Add Border' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Add Border' }));
+    expect(useEditorStore.getState().instances.find((i) => i.id === rootId)).toMatchObject({
+      type: 'card',
+      props: expect.objectContaining({ borderEnabled: true }),
+    });
+  });
+
+  it('removes shadow from the Shadow section header', async () => {
+    const user = userEvent.setup();
+    const rootId = DEFAULT_SEED_CARD_INSTANCE_IDS.root;
+    useEditorStore.getState().select(rootId);
+    render(<Sidebar />);
+    await user.click(screen.getByRole('button', { name: 'Remove Shadow' }));
+    expect(useEditorStore.getState().instances.find((i) => i.id === rootId)).toMatchObject({
+      type: 'card',
+      props: expect.objectContaining({ shadowEnabled: false }),
+    });
+    expect(screen.queryByRole('button', { name: 'Remove Shadow' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Shadow' })).toBeInTheDocument();
   });
 });

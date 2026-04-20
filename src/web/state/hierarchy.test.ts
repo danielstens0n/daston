@@ -28,8 +28,10 @@ function rect(
     parentId,
     props: {
       fill: '#fff',
+      fillEnabled: true,
       borderColor: '#000',
       borderWidth: 1,
+      borderEnabled: true,
       borderRadius: 0,
       shadowEnabled: false,
       shadowColor: '#000',

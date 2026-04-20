@@ -26,7 +26,7 @@
 .preview-table-el td {
   padding: var(--table-cell-padding, 10px);
   text-align: left;
-  border-bottom: 1px solid var(--table-border-color, var(--color-border));
+  border-bottom: var(--table-cell-border-width, 1px) solid var(--table-border-color, var(--color-border));
 }
 
 .preview-table-el th {

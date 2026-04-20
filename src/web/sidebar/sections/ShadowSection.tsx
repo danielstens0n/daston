@@ -3,7 +3,6 @@ import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
-import { ToggleField } from '../fields/ToggleField.tsx';
 
 type Props = {
   props: ShadowProps;
@@ -12,10 +11,12 @@ type Props = {
 
 export function ShadowSection({ props, onPatch }: Props) {
   return (
-    <Section title="Shadow">
-      <FieldRow label="Enabled">
-        <ToggleField value={props.shadowEnabled} onChange={(value) => onPatch({ shadowEnabled: value })} />
-      </FieldRow>
+    <Section
+      title="Shadow"
+      enabled={props.shadowEnabled}
+      onAdd={() => onPatch({ shadowEnabled: true })}
+      onRemove={() => onPatch({ shadowEnabled: false })}
+    >
       <FieldRow label="Color">
         <ColorField value={props.shadowColor} onChange={(value) => onPatch({ shadowColor: value })} />
       </FieldRow>

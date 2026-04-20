@@ -86,8 +86,10 @@ export function baseCardProps(): CardProps {
   return {
     padding: 20,
     fill: '#ffffff',
+    fillEnabled: true,
     borderColor: '#e4e4e7',
     borderWidth: 1,
+    borderEnabled: true,
     borderRadius: 12,
     shadowEnabled: true,
     shadowColor: '#0000001a',
@@ -231,8 +233,10 @@ export function createDefaultCardBodyTextProps(theme?: ThemeConfig | null): Text
 export function createDefaultButtonProps(theme?: ThemeConfig | null): ButtonProps {
   const base: ButtonProps = {
     fill: ACCENT_HEX,
+    fillEnabled: true,
     borderColor: ACCENT_BORDER_HEX,
     borderWidth: 1,
+    borderEnabled: true,
     borderRadius: 8,
     paddingX: 20,
     paddingY: 10,
@@ -288,6 +292,7 @@ export function createDefaultTableProps(theme?: ThemeConfig | null): TableProps 
     borderColor: '#e4e4e7',
     borderWidth: 1,
     borderRadius: 8,
+    borderEnabled: true,
     headerTextColor: '#18181b',
     bodyTextColor: '#52525b',
     headerFont: DEFAULT_HEADING_FONT_ID,
@@ -316,8 +321,10 @@ export function createDefaultTableProps(theme?: ThemeConfig | null): TableProps 
 export function createDefaultShapeProps(): ShapeProps {
   return {
     fill: '#e4e4e7',
+    fillEnabled: true,
     borderColor: '#a1a1aa',
     borderWidth: 1,
+    borderEnabled: true,
     borderRadius: 8,
     shadowEnabled: false,
     shadowColor: '#0000001a',

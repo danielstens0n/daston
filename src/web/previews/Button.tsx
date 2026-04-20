@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { previewBorderWidthCss, previewFillCss } from '../lib/previewSurfaceCss.ts';
 import { useButtonProps } from '../state/editor.ts';
 import './button.css';
 
@@ -12,9 +13,9 @@ export function Button({ id }: Props) {
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
-    '--button-fill': p.fill,
+    '--button-fill': previewFillCss(p.fill, p.fillEnabled),
     '--button-border-color': p.borderColor,
-    '--button-border-width': `${p.borderWidth}px`,
+    '--button-border-width': previewBorderWidthCss(p.borderWidth, p.borderEnabled),
     '--button-border-radius': `${p.borderRadius}px`,
     '--button-padding-x': `${p.paddingX}px`,
     '--button-padding-y': `${p.paddingY}px`,
