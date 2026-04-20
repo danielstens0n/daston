@@ -4,7 +4,6 @@ import { FieldRow } from './FieldRow.tsx';
 import { FontField } from './FontField.tsx';
 import { INSPECTOR_FONT_SIZE_FIELD } from './inspectorFontSizeProps.ts';
 import { NumberField } from './NumberField.tsx';
-import { ToggleField } from './ToggleField.tsx';
 import { WeightField } from './WeightField.tsx';
 
 type Props = {
@@ -43,11 +42,36 @@ export function TypographyStyleRows({
           ariaLabel={weightAriaLabel}
         />
       </FieldRow>
-      <FieldRow label="Italic">
-        <ToggleField value={italic} onChange={(v) => onChange({ italic: v })} />
-      </FieldRow>
-      <FieldRow label="Deco">
-        <DecorationField value={decoration} onChange={(v) => onChange({ decoration: v })} />
+      <FieldRow label="Style">
+        <div className="sidebar-typography-format-toolbar">
+          <button
+            type="button"
+            className={
+              fontWeight === 700
+                ? 'sidebar-format-toggle sidebar-format-toggle-active'
+                : 'sidebar-format-toggle'
+            }
+            aria-pressed={fontWeight === 700}
+            aria-label="Bold"
+            title="Bold"
+            onClick={() => onChange({ fontWeight: fontWeight === 700 ? 400 : 700 })}
+          >
+            <span className="sidebar-format-toggle-bold">B</span>
+          </button>
+          <button
+            type="button"
+            className={
+              italic ? 'sidebar-format-toggle sidebar-format-toggle-active' : 'sidebar-format-toggle'
+            }
+            aria-pressed={italic}
+            aria-label="Italic"
+            title="Italic"
+            onClick={() => onChange({ italic: !italic })}
+          >
+            <span className="sidebar-format-toggle-italic">I</span>
+          </button>
+          <DecorationField value={decoration} onChange={(v) => onChange({ decoration: v })} />
+        </div>
       </FieldRow>
     </>
   );

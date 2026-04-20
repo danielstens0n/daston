@@ -1,4 +1,11 @@
-type Option<T extends string> = { value: T; label: string; title?: string };
+type Option<T extends string> = {
+  value: T;
+  label: string;
+  title?: string;
+  /** Overrides the visible label for assistive tech (e.g. symbol "U" + name "Underline"). */
+  ariaLabel?: string;
+  labelClassName?: string;
+};
 
 type Props<T extends string> = {
   value: T;
@@ -14,16 +21,17 @@ export function SegmentedField<T extends string>({ value, onChange, options, ari
         <button
           key={opt.value}
           type="button"
-          title={opt.title}
+          title={opt.title ?? opt.ariaLabel}
           className={
             value === opt.value
               ? 'sidebar-segmented-option sidebar-segmented-option-active'
               : 'sidebar-segmented-option'
           }
+          aria-label={opt.ariaLabel ?? opt.label}
           aria-pressed={value === opt.value}
           onClick={() => onChange(opt.value)}
         >
-          {opt.label}
+          <span className={opt.labelClassName}>{opt.label}</span>
         </button>
       ))}
     </fieldset>

@@ -6,10 +6,25 @@ type Props = {
   onChange: (value: TextDecoration) => void;
 };
 
-const OPTIONS: { value: TextDecoration; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'underline', label: 'Underline' },
-  { value: 'strikethrough', label: 'Strike' },
+const OPTIONS: {
+  value: TextDecoration;
+  label: string;
+  ariaLabel: string;
+  labelClassName?: string;
+}[] = [
+  { value: 'none', label: '—', ariaLabel: 'None' },
+  {
+    value: 'underline',
+    label: 'U',
+    ariaLabel: 'Underline',
+    labelClassName: 'sidebar-decoration-symbol sidebar-decoration-symbol-underline',
+  },
+  {
+    value: 'strikethrough',
+    label: 'S',
+    ariaLabel: 'Strikethrough',
+    labelClassName: 'sidebar-decoration-symbol sidebar-decoration-symbol-strikethrough',
+  },
 ];
 
 export function DecorationField({ value, onChange }: Props) {

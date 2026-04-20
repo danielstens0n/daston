@@ -484,6 +484,69 @@
   border-color: var(--color-chrome-focus);
 }
 
+/* Bold / italic / underline / strikethrough: classic symbol row next to decoration segments. */
+.sidebar-typography-format-toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sidebar-typography-format-toolbar .sidebar-segmented-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-format-toggle {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-width: 28px;
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+  outline: none;
+}
+
+.sidebar-format-toggle:hover {
+  border-color: var(--color-chrome-focus);
+  color: var(--color-text-primary);
+}
+
+.sidebar-format-toggle-active {
+  border-color: var(--color-chrome-focus);
+  background: color-mix(in srgb, var(--color-chrome-focus) 14%, transparent);
+  color: var(--color-text-primary);
+}
+
+.sidebar-format-toggle-bold {
+  font-weight: 700;
+}
+
+.sidebar-format-toggle-italic {
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.sidebar-decoration-symbol {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar-decoration-symbol-underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sidebar-decoration-symbol-strikethrough {
+  text-decoration: line-through;
+}
+
 .sidebar-segmented-field {
   display: flex;
   gap: 4px;
