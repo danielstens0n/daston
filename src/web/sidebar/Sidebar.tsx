@@ -1,7 +1,7 @@
 import { useShallow } from 'zustand/react/shallow';
 import { componentTypeLabel } from '../state/component-type-label.ts';
 import { type SelectedTargetMeta, useEditorStore, useSelectedTargetMeta } from '../state/editor.ts';
-import { buildLayerTree, findLayerNode, isCardLayerId } from '../state/layers.ts';
+import { getLayerLabel, isCardLayerId } from '../state/layers.ts';
 import type { ButtonProps, CardProps, LandingProps, TableProps } from '../state/types.ts';
 import { ColorField } from './fields/ColorField.tsx';
 import { FieldRow } from './fields/FieldRow.tsx';
@@ -42,8 +42,8 @@ export function Sidebar() {
         <p className="sidebar-header-subtitle">{description?.subtitle ?? 'Select a component to edit'}</p>
       </header>
       <CanvasBackgroundSection />
-      {meta && description ? (
-        renderInspector(meta, description)
+      {meta ? (
+        renderInspector(meta, description?.title ?? 'Layer')
       ) : (
         <div className="sidebar-empty">Nothing selected.</div>
       )}
@@ -53,7 +53,7 @@ export function Sidebar() {
 
 // Dispatch by selection target. Whole components keep their current
 // inspectors; focused layer rows can narrow to layer-specific controls.
-function renderInspector(meta: SelectedTargetMeta, description: { title: string; subtitle: string }) {
+function renderInspector(meta: SelectedTargetMeta, selectedLabel: string) {
   if (meta.kind === 'layer') {
     if (meta.type === 'card' && isCardLayerId(meta.layerId)) {
       return (
@@ -64,7 +64,7 @@ function renderInspector(meta: SelectedTargetMeta, description: { title: string;
         />
       );
     }
-    return <LayerInspectorFallback label={description.title} />;
+    return <LayerInspectorFallback label={selectedLabel} />;
   }
 
   switch (meta.type) {
@@ -105,8 +105,7 @@ function describeSelection(meta: SelectedTargetMeta | null): { title: string; su
 
 function describeSelectionTitle(meta: SelectedTargetMeta): string {
   if (meta.kind === 'instance') return componentTypeLabel(meta.type);
-  const root = buildLayerTree({ type: meta.type, instanceId: meta.instanceId });
-  return findLayerNode(root, meta.layerId)?.label ?? 'Layer';
+  return getLayerLabel({ type: meta.type, instanceId: meta.instanceId }, meta.layerId) ?? 'Layer';
 }
 
 function LayerInspectorFallback({ label }: { label: string }) {

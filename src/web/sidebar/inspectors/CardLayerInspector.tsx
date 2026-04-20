@@ -1,4 +1,5 @@
 import { useCardProps } from '../../state/editor.ts';
+import type { CardLayerId } from '../../state/layers.ts';
 import type { CardProps } from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { DecorationField } from '../fields/DecorationField.tsx';
@@ -14,8 +15,6 @@ import { BorderSection } from '../sections/BorderSection.tsx';
 import { FillSection } from '../sections/FillSection.tsx';
 import { LayoutSection } from '../sections/LayoutSection.tsx';
 import { ShadowSection } from '../sections/ShadowSection.tsx';
-
-type CardLayerId = 'surface' | 'title' | 'body';
 
 type Props = {
   id: string;

@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from './editor.ts';
-import { buildLayerTreeFromSignature, encodeLayerTreeSignature } from './layers.ts';
+import {
+  buildLayerTreeFromSignature,
+  encodeLayerTreeSignature,
+  instanceSelection,
+  layerSelection,
+} from './layers.ts';
 import type { CardInstance, ImportedInstance } from './types.ts';
 
 // Reset the store to a known two-instance baseline before each test. We
@@ -78,20 +83,13 @@ describe('select', () => {
 
   it('tracks the selected instance target', () => {
     useEditorStore.getState().select('a');
-    expect(useEditorStore.getState().selectedTarget).toEqual({ kind: 'instance', instanceId: 'a' });
+    expect(useEditorStore.getState().selectedTarget).toEqual(instanceSelection('a'));
   });
 
   it('tracks a selected layer while keeping the owning instance selected', () => {
-    useEditorStore
-      .getState()
-      .selectLayer({ kind: 'layer', instanceId: 'a', layerId: 'title', layerKind: 'text' });
+    useEditorStore.getState().selectLayer(layerSelection('a', 'title'));
     expect(useEditorStore.getState().selectedId).toBe('a');
-    expect(useEditorStore.getState().selectedTarget).toEqual({
-      kind: 'layer',
-      instanceId: 'a',
-      layerId: 'title',
-      layerKind: 'text',
-    });
+    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('a', 'title'));
   });
 });
 
@@ -308,9 +306,7 @@ describe('remove', () => {
   });
 
   it('clears selectedTarget when removing the owning instance', () => {
-    useEditorStore
-      .getState()
-      .selectLayer({ kind: 'layer', instanceId: 'a', layerId: 'body', layerKind: 'text' });
+    useEditorStore.getState().selectLayer(layerSelection('a', 'body'));
     useEditorStore.getState().remove('a');
     expect(useEditorStore.getState().selectedTarget).toBeNull();
   });

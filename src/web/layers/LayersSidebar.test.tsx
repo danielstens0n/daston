@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useEditorStore } from '../state/editor.ts';
+import { instanceSelection, layerSelection } from '../state/layers.ts';
 import type { CardInstance } from '../state/types.ts';
 import { LayersSidebar } from './LayersSidebar.tsx';
 
@@ -99,16 +100,11 @@ describe('LayersSidebar', () => {
 
     fireEvent.click(rootRow);
     expect(useEditorStore.getState().selectedId).toBe('b');
-    expect(useEditorStore.getState().selectedTarget).toEqual({ kind: 'instance', instanceId: 'b' });
+    expect(useEditorStore.getState().selectedTarget).toEqual(instanceSelection('b'));
 
     fireEvent.click(titleRow);
     expect(useEditorStore.getState().selectedId).toBe('b');
-    expect(useEditorStore.getState().selectedTarget).toEqual({
-      kind: 'layer',
-      instanceId: 'b',
-      layerId: 'title',
-      layerKind: 'text',
-    });
+    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('b', 'title'));
   });
 
   it('can collapse component rows independently and restore them', () => {

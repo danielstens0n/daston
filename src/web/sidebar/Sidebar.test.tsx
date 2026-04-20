@@ -3,6 +3,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { useEditorStore } from '../state/editor.ts';
+import { layerSelection } from '../state/layers.ts';
 import type { CardInstance } from '../state/types.ts';
 import { Sidebar } from './Sidebar.tsx';
 
@@ -70,9 +71,7 @@ describe('Sidebar', () => {
   });
 
   it('focuses title controls when the title layer is selected', () => {
-    useEditorStore
-      .getState()
-      .selectLayer({ kind: 'layer', instanceId: 'card-1', layerId: 'title', layerKind: 'text' });
+    useEditorStore.getState().selectLayer(layerSelection('card-1', 'title'));
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Card title')).toBeInTheDocument();
@@ -81,9 +80,7 @@ describe('Sidebar', () => {
   });
 
   it('focuses body controls when the body layer is selected', () => {
-    useEditorStore
-      .getState()
-      .selectLayer({ kind: 'layer', instanceId: 'card-1', layerId: 'body', layerKind: 'text' });
+    useEditorStore.getState().selectLayer(layerSelection('card-1', 'body'));
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Body' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Card body')).toBeInTheDocument();
@@ -91,9 +88,7 @@ describe('Sidebar', () => {
   });
 
   it('focuses surface controls when the surface layer is selected', () => {
-    useEditorStore
-      .getState()
-      .selectLayer({ kind: 'layer', instanceId: 'card-1', layerId: 'surface', layerKind: 'rectangle' });
+    useEditorStore.getState().selectLayer(layerSelection('card-1', 'surface'));
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Surface' })).toBeInTheDocument();
     expect(screen.getByText('Layout')).toBeInTheDocument();

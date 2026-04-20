@@ -13,7 +13,7 @@ export type LayerKind =
 
 export type SelectedTarget =
   | { kind: 'instance'; instanceId: string }
-  | { kind: 'layer'; instanceId: string; layerId: string; layerKind: LayerKind };
+  | { kind: 'layer'; instanceId: string; layerId: string };
 
 export type LayerNode = {
   id: string;
@@ -28,6 +28,15 @@ export type LayerNode = {
 
 export const CARD_LAYER_IDS = ['surface', 'title', 'body'] as const;
 export type CardLayerId = (typeof CARD_LAYER_IDS)[number];
+export const CARD_LAYERS: ReadonlyArray<{
+  id: CardLayerId;
+  kind: Extract<LayerKind, 'rectangle' | 'text'>;
+  label: string;
+}> = [
+  { id: 'surface', kind: 'rectangle', label: 'Surface' },
+  { id: 'title', kind: 'text', label: 'Title' },
+  { id: 'body', kind: 'text', label: 'Body' },
+] as const;
 
 export function isCardLayerId(layerId: string): layerId is CardLayerId {
   return CARD_LAYER_IDS.some((candidate) => candidate === layerId);
@@ -41,12 +50,15 @@ type LayerSource = {
   definitionId?: string;
 };
 
-function instanceSelection(instanceId: string): SelectedTarget {
+export function instanceSelection(instanceId: string): Extract<SelectedTarget, { kind: 'instance' }> {
   return { kind: 'instance', instanceId };
 }
 
-function layerSelection(instanceId: string, layerId: string, layerKind: LayerKind): SelectedTarget {
-  return { kind: 'layer', instanceId, layerId, layerKind };
+export function layerSelection(
+  instanceId: string,
+  layerId: string,
+): Extract<SelectedTarget, { kind: 'layer' }> {
+  return { kind: 'layer', instanceId, layerId };
 }
 
 function nodeId(selection: SelectedTarget): string {
@@ -79,7 +91,7 @@ function leaf(
   label: string,
   children: LayerNode[] = [],
 ): LayerNode {
-  const selection = layerSelection(source.instanceId, layerId, layerKind);
+  const selection = layerSelection(source.instanceId, layerId);
   return {
     id: nodeId(selection),
     instanceId: source.instanceId,
@@ -92,11 +104,10 @@ function leaf(
 }
 
 function buildCardLayers(source: LayerSource): LayerNode {
-  return rootNode(source, [
-    leaf(source, 'surface', 'rectangle', 'Surface'),
-    leaf(source, 'title', 'text', 'Title'),
-    leaf(source, 'body', 'text', 'Body'),
-  ]);
+  return rootNode(
+    source,
+    CARD_LAYERS.map((layer) => leaf(source, layer.id, layer.kind, layer.label)),
+  );
 }
 
 function buildButtonLayers(source: LayerSource): LayerNode {
@@ -180,6 +191,10 @@ export function findLayerNode(node: LayerNode, layerId: string): LayerNode | nul
     if (found) return found;
   }
   return null;
+}
+
+export function getLayerLabel(source: LayerSource, layerId: string): string | null {
+  return findLayerNode(buildLayerTree(source), layerId)?.label ?? null;
 }
 
 export function selectedTargetsEqual(a: SelectedTarget | null, b: SelectedTarget): boolean {

@@ -6,6 +6,7 @@ import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../lib/fonts.ts';
 import {
   buildLayerTreeFromSignature,
   encodeLayerTreeSignature,
+  instanceSelection,
   type LayerNode,
   type SelectedTarget,
 } from './layers.ts';
@@ -307,7 +308,7 @@ export const useEditorStore = create<EditorStore>((set) => {
     select: (id) =>
       set({
         selectedId: id,
-        selectedTarget: id ? { kind: 'instance', instanceId: id } : null,
+        selectedTarget: id ? instanceSelection(id) : null,
       }),
     selectLayer: (target) =>
       set({
@@ -402,7 +403,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
-              selectedTarget: { kind: 'instance', instanceId: id },
+              selectedTarget: instanceSelection(id),
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -420,7 +421,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
-              selectedTarget: { kind: 'instance', instanceId: id },
+              selectedTarget: instanceSelection(id),
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -438,7 +439,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
-              selectedTarget: { kind: 'instance', instanceId: id },
+              selectedTarget: instanceSelection(id),
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -456,7 +457,7 @@ export const useEditorStore = create<EditorStore>((set) => {
             return {
               instances: [...state.instances, instance],
               selectedId: id,
-              selectedTarget: { kind: 'instance', instanceId: id },
+              selectedTarget: instanceSelection(id),
               nextInstanceId: state.nextInstanceId + 1,
             };
           }
@@ -478,7 +479,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, instance],
           selectedId: id,
-          selectedTarget: { kind: 'instance', instanceId: id },
+          selectedTarget: instanceSelection(id),
           nextInstanceId: state.nextInstanceId + 1,
         };
       }),
@@ -486,8 +487,14 @@ export const useEditorStore = create<EditorStore>((set) => {
       applyMutation((state) => {
         const instance = state.instances.find((candidate) => candidate.id === id);
         if (!instance) return null;
+        if (
+          Object.entries(patch).every(([key, value]) =>
+            Object.is(instance.props[key as keyof typeof instance.props], value),
+          )
+        ) {
+          return null;
+        }
         const nextProps = { ...instance.props, ...patch };
-        if (JSON.stringify(nextProps) === JSON.stringify(instance.props)) return null;
         return {
           instances: state.instances.map((candidate) =>
             candidate.id === id ? ({ ...candidate, props: nextProps } as ComponentInstance) : candidate,
@@ -517,7 +524,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, clone],
           selectedId: clone.id,
-          selectedTarget: { kind: 'instance', instanceId: clone.id },
+          selectedTarget: instanceSelection(clone.id),
           nextInstanceId: state.nextInstanceId + 1,
         };
       }),
@@ -532,7 +539,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, clone],
           selectedId: cloneId,
-          selectedTarget: { kind: 'instance', instanceId: cloneId },
+          selectedTarget: instanceSelection(cloneId),
           nextInstanceId: state.nextInstanceId + 1,
         };
       });
@@ -589,7 +596,7 @@ export const useEditorStore = create<EditorStore>((set) => {
         return {
           instances: [...state.instances, clone],
           selectedId: newId,
-          selectedTarget: { kind: 'instance', instanceId: newId },
+          selectedTarget: instanceSelection(newId),
           lastPasteId: newId,
           nextInstanceId: state.nextInstanceId + 1,
         };
@@ -666,7 +673,6 @@ export type SelectedTargetMeta =
       instanceId: string;
       type: ComponentInstance['type'];
       layerId: string;
-      layerKind: Extract<SelectedTarget, { kind: 'layer' }>['layerKind'];
     };
 
 export function useSelectedTargetMeta(): SelectedTargetMeta | null {
@@ -686,7 +692,6 @@ export function useSelectedTargetMeta(): SelectedTargetMeta | null {
             instanceId: state.selectedTarget.instanceId,
             type: instance.type,
             layerId: state.selectedTarget.layerId,
-            layerKind: state.selectedTarget.layerKind,
           };
     }),
   );
