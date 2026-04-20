@@ -5,7 +5,10 @@ dist/
 src/web/routeTree.gen.ts
 *.log
 .DS_Store
+.agents/
+.claude/skills/
 .claude/settings.local.json
+skills-lock.json
 CLAUDE.md
 AGENTS.md
 Claude.md
