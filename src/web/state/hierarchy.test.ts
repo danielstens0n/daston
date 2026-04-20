@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from 'vitest';
+import { TEXT_PRIMITIVE_FRAME_DEFAULTS } from './editor/instance-defaults.ts';
 import {
   collectDescendantIds,
   collectSubtreeIds,
@@ -54,6 +55,7 @@ function text(id: string, x: number, y: number, parentId: string | null): TextPr
       text: 'hi',
       textColor: '#000',
       textAlign: 'left',
+      ...TEXT_PRIMITIVE_FRAME_DEFAULTS,
       textFont: 'f',
       textFontSize: 12,
       textFontWeight: 400,

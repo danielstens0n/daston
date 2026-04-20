@@ -1,11 +1,11 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildInstanceMenuItems } from '../context-menu/items.ts';
-import { useEditorStore, useInstance, useIsDropTarget } from '../state/editor.ts';
+import { useEditorStore, useInstance, useIsDropTarget, useResizeLockedAxes } from '../state/editor.ts';
 import { renderPreviewBody } from '../state/registry/component-registry.tsx';
 import { InstanceIdProvider, useInstanceId } from './InstanceIdContext.tsx';
 import { useInstanceInteraction } from './useInstanceInteraction.ts';
-import { type ResizeCorner, useResizeInteraction } from './useResizeInteraction.ts';
+import { type ResizeAxisLocks, type ResizeCorner, useResizeInteraction } from './useResizeInteraction.ts';
 import './preview-wrapper.css';
 
 type Props = {
@@ -22,6 +22,7 @@ const CORNERS: readonly ResizeCorner[] = ['nw', 'ne', 'sw', 'se'];
 // Shared by every preview type (Card today; Button, Table, Landing later).
 export function PreviewWrapper({ id, children }: Props) {
   const instance = useInstance(id);
+  const resizeLocks = useResizeLockedAxes(id);
   const { isSelected, handlers } = useInstanceInteraction(id);
   const isDropTarget = useIsDropTarget(id);
   const { openMenu } = useContextMenuHost();
@@ -55,14 +56,16 @@ export function PreviewWrapper({ id, children }: Props) {
         onContextMenu={onContextMenu}
       >
         {body}
-        {isSelected ? CORNERS.map((corner) => <ResizeHandle key={corner} corner={corner} />) : null}
+        {isSelected
+          ? CORNERS.map((corner) => <ResizeHandle key={corner} corner={corner} locks={resizeLocks} />)
+          : null}
       </div>
     </InstanceIdProvider>
   );
 }
 
-function ResizeHandle({ corner }: { corner: ResizeCorner }) {
+function ResizeHandle({ corner, locks }: { corner: ResizeCorner; locks: ResizeAxisLocks }) {
   const id = useInstanceId();
-  const { handlers } = useResizeInteraction(id, corner);
+  const { handlers } = useResizeInteraction(id, corner, locks);
   return <div className={`preview-resize-handle preview-resize-handle-${corner}`} {...handlers} />;
 }

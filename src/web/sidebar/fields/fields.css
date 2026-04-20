@@ -484,7 +484,7 @@
   border-color: var(--color-chrome-focus);
 }
 
-.sidebar-decoration-field {
+.sidebar-segmented-field {
   display: flex;
   gap: 4px;
   min-width: 0;
@@ -493,7 +493,7 @@
   border: none;
 }
 
-.sidebar-decoration-option {
+.sidebar-segmented-option {
   flex: 1;
   margin: 0;
   padding: 4px 2px;
@@ -506,12 +506,62 @@
   outline: none;
 }
 
-.sidebar-decoration-option:hover {
+.sidebar-segmented-option:hover {
   border-color: var(--color-chrome-focus);
 }
 
-.sidebar-decoration-option-active {
+.sidebar-segmented-option-active {
   border-color: var(--color-chrome-focus);
   background: color-mix(in srgb, var(--color-chrome-focus) 14%, transparent);
   color: var(--color-text-primary);
+}
+
+.sidebar-alignment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sidebar-alignment-row {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+  min-inline-size: 0;
+}
+
+.sidebar-alignment-button {
+  flex: 1;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  outline: none;
+}
+
+.sidebar-alignment-button:hover {
+  border-color: var(--color-chrome-focus);
+}
+
+.sidebar-alignment-button[data-active] {
+  border-color: var(--color-chrome-focus);
+  background: color-mix(in srgb, var(--color-chrome-focus) 14%, transparent);
+  color: var(--color-text-primary);
+}
+
+.sidebar-alignment-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
 }

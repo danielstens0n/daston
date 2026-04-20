@@ -18,12 +18,16 @@ import type {
   ComponentInstance,
   LandingProps,
   TableProps,
-  TextAlign,
+  TextAutoResize,
+  TextCase,
+  TextOverflow,
 } from '../../state/types.ts';
+import { AlignmentField } from '../fields/AlignmentField.tsx';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
+import { SegmentedField } from '../fields/SegmentedField.tsx';
 import { ToggleField } from '../fields/ToggleField.tsx';
 import { TypographyStyleRows } from '../fields/TypographyStyleRows.tsx';
 import { BorderSection } from '../sections/BorderSection.tsx';
@@ -94,7 +98,23 @@ function ShapeRootInspector({ id, showRadius }: { id: string; showRadius: boolea
   );
 }
 
-const TEXT_ALIGNS: readonly TextAlign[] = ['left', 'center', 'right'];
+const TEXT_CASE_OPTIONS: { value: TextCase; label: string }[] = [
+  { value: 'none', label: 'None' },
+  { value: 'upper', label: 'ABC' },
+  { value: 'lower', label: 'abc' },
+  { value: 'title', label: 'Abc' },
+];
+
+const TEXT_OVERFLOW_OPTIONS: { value: TextOverflow; label: string }[] = [
+  { value: 'clip', label: 'Clip' },
+  { value: 'ellipsis', label: '…' },
+];
+
+const TEXT_AUTO_RESIZE_OPTIONS: { value: TextAutoResize; label: string; title?: string }[] = [
+  { value: 'fixed', label: 'Fixed' },
+  { value: 'width', label: 'W', title: 'Auto width' },
+  { value: 'height', label: 'H', title: 'Auto height' },
+];
 
 /** Text primitive: color, alignment, and typography (instance or `text` layer). */
 export function TextPrimitiveFields({ id }: { id: string }) {
@@ -114,19 +134,13 @@ export function TextPrimitiveFields({ id }: { id: string }) {
           />
         </FieldRow>
         <FieldRow label="Align">
-          <div className="sidebar-align-row">
-            {TEXT_ALIGNS.map((align: TextAlign) => (
-              <button
-                key={align}
-                type="button"
-                className="sidebar-align-button"
-                data-active={props.textAlign === align || undefined}
-                onClick={() => onPatch({ textAlign: align })}
-              >
-                {align}
-              </button>
-            ))}
-          </div>
+          <AlignmentField
+            value={{ horizontal: props.textAlign, vertical: props.textVerticalAlign }}
+            onChange={(patch) => {
+              if (patch.horizontal !== undefined) onPatch({ textAlign: patch.horizontal });
+              if (patch.vertical !== undefined) onPatch({ textVerticalAlign: patch.vertical });
+            }}
+          />
         </FieldRow>
       </Section>
       <Section title="Typography">
@@ -137,6 +151,61 @@ export function TextPrimitiveFields({ id }: { id: string }) {
           fontAriaLabel="Text font"
           weightAriaLabel="Text weight"
         />
+        <FieldRow label="Line">
+          <NumberField
+            value={props.textLineHeight}
+            onChange={(value) => onPatch({ textLineHeight: value })}
+            min={0}
+            max={4}
+            step={0.05}
+          />
+        </FieldRow>
+        <FieldRow label="Spacing">
+          <NumberField
+            value={props.textLetterSpacing}
+            onChange={(value) => onPatch({ textLetterSpacing: value })}
+            min={-4}
+            max={40}
+            unit="px"
+          />
+        </FieldRow>
+        <FieldRow label="Case">
+          <SegmentedField
+            value={props.textCase}
+            onChange={(value) => onPatch({ textCase: value })}
+            options={TEXT_CASE_OPTIONS}
+            ariaLabel="Text case"
+          />
+        </FieldRow>
+        <FieldRow label="Paragraph">
+          <NumberField
+            value={props.textParagraphSpacing}
+            onChange={(value) => onPatch({ textParagraphSpacing: value })}
+            min={0}
+            max={80}
+            unit="px"
+          />
+        </FieldRow>
+      </Section>
+      <Section title="Frame">
+        <FieldRow label="Resize">
+          <SegmentedField
+            value={props.textAutoResize}
+            onChange={(value) => onPatch({ textAutoResize: value })}
+            options={TEXT_AUTO_RESIZE_OPTIONS}
+            ariaLabel="Text frame resize mode"
+          />
+        </FieldRow>
+        {props.textAutoResize === 'fixed' ? (
+          <FieldRow label="Overflow">
+            <SegmentedField
+              value={props.textOverflow}
+              onChange={(value) => onPatch({ textOverflow: value })}
+              options={TEXT_OVERFLOW_OPTIONS}
+              ariaLabel="Text overflow"
+            />
+          </FieldRow>
+        ) : null}
       </Section>
     </>
   );

@@ -168,15 +168,33 @@ export type TriangleInstance = InstanceGeometry & {
 
 export type TextAlign = 'left' | 'center' | 'right';
 
+export type TextVerticalAlign = 'top' | 'middle' | 'bottom';
+
+export type TextCase = 'none' | 'upper' | 'lower' | 'title';
+
+export type TextOverflow = 'clip' | 'ellipsis';
+
+export type TextAutoResize = 'fixed' | 'width' | 'height';
+
 export type TextPrimitiveProps = {
   text: string;
   textColor: string;
   textAlign: TextAlign;
+  textVerticalAlign: TextVerticalAlign;
   textFont: string;
   textFontSize: number;
   textFontWeight: FontWeight;
   textItalic: boolean;
   textDecoration: TextDecoration;
+  /** Unitless line-height multiplier; 0 means CSS `normal` (auto). */
+  textLineHeight: number;
+  /** Letter spacing in px (may be negative). */
+  textLetterSpacing: number;
+  textCase: TextCase;
+  /** Vertical gap between paragraphs (`\n\n`-delimited) in px. */
+  textParagraphSpacing: number;
+  textOverflow: TextOverflow;
+  textAutoResize: TextAutoResize;
 };
 
 export type TextPrimitiveInstance = InstanceGeometry & {

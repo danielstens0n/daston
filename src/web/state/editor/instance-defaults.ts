@@ -162,11 +162,23 @@ export function createDefaultCardProps(theme?: ThemeConfig | null): CardProps {
   return mergeCard(base, t);
 }
 
+/** Shared by text factories and tests that build minimal `TextPrimitiveInstance` props. */
+export const TEXT_PRIMITIVE_FRAME_DEFAULTS = {
+  textVerticalAlign: 'top' as const,
+  textLineHeight: 0,
+  textLetterSpacing: 0,
+  textCase: 'none' as const,
+  textParagraphSpacing: 0,
+  textOverflow: 'clip' as const,
+  textAutoResize: 'fixed' as const,
+};
+
 export function baseCardTitleTextProps(): TextPrimitiveProps {
   return {
     text: 'Card',
     textColor: '#18181b',
     textAlign: 'left',
+    ...TEXT_PRIMITIVE_FRAME_DEFAULTS,
     textFont: DEFAULT_HEADING_FONT_ID,
     textFontSize: 16,
     textFontWeight: 600,
@@ -180,6 +192,7 @@ export function baseCardBodyTextProps(): TextPrimitiveProps {
     text: 'A simple card preview. Double-click text to edit.',
     textColor: '#52525b',
     textAlign: 'left',
+    ...TEXT_PRIMITIVE_FRAME_DEFAULTS,
     textFont: DEFAULT_BODY_FONT_ID,
     textFontSize: 13,
     textFontWeight: 400,
@@ -255,6 +268,8 @@ export function baseButtonLabelTextProps(): TextPrimitiveProps {
     text: 'Button',
     textColor: '#ffffff',
     textAlign: 'center',
+    ...TEXT_PRIMITIVE_FRAME_DEFAULTS,
+    textVerticalAlign: 'middle',
     textFont: DEFAULT_HEADING_FONT_ID,
     textFontSize: 14,
     textFontWeight: 600,
@@ -338,6 +353,7 @@ export function createDefaultTextPrimitiveProps(theme?: ThemeConfig | null): Tex
     text: 'Text',
     textColor: '#18181b',
     textAlign: 'left',
+    ...TEXT_PRIMITIVE_FRAME_DEFAULTS,
     textFont: DEFAULT_BODY_FONT_ID,
     textFontSize: 16,
     textFontWeight: 500,

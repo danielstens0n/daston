@@ -1,8 +1,10 @@
 import {
   type FocusEvent,
+  forwardRef,
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
+  type ReactNode,
   useId,
   useLayoutEffect,
   useRef,
@@ -21,16 +23,14 @@ type Props = {
   layerId?: string;
   /** Open the inline editor once after mount (e.g. new text from the draw tool). */
   openOnMount?: boolean;
+  /** Read-only display; defaults to `value`. */
+  children?: ReactNode;
 };
 
-export function EditableText({
-  value,
-  onChange,
-  className,
-  multiline = false,
-  layerId,
-  openOnMount = false,
-}: Props) {
+export const EditableText = forwardRef<HTMLButtonElement, Props>(function EditableText(
+  { value, onChange, className, multiline = false, layerId, openOnMount = false, children },
+  ref,
+) {
   const instanceId = useInstanceId();
   const anchorKey = useId();
   const anchorRef = useRef<HTMLButtonElement | null>(null);
@@ -89,9 +89,15 @@ export function EditableText({
 
   const anchorClass = `${className ?? 'preview-inline-text'} preview-editable-text-anchor`;
 
+  function setRefs(el: HTMLButtonElement | null) {
+    anchorRef.current = el;
+    if (typeof ref === 'function') ref(el);
+    else if (ref) ref.current = el;
+  }
+
   return (
     <button
-      ref={anchorRef}
+      ref={setRefs}
       type="button"
       data-preview-interactive="true"
       className={anchorClass}
@@ -101,7 +107,7 @@ export function EditableText({
       onDoubleClick={beginEditing}
       onKeyDown={onTriggerKeyDown}
     >
-      {value}
+      {children ?? value}
     </button>
   );
-}
+});

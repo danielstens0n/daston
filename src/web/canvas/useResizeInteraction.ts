@@ -13,6 +13,10 @@ export type ResizeRect = { x: number; y: number; width: number; height: number }
 // which the store can't do (it doesn't know which corner is being dragged).
 const MIN_SIZE = 40;
 
+export type ResizeAxisLocks = { lockWidth: boolean; lockHeight: boolean };
+
+const NO_LOCKS: ResizeAxisLocks = { lockWidth: false, lockHeight: false };
+
 type DragState = {
   pointerId: number;
   lastClientX: number;
@@ -21,6 +25,10 @@ type DragState = {
   // accumulate per-frame deltas on the ref so zoom mid-drag doesn't rescale
   // travel that already happened at the previous zoom.
   rect: ResizeRect;
+  // When an axis is locked, re-apply the start geometry on that axis every
+  // frame so the lock holds against whatever resizeRect produced.
+  startRect: ResizeRect;
+  locks: ResizeAxisLocks;
 };
 
 // Apply a world-space delta to a corner and return the new rect. Pure.
@@ -75,7 +83,7 @@ export function resizeRect(rect: ResizeRect, corner: ResizeCorner, dx: number, d
 // useInstanceInteraction: subscribes to scale (reactive), reads the live
 // instance at pointerdown via getState(), and writes every frame via
 // store.resize.
-export function useResizeInteraction(id: string, corner: ResizeCorner) {
+export function useResizeInteraction(id: string, corner: ResizeCorner, locks?: ResizeAxisLocks) {
   const scale = useCanvasScale();
   const dragRef = useRef<DragState | null>(null);
 
@@ -91,16 +99,19 @@ export function useResizeInteraction(id: string, corner: ResizeCorner) {
     store.select(id);
     store.beginHistoryBatch();
     event.currentTarget.setPointerCapture(event.pointerId);
+    const startRect = {
+      x: instance.x,
+      y: instance.y,
+      width: instance.width,
+      height: instance.height,
+    };
     dragRef.current = {
       pointerId: event.pointerId,
       lastClientX: event.clientX,
       lastClientY: event.clientY,
-      rect: {
-        x: instance.x,
-        y: instance.y,
-        width: instance.width,
-        height: instance.height,
-      },
+      rect: { ...startRect },
+      startRect,
+      locks: locks ?? NO_LOCKS,
     };
   }
 
@@ -111,8 +122,15 @@ export function useResizeInteraction(id: string, corner: ResizeCorner) {
     const dy = (event.clientY - drag.lastClientY) / scale;
     drag.lastClientX = event.clientX;
     drag.lastClientY = event.clientY;
-    drag.rect = resizeRect(drag.rect, corner, dx, dy);
-    useEditorStore.getState().resize(id, drag.rect);
+    let next = resizeRect(drag.rect, corner, dx, dy);
+    if (drag.locks.lockWidth) {
+      next = { ...next, x: drag.startRect.x, width: drag.startRect.width };
+    }
+    if (drag.locks.lockHeight) {
+      next = { ...next, y: drag.startRect.y, height: drag.startRect.height };
+    }
+    drag.rect = next;
+    useEditorStore.getState().resize(id, next);
   }
 
   function endDrag(event: ReactPointerEvent<HTMLDivElement>) {

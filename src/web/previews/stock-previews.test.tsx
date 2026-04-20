@@ -29,6 +29,7 @@ describe('stock preview bodies', () => {
       canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
       activeTool: 'select',
       pendingTextEditInstanceId: null,
+      dropTargetId: null,
     });
   });
 
@@ -102,5 +103,28 @@ describe('stock preview bodies', () => {
     expect(screen.getByText('Get started')).toBeInTheDocument();
     expect(screen.getByText('Highlights')).toBeInTheDocument();
     expect(screen.getByText('Editable previews')).toBeInTheDocument();
+  });
+
+  it('applies text frame CSS variables on the text preview root', () => {
+    useEditorStore.getState().addInstance('text', { x: 0, y: 0 });
+    const id = useEditorStore.getState().instances.find((i) => i.type === 'text')?.id;
+    if (!id) throw new Error('expected text instance');
+    useEditorStore.getState().updateProps(id, {
+      textVerticalAlign: 'middle',
+      textCase: 'upper',
+      textLetterSpacing: 3,
+      textLineHeight: 1.4,
+    });
+    const { container } = render(
+      <InstanceIdProvider id={id}>
+        <Text id={id} />
+      </InstanceIdProvider>,
+    );
+    const root = container.querySelector('.preview-text-root');
+    const style = root?.getAttribute('style') ?? '';
+    expect(style).toContain('--text-valign: center');
+    expect(style).toContain('--text-transform: uppercase');
+    expect(style).toContain('--text-letter-spacing: 3px');
+    expect(style).toContain('--text-line-height: 1.4');
   });
 });
