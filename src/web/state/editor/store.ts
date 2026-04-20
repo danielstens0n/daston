@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { ComponentId, ThemeConfig } from '../../../shared/types.ts';
 import { patchTheme } from '../../lib/api.ts';
 import { setResolvedThemeConfig } from '../../lib/theme-defaults-context.ts';
+import { ancestorChain } from '../hierarchy.ts';
 import { instanceSelection, type SelectedTarget } from '../layers.ts';
 import {
   createSnapshot,
@@ -99,6 +100,14 @@ type EditorAmbientState = {
   pendingTextEditInstanceId: string | null;
   /** Ephemeral preview of the parent an in-progress drag will land inside; not part of undo history. */
   dropTargetId: string | null;
+  /** Wrapper currently under the pointer while the select tool is active; drives the hover outline. */
+  hoveredId: string | null;
+  /**
+   * Figma-style "entered" container. While non-null, clicking any descendant of
+   * this instance selects the direct child of this root on the hit path
+   * instead of the outermost ancestor.
+   */
+  selectionRootId: string | null;
   /** Last theme from server; drives color variables in the picker. */
   themeConfig: ThemeConfig | null;
 };
@@ -107,6 +116,9 @@ type EditorActions = {
   setActiveTool: (tool: CanvasTool) => void;
   setPendingTextEditInstanceId: (id: string | null) => void;
   setDropTargetId: (id: string | null) => void;
+  setHoveredId: (id: string | null) => void;
+  setSelectionRootId: (id: string | null) => void;
+  popSelectionRoot: () => void;
   setCanvasBackgroundColor: (color: string) => void;
 
   applyInitialThemeFromServer: (theme: ThemeConfig) => void;
@@ -152,14 +164,33 @@ export const useEditorStore = create<EditorStore>((set) => {
       const snapshot = pickEditorSnapshot(state);
       const patch = recipe(snapshot);
       if (!patch) return state;
+      // Clear ambient drill-down / hover references if the instance they
+      // point at no longer exists after the mutation (e.g. remove/cut).
+      // Skip the O(n) scan entirely when the mutation didn't touch
+      // `instances` or when nothing ambient is set — the pointermove / drag
+      // path goes through here on every frame.
+      let ambient: Partial<EditorStore> | null = null;
+      if (patch.instances && (state.selectionRootId || state.hoveredId)) {
+        const ids = new Set(patch.instances.map((i) => i.id));
+        if (state.selectionRootId && !ids.has(state.selectionRootId)) {
+          ambient = { selectionRootId: null };
+        }
+        if (state.hoveredId && !ids.has(state.hoveredId)) {
+          ambient = { ...ambient, hoveredId: null };
+        }
+      }
       if (state.historyBatch) {
-        return state.future.length === 0 ? patch : { ...patch, future: [] };
+        const base = state.future.length === 0 ? patch : { ...patch, future: [] };
+        return ambient ? { ...base, ...ambient } : base;
       }
       const before = createSnapshot(snapshot);
       const after = mergeSnapshot(snapshot, patch);
-      if (snapshotsEqual(before, after)) return state;
+      if (snapshotsEqual(before, after)) {
+        return ambient ? { ...state, ...ambient } : state;
+      }
       return {
         ...patch,
+        ...ambient,
         past: [...state.past, before],
         future: [],
       };
@@ -184,6 +215,17 @@ export const useEditorStore = create<EditorStore>((set) => {
     setPendingTextEditInstanceId: (id) => set({ pendingTextEditInstanceId: id }),
     dropTargetId: null,
     setDropTargetId: (id) => set({ dropTargetId: id }),
+    hoveredId: null,
+    setHoveredId: (id) => set({ hoveredId: id }),
+    selectionRootId: null,
+    setSelectionRootId: (id) => set({ selectionRootId: id }),
+    popSelectionRoot: () =>
+      set((state) => {
+        if (state.selectionRootId === null) return state;
+        // Walk up one level; `ancestorChain[1]` is the parent (chain is self-first).
+        const parent = ancestorChain(state.instances, state.selectionRootId)[1] ?? null;
+        return { selectionRootId: parent };
+      }),
     setCanvasBackgroundColor: (color) => set({ canvasBackgroundColor: color }),
     applyInitialThemeFromServer: (theme) =>
       set((state) => {

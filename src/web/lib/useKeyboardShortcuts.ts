@@ -83,6 +83,12 @@ export function useKeyboardShortcuts(): void {
             store.setActiveTool('select');
             return;
           }
+          // Figma-style Esc cascade: pop out of any drilled-in container
+          // first, only clear selection when there's nothing left to pop.
+          if (store.selectionRootId !== null) {
+            store.popSelectionRoot();
+            return;
+          }
           store.select(null);
         },
       },

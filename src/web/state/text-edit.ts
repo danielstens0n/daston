@@ -19,6 +19,13 @@ type TextEditStore = {
   registerAnchor: (key: string, getter: AnchorGetter) => void;
   unregisterAnchor: (key: string) => void;
   getAnchor: (key: string) => AnchorGetter | undefined;
+  /**
+   * Per-instance "primary" edit trigger. Lets wrapper-level double-click
+   * share EditableText's anchor + onCommit wiring instead of duplicating it.
+   */
+  registerBeginEdit: (instanceId: string, fn: () => void) => void;
+  unregisterBeginEdit: (instanceId: string, fn: () => void) => void;
+  beginPrimaryEdit: (instanceId: string) => void;
   open: (session: Omit<TextEditSession, 'draft' | 'baseline'> & { value: string }) => void;
   setDraft: (draft: string) => void;
   cancel: () => void;
@@ -26,6 +33,7 @@ type TextEditStore = {
 };
 
 const anchorGetters = new Map<string, AnchorGetter>();
+const beginEditByInstance = new Map<string, () => void>();
 
 export function elementRectToWorldRect(
   element: HTMLElement,
@@ -54,6 +62,19 @@ export const useTextEditStore = create<TextEditStore>((set, get) => ({
     anchorGetters.delete(key);
   },
   getAnchor: (key) => anchorGetters.get(key),
+  registerBeginEdit: (instanceId, fn) => {
+    beginEditByInstance.set(instanceId, fn);
+  },
+  unregisterBeginEdit: (instanceId, fn) => {
+    // StrictMode double-mount can interleave register/unregister; only clear
+    // if we still own the slot.
+    if (beginEditByInstance.get(instanceId) === fn) {
+      beginEditByInstance.delete(instanceId);
+    }
+  },
+  beginPrimaryEdit: (instanceId) => {
+    beginEditByInstance.get(instanceId)?.();
+  },
   open: (session) =>
     set({
       active: {
@@ -79,4 +100,8 @@ export const useTextEditStore = create<TextEditStore>((set, get) => ({
 
 export function useTextEditActiveForAnchor(anchorKey: string): boolean {
   return useTextEditStore((s) => s.active?.anchorKey === anchorKey);
+}
+
+export function useIsTextEditActiveForInstance(instanceId: string): boolean {
+  return useTextEditStore((s) => s.active?.instanceId === instanceId);
 }

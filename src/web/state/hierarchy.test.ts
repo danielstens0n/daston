@@ -3,6 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { TEXT_PRIMITIVE_FRAME_DEFAULTS } from './editor/instance-defaults.ts';
 import {
+  ancestorChain,
+  childOfRootOnPath,
   collectDescendantIds,
   collectSubtreeIds,
   orderedInstanceIds,
@@ -118,6 +120,43 @@ describe('orderedInstanceIds', () => {
       text('ghost', 0, 0, 'missing-parent'),
     ];
     expect(orderedInstanceIds(instances)).toEqual(['r1', 'ghost']);
+  });
+});
+
+describe('ancestorChain', () => {
+  it('returns self-first, root-last for a nested descendant', () => {
+    const instances: ComponentInstance[] = [
+      rect('r1', 0, 0, 100, 100, null),
+      rect('r2', 10, 10, 40, 40, 'r1'),
+      text('t1', 20, 20, 'r2'),
+    ];
+    expect(ancestorChain(instances, 't1')).toEqual(['t1', 'r2', 'r1']);
+  });
+
+  it('treats orphans with a missing parent as stopping at self', () => {
+    const instances: ComponentInstance[] = [text('ghost', 0, 0, 'missing-parent')];
+    expect(ancestorChain(instances, 'ghost')).toEqual(['ghost']);
+  });
+});
+
+describe('childOfRootOnPath', () => {
+  it('returns the direct child of rootId on the path down to descendantId', () => {
+    const instances: ComponentInstance[] = [
+      rect('r1', 0, 0, 100, 100, null),
+      rect('r2', 10, 10, 40, 40, 'r1'),
+      text('t1', 20, 20, 'r2'),
+    ];
+    expect(childOfRootOnPath(instances, 'r1', 't1')).toBe('r2');
+  });
+
+  it('returns null when rootId is not an ancestor of descendantId', () => {
+    const instances: ComponentInstance[] = [rect('r1', 0, 0, 100, 100, null), text('t1', 0, 0, null)];
+    expect(childOfRootOnPath(instances, 'r1', 't1')).toBeNull();
+  });
+
+  it('returns null when rootId equals descendantId', () => {
+    const instances: ComponentInstance[] = [rect('r1', 0, 0, 100, 100, null)];
+    expect(childOfRootOnPath(instances, 'r1', 'r1')).toBeNull();
   });
 });
 

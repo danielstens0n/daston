@@ -6,6 +6,42 @@ import type { ComponentInstance } from './types.ts';
 
 type Rect = { x: number; y: number; width: number; height: number };
 
+/**
+ * Walks up `parentId` from `id` and returns the chain self-first, root-last.
+ * Stops at `null` or at a missing parent (treats orphans as roots). Also
+ * stops if a cycle is detected, so a bad graph can't loop forever.
+ */
+export function ancestorChain(instances: readonly ComponentInstance[], id: string): string[] {
+  const byId = new Map(instances.map((inst) => [inst.id, inst]));
+  const chain: string[] = [];
+  const seen = new Set<string>();
+  let cursor: string | null = id;
+  while (cursor !== null && !seen.has(cursor)) {
+    const inst = byId.get(cursor);
+    if (!inst) break;
+    chain.push(cursor);
+    seen.add(cursor);
+    cursor = inst.parentId;
+  }
+  return chain;
+}
+
+/**
+ * The direct child of `rootId` that sits on the ancestor chain from
+ * `descendantId`. Returns `null` if `rootId` is not a strict ancestor of
+ * `descendantId` (same instance or unrelated).
+ */
+export function childOfRootOnPath(
+  instances: readonly ComponentInstance[],
+  rootId: string,
+  descendantId: string,
+): string | null {
+  const chain = ancestorChain(instances, descendantId);
+  const rootIndex = chain.indexOf(rootId);
+  if (rootIndex <= 0) return null;
+  return chain[rootIndex - 1] ?? null;
+}
+
 export function collectDescendantIds(instances: readonly ComponentInstance[], rootId: string): Set<string> {
   const out = new Set<string>();
   const stack = [rootId];

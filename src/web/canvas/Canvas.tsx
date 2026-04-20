@@ -151,7 +151,10 @@ export function Canvas({ children, overlay }: Props) {
       return;
     }
 
-    useEditorStore.getState().select(null);
+    const store = useEditorStore.getState();
+    store.select(null);
+    store.setSelectionRootId(null);
+    store.setHoveredId(null);
     event.currentTarget.setPointerCapture(event.pointerId);
     panRef.current = {
       pointerId: event.pointerId,
@@ -248,7 +251,9 @@ export function Canvas({ children, overlay }: Props) {
   function onContextMenu(event: MouseEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
     event.preventDefault();
-    useEditorStore.getState().select(null);
+    const store = useEditorStore.getState();
+    store.select(null);
+    store.setSelectionRootId(null);
     const el = viewportRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();

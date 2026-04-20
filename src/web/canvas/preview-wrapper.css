@@ -11,12 +11,38 @@
   cursor: grabbing;
 }
 
-/* Selection outline lives on the wrapper, which has no border-radius, so
-   the outline renders as a sharp rectangle regardless of the inner preview's
-   shape. `outline` is drawn outside layout, so no reflow on toggle. */
-.preview-wrapper[data-selected] {
+/* Translucent tint painted on top of the preview body when selected; lives
+   on a pseudo-element so the body's own colors stay untouched and the tint
+   clears cleanly when selection drops. */
+.preview-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: transparent;
+  transition: background 80ms linear;
+}
+
+/* Hover outline shows only when nothing else is happening (not selected,
+   not editing). A 1px rule keeps it visually distinct from the heavier
+   selection outline. */
+.preview-wrapper[data-hovered]:not([data-selected]):not([data-editing]) {
   outline: 1px solid var(--color-chrome-focus);
   outline-offset: 2px;
+}
+
+/* Selection outline lives on the wrapper, which has no border-radius, so
+   the outline renders as a sharp rectangle regardless of the inner preview's
+   shape. `outline` is drawn outside layout, so no reflow on toggle.
+   Suppressed while editing so the text edit input's own outline is the
+   only visible focus indicator. */
+.preview-wrapper[data-selected]:not([data-editing]) {
+  outline: 1px solid var(--color-chrome-focus);
+  outline-offset: 2px;
+}
+
+.preview-wrapper[data-selected]:not([data-editing])::before {
+  background: color-mix(in srgb, var(--color-chrome-focus) 12%, transparent);
 }
 
 /* Drop-target preview while another element is being dragged over this one.
@@ -24,6 +50,13 @@
 .preview-wrapper[data-drop-target] {
   outline: 2px dashed var(--color-chrome-focus);
   outline-offset: -2px;
+}
+
+/* "Entered" container via double-click drill-down: a subtler dashed inset
+   outline so the user can see which container scopes further clicks. */
+.preview-wrapper[data-selection-root]:not([data-selected]):not([data-editing]) {
+  outline: 1px dashed var(--color-chrome-focus);
+  outline-offset: 2px;
 }
 
 /* Resize handles are 10×10 squares at each corner, offset so they straddle

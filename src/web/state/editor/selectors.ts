@@ -40,6 +40,14 @@ export function useIsDropTarget(id: string): boolean {
   return useEditorStore((state) => state.dropTargetId === id);
 }
 
+export function useIsHovered(id: string): boolean {
+  return useEditorStore((state) => state.hoveredId === id);
+}
+
+export function useIsSelectionRoot(id: string): boolean {
+  return useEditorStore((state) => state.selectionRootId === id);
+}
+
 export function useLayerTree(): LayerNode[] {
   const layerMemoKey = useEditorStore(
     useShallow((state) => state.instances.map((i) => `${i.id}:${encodeLayerTreeSignature(i)}`).join('|')),

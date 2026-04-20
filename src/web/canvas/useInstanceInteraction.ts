@@ -1,6 +1,8 @@
-import { type PointerEvent as ReactPointerEvent, useRef } from 'react';
+import { type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useRef } from 'react';
 import { useEditorStore, useIsSelected } from '../state/editor.ts';
-import { pickDropTarget } from '../state/hierarchy.ts';
+import { ancestorChain, childOfRootOnPath, pickDropTarget } from '../state/hierarchy.ts';
+import { useTextEditStore } from '../state/text-edit.ts';
+import type { ComponentInstance } from '../state/types.ts';
 import { useCanvasScale } from './Canvas.tsx';
 
 // Tracks the last pointer position + running world position so each frame's
@@ -44,6 +46,26 @@ export function constrainedDragPosition(
   return { x: originX, y: unconstrainedY };
 }
 
+/**
+ * Figma-style drill-down resolution. Walks the hit's ancestor chain once
+ * and decides, given the current "entered" container (`selectionRootId`),
+ * which instance should become the selected/drag target and whether the
+ * selection root should be cleared.
+ */
+export function resolveDrillTarget(
+  instances: readonly ComponentInstance[],
+  hitId: string,
+  selectionRootId: string | null,
+): { targetId: string; clearSelectionRoot: boolean } {
+  const chain = ancestorChain(instances, hitId);
+  const outermost = chain[chain.length - 1] ?? hitId;
+  if (!selectionRootId) return { targetId: outermost, clearSelectionRoot: false };
+  const rootIndex = chain.indexOf(selectionRootId);
+  if (rootIndex < 0) return { targetId: outermost, clearSelectionRoot: true };
+  if (rootIndex === 0) return { targetId: hitId, clearSelectionRoot: false };
+  return { targetId: chain[rootIndex - 1] ?? hitId, clearSelectionRoot: false };
+}
+
 // Drag + select for any preview, keyed by id. The hook subscribes only to
 // `isSelected` (reactive) and reads the live position from the store at
 // pointerdown via `getState()` so dragging doesn't re-subscribe the caller
@@ -55,26 +77,29 @@ export function useInstanceInteraction(id: string) {
 
   function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
-    // Prevent the canvas pan handler from starting a pan under this element.
     event.stopPropagation();
     const store = useEditorStore.getState();
-    const instance = store.instances.find((i) => i.id === id);
-    if (!instance) return;
-    store.select(id);
+    const { targetId, clearSelectionRoot } = resolveDrillTarget(store.instances, id, store.selectionRootId);
+    if (clearSelectionRoot) store.setSelectionRootId(null);
+    store.select(targetId);
+
     if (isInteractiveTarget(event.target)) return;
+    const dragInstance = store.instances.find((i) => i.id === targetId);
+    if (!dragInstance) return;
+
     store.beginHistoryBatch();
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    let targetId = id;
+    let dragTargetId = targetId;
     let altDuplicated = false;
     if (event.altKey) {
-      const cloneId = store.duplicateInPlaceForDrag(id);
+      const cloneId = store.duplicateInPlaceForDrag(dragTargetId);
       if (!cloneId) {
         store.endHistoryBatch();
         event.currentTarget.releasePointerCapture(event.pointerId);
         return;
       }
-      targetId = cloneId;
+      dragTargetId = cloneId;
       altDuplicated = true;
     }
 
@@ -82,11 +107,11 @@ export function useInstanceInteraction(id: string) {
       pointerId: event.pointerId,
       lastClientX: event.clientX,
       lastClientY: event.clientY,
-      unconstrainedX: instance.x,
-      unconstrainedY: instance.y,
-      originWorldX: instance.x,
-      originWorldY: instance.y,
-      targetId,
+      unconstrainedX: dragInstance.x,
+      unconstrainedY: dragInstance.y,
+      originWorldX: dragInstance.x,
+      originWorldY: dragInstance.y,
+      targetId: dragTargetId,
       altDuplicated,
       dropTargetId: null,
     };
@@ -120,6 +145,7 @@ export function useInstanceInteraction(id: string) {
       event.shiftKey,
       SHIFT_AXIS_LOCK_THRESHOLD_PX,
     );
+
     store.move(drag.targetId, { x, y });
 
     // Preview the parent the drop will land in; the actual reparent happens
@@ -149,6 +175,34 @@ export function useInstanceInteraction(id: string) {
     event.currentTarget.removeAttribute('data-dragging');
   }
 
+  function onDoubleClick(event: ReactMouseEvent<HTMLDivElement>) {
+    const store = useEditorStore.getState();
+    const hit = store.instances.find((i) => i.id === id);
+    if (!hit) return;
+    event.stopPropagation();
+
+    // Figma parity: double-click on an already-selected text opens the inline
+    // editor (via EditableText's registered entry point, sharing its anchor
+    // + onCommit wiring); double-click on an already-selected container
+    // "enters" it, after which single clicks select the direct child on the
+    // hit path.
+    if (hit.type === 'text' && store.selectedId === id) {
+      useTextEditStore.getState().beginPrimaryEdit(id);
+      return;
+    }
+
+    const chain = ancestorChain(store.instances, id);
+    const selectedId = store.selectedId;
+    if (!selectedId || !chain.includes(selectedId)) return;
+    if (!store.instances.some((i) => i.parentId === selectedId)) return;
+
+    store.setSelectionRootId(selectedId);
+    if (selectedId !== id) {
+      const child = childOfRootOnPath(store.instances, selectedId, id);
+      if (child) store.select(child);
+    }
+  }
+
   return {
     isSelected,
     handlers: {
@@ -156,6 +210,7 @@ export function useInstanceInteraction(id: string) {
       onPointerMove,
       onPointerUp: endDrag,
       onPointerCancel: endDrag,
+      onDoubleClick,
     },
   };
 }

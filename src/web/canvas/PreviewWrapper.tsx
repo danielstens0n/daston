@@ -1,8 +1,16 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildInstanceMenuItems } from '../context-menu/items.ts';
-import { useEditorStore, useInstance, useIsDropTarget, useResizeLockedAxes } from '../state/editor.ts';
+import {
+  useEditorStore,
+  useInstance,
+  useIsDropTarget,
+  useIsHovered,
+  useIsSelectionRoot,
+  useResizeLockedAxes,
+} from '../state/editor.ts';
 import { renderPreviewBody } from '../state/registry/component-registry.tsx';
+import { useIsTextEditActiveForInstance } from '../state/text-edit.ts';
 import { InstanceIdProvider, useInstanceId } from './InstanceIdContext.tsx';
 import { useInstanceInteraction } from './useInstanceInteraction.ts';
 import { type ResizeAxisLocks, type ResizeCorner, useResizeInteraction } from './useResizeInteraction.ts';
@@ -25,6 +33,9 @@ export function PreviewWrapper({ id, children }: Props) {
   const resizeLocks = useResizeLockedAxes(id);
   const { isSelected, handlers } = useInstanceInteraction(id);
   const isDropTarget = useIsDropTarget(id);
+  const isHovered = useIsHovered(id);
+  const isSelectionRoot = useIsSelectionRoot(id);
+  const isEditing = useIsTextEditActiveForInstance(id);
   const { openMenu } = useContextMenuHost();
   if (!instance) return null;
   const body = children ?? renderPreviewBody(instance);
@@ -40,12 +51,28 @@ export function PreviewWrapper({ id, children }: Props) {
     });
   }
 
+  function onPointerEnter() {
+    const store = useEditorStore.getState();
+    if (store.activeTool === 'select') store.setHoveredId(id);
+  }
+
+  function onPointerLeave() {
+    // Guard against a nested wrapper's leave clearing an outer wrapper's
+    // hover when the pointer stays inside the outer — only drop hover if
+    // this instance is still the hovered one.
+    const store = useEditorStore.getState();
+    if (store.hoveredId === id) store.setHoveredId(null);
+  }
+
   return (
     <InstanceIdProvider id={id}>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles drag + instance context menu */}
       <div
         className="preview-wrapper"
         data-selected={isSelected || undefined}
+        data-hovered={isHovered || undefined}
+        data-editing={isEditing || undefined}
+        data-selection-root={isSelectionRoot || undefined}
         data-drop-target={isDropTarget || undefined}
         style={{
           transform: `translate(${instance.x}px, ${instance.y}px)`,
@@ -53,10 +80,12 @@ export function PreviewWrapper({ id, children }: Props) {
           height: `${instance.height}px`,
         }}
         {...handlers}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
         onContextMenu={onContextMenu}
       >
         {body}
-        {isSelected
+        {isSelected && !isEditing
           ? CORNERS.map((corner) => <ResizeHandle key={corner} corner={corner} locks={resizeLocks} />)
           : null}
       </div>

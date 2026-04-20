@@ -108,6 +108,21 @@ describe('EditableText', () => {
       expect(onChange).toHaveBeenCalledWith('Launch');
     });
 
+    it('does not enter edit mode on a double-click when the anchor was not already selected', () => {
+      const onChange = vi.fn();
+      renderOnCanvas(<EditableText value="Button" onChange={onChange} />, labelId);
+      // Force the store into an unselected state so the double-click has to
+      // prove the gating works without relying on pointerdown's usual
+      // "select first" side-effect.
+      useEditorStore.setState({ selectedId: null, selectedTarget: null });
+
+      const trigger = screen.getByText('Button');
+      fireEvent.doubleClick(trigger);
+
+      expect(screen.queryByDisplayValue('Button')).toBeNull();
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
     it('commits the full string when typing multiple characters', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
