@@ -83,6 +83,8 @@
   min-height: 0;
   padding: 6px;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  background: inherit;
 }
 
 .layers-empty {

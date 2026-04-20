@@ -59,7 +59,9 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <SidebarHeader />
-      <SidebarInspectorBody />
+      <div className="sidebar-body">
+        <SidebarInspectorBody />
+      </div>
     </aside>
   );
 }
