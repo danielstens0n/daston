@@ -41,8 +41,8 @@ function SidebarHeader() {
   const description = describeSelection(meta, layerOwner);
   return (
     <header className="sidebar-header">
-      <h2 className="sidebar-header-title">{description?.title ?? 'Inspector'}</h2>
-      <p className="sidebar-header-subtitle">{description?.subtitle ?? 'Select a component to edit'}</p>
+      <h2 className="sidebar-header-title">{description?.title ?? 'Canvas'}</h2>
+      <p className="sidebar-header-subtitle">{description?.subtitle ?? 'Edit canvas background'}</p>
     </header>
   );
 }
@@ -50,7 +50,7 @@ function SidebarHeader() {
 function SidebarInspectorBody() {
   const meta = useSelectedTargetMeta();
   if (!meta) {
-    return <div className="sidebar-empty">Nothing selected.</div>;
+    return <CanvasBackgroundSection />;
   }
   return renderInspector(meta);
 }
@@ -59,7 +59,6 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <SidebarHeader />
-      <CanvasBackgroundSection />
       <SidebarInspectorBody />
     </aside>
   );
@@ -72,7 +71,7 @@ function renderInspector(meta: SelectedTargetMeta) {
   if (meta.type === 'imported') {
     return renderImportedInstanceInspector(meta.instanceId);
   }
-  return renderStockInstanceInspector(meta.instanceId);
+  return renderStockInstanceInspector(meta.type, meta.instanceId);
 }
 
 function describeSelection(

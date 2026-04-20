@@ -72,6 +72,7 @@ export function Table({ id }: Props) {
                         })
                       }
                       className="preview-table-text"
+                      layerId={`col-${columnIndex}`}
                     />
                   </th>
                 ))}
@@ -103,6 +104,7 @@ export function Table({ id }: Props) {
                           })
                         }
                         className="preview-table-text"
+                        layerId={`row-${rowIndex}`}
                       />
                     </td>
                   ))}

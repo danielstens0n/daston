@@ -7,9 +7,9 @@ import { Table } from '../../previews/Table.tsx';
 import { Section } from '../../sidebar/fields/Section.tsx';
 import { ButtonLayerInspector } from '../../sidebar/inspectors/ButtonLayerInspector.tsx';
 import { CardLayerInspector } from '../../sidebar/inspectors/CardLayerInspector.tsx';
-import { FrameInspector } from '../../sidebar/inspectors/FrameInspector.tsx';
 import { ImportedLayerInspector } from '../../sidebar/inspectors/ImportedLayerInspector.tsx';
 import { LandingLayerInspector } from '../../sidebar/inspectors/LandingLayerInspector.tsx';
+import { StockInstanceInspector } from '../../sidebar/inspectors/StockInstanceInspector.tsx';
 import { TableLayerInspector } from '../../sidebar/inspectors/TableLayerInspector.tsx';
 import type { ComponentInstance } from '../types.ts';
 import { componentTypeLabel, isCardLayerId } from './data.ts';
@@ -33,8 +33,11 @@ export function renderPreviewBody(instance: ComponentInstance): ReactNode {
   }
 }
 
-export function renderStockInstanceInspector(instanceId: string): ReactNode {
-  return <FrameInspector id={instanceId} />;
+export function renderStockInstanceInspector(
+  type: Exclude<ComponentInstance['type'], 'imported'>,
+  instanceId: string,
+): ReactNode {
+  return <StockInstanceInspector type={type} id={instanceId} />;
 }
 
 export function renderImportedInstanceInspector(instanceId: string): ReactNode {

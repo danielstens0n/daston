@@ -154,6 +154,62 @@
   margin-top: 10px;
 }
 
+.sidebar-style-overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-style-overview-button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-style-overview-button:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-chrome-focus);
+}
+
+.sidebar-style-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-style-overview-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.sidebar-style-overview-action,
+.sidebar-style-overview-summary,
+.sidebar-style-overview-note {
+  font-size: 11px;
+}
+
+.sidebar-style-overview-action {
+  color: var(--color-text-muted);
+}
+
+.sidebar-style-overview-summary {
+  color: var(--color-text-secondary);
+}
+
+.sidebar-style-overview-note {
+  color: var(--color-text-muted);
+}
+
 .sidebar-table-editor-list,
 .sidebar-table-row-list {
   display: flex;

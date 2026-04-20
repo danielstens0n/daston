@@ -1,5 +1,15 @@
-import { type KeyboardEvent, type MouseEvent, useId, useLayoutEffect, useRef } from 'react';
+import {
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+  useId,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import { useInstanceId } from '../canvas/InstanceIdContext.tsx';
+import { useEditorStore } from '../state/editor.ts';
+import { layerSelection } from '../state/layers.ts';
 import { useTextEditActiveForAnchor, useTextEditStore } from '../state/text-edit.ts';
 import './editable-text.css';
 
@@ -8,9 +18,10 @@ type Props = {
   onChange: (value: string) => void;
   className?: string;
   multiline?: boolean;
+  layerId?: string;
 };
 
-export function EditableText({ value, onChange, className, multiline = false }: Props) {
+export function EditableText({ value, onChange, className, multiline = false, layerId }: Props) {
   const instanceId = useInstanceId();
   const anchorKey = useId();
   const anchorRef = useRef<HTMLButtonElement | null>(null);
@@ -26,7 +37,27 @@ export function EditableText({ value, onChange, className, multiline = false }: 
   function beginEditing(event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
+    selectAnchorTarget();
     useTextEditStore.getState().open({ instanceId, anchorKey, value, multiline, onCommit: onChange });
+  }
+
+  function selectAnchorTarget() {
+    if (layerId) {
+      useEditorStore.getState().selectLayer(layerSelection(instanceId, layerId));
+      return;
+    }
+    useEditorStore.getState().select(instanceId);
+  }
+
+  function onPointerDown(event: PointerEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (event.button !== 0) return;
+    selectAnchorTarget();
+  }
+
+  function onFocus(event: FocusEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    selectAnchorTarget();
   }
 
   function onTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -41,6 +72,8 @@ export function EditableText({ value, onChange, className, multiline = false }: 
       data-preview-interactive="true"
       className={className ?? 'preview-inline-text'}
       style={{ visibility: isAnchorActive ? 'hidden' : 'visible' }}
+      onPointerDown={onPointerDown}
+      onFocus={onFocus}
       onDoubleClick={beginEditing}
       onKeyDown={onTriggerKeyDown}
     >

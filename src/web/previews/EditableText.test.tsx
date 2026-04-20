@@ -6,10 +6,15 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Canvas } from '../canvas/Canvas.tsx';
 import { InstanceIdProvider } from '../canvas/InstanceIdContext.tsx';
+import { PreviewWrapper } from '../canvas/PreviewWrapper.tsx';
 import { TextEditLayer } from '../canvas/TextEditLayer.tsx';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
+import { LayersSidebar } from '../layers/LayersSidebar.tsx';
+import { Sidebar } from '../sidebar/Sidebar.tsx';
 import { useEditorStore } from '../state/editor.ts';
+import { layerSelection } from '../state/layers.ts';
 import { useTextEditStore } from '../state/text-edit.ts';
+import { Card } from './Card.tsx';
 import { EditableText } from './EditableText.tsx';
 
 afterEach(() => {
@@ -37,6 +42,21 @@ function renderOnCanvas(node: ReactNode, instanceId: string) {
         <InstanceIdProvider id={instanceId}>{node}</InstanceIdProvider>
         <TextEditLayer />
       </Canvas>
+    </ContextMenuProvider>,
+  );
+}
+
+function renderCardSelectionShell() {
+  return render(
+    <ContextMenuProvider>
+      <LayersSidebar />
+      <Canvas>
+        <PreviewWrapper id="card-1">
+          <Card id="card-1" />
+        </PreviewWrapper>
+        <TextEditLayer />
+      </Canvas>
+      <Sidebar />
     </ContextMenuProvider>,
   );
 }
@@ -110,6 +130,22 @@ describe('EditableText', () => {
       await user.dblClick(screen.getByText('A simple card preview.'));
 
       expect(screen.getByDisplayValue('A simple card preview.').tagName).toBe('TEXTAREA');
+    });
+
+    it('selects the matching layer and updates both sidebars on text click', () => {
+      renderCardSelectionShell();
+
+      fireEvent.pointerDown(screen.getByRole('button', { name: 'Card' }), {
+        button: 0,
+        pointerId: 1,
+      });
+
+      expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('card-1', 'title'));
+      expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
+
+      const selectedRow = document.querySelector<HTMLButtonElement>('.layers-row[data-selected="true"]');
+      expect(selectedRow).not.toBeNull();
+      expect(selectedRow).toHaveTextContent('Title');
     });
   });
 });

@@ -44,6 +44,7 @@ export function Button({ id }: Props) {
         value={p.label}
         onChange={(label) => updateProps({ label })}
         className="preview-button-label"
+        layerId="label"
       />
     </div>
   );

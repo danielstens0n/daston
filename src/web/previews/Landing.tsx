@@ -54,13 +54,27 @@ export function Landing({ id }: Props) {
     <div className="preview-landing" style={style}>
       <div className="preview-landing-hero" data-shadow={p.shadowEnabled || undefined}>
         <h2 className="preview-landing-title">
-          <EditableText value={p.heroTitle} onChange={(heroTitle) => updateProps({ heroTitle })} multiline />
+          <EditableText
+            value={p.heroTitle}
+            onChange={(heroTitle) => updateProps({ heroTitle })}
+            multiline
+            layerId="hero-title"
+          />
         </h2>
         <p className="preview-landing-body">
-          <EditableText value={p.heroBody} onChange={(heroBody) => updateProps({ heroBody })} multiline />
+          <EditableText
+            value={p.heroBody}
+            onChange={(heroBody) => updateProps({ heroBody })}
+            multiline
+            layerId="hero-body"
+          />
         </p>
         <span className="preview-landing-cta">
-          <EditableText value={p.ctaLabel} onChange={(ctaLabel) => updateProps({ ctaLabel })} />
+          <EditableText
+            value={p.ctaLabel}
+            onChange={(ctaLabel) => updateProps({ ctaLabel })}
+            layerId="cta-label"
+          />
         </span>
       </div>
       <div className="preview-landing-features">
@@ -69,6 +83,7 @@ export function Landing({ id }: Props) {
             value={p.featuresTitle}
             onChange={(featuresTitle) => updateProps({ featuresTitle })}
             multiline
+            layerId="features-title"
           />
         </p>
         <ul className="preview-landing-feature-list">
@@ -84,6 +99,7 @@ export function Landing({ id }: Props) {
                   })
                 }
                 multiline
+                layerId={`feature-${index}`}
               />
             </li>
           ))}

@@ -56,10 +56,15 @@ export function Card({ id }: Props) {
   return (
     <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style}>
       <h3 className="preview-card-title">
-        <EditableText value={p.title} onChange={(title) => updateProps({ title })} multiline />
+        <EditableText
+          value={p.title}
+          onChange={(title) => updateProps({ title })}
+          multiline
+          layerId="title"
+        />
       </h3>
       <p className="preview-card-body">
-        <EditableText value={p.body} onChange={(body) => updateProps({ body })} multiline />
+        <EditableText value={p.body} onChange={(body) => updateProps({ body })} multiline layerId="body" />
       </p>
     </div>
   );

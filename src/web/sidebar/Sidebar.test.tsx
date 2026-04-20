@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../state/editor.ts';
 import { layerSelection } from '../state/layers.ts';
@@ -61,13 +61,41 @@ beforeEach(() => {
 });
 
 describe('Sidebar', () => {
-  it('shows the frame inspector when the component root is selected', () => {
+  it('shows canvas controls only when no element is selected', () => {
+    render(<Sidebar />);
+    expect(screen.getAllByRole('heading', { name: 'Canvas' })).toHaveLength(2);
+    expect(screen.getByText('Edit canvas background')).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue(DEFAULT_CANVAS_BACKGROUND)).toHaveLength(2);
+    expect(screen.queryByRole('heading', { name: 'Frame' })).not.toBeInTheDocument();
+  });
+
+  it('shows the frame inspector plus component overview when the root is selected', () => {
     useEditorStore.getState().select('card-1');
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Card' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Frame' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Canvas' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Layout' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Fill' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Border' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Shadow' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Text styles' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Title.*Inter.*16px/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Body.*Inter.*13px/i })).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Card title')).not.toBeInTheDocument();
     expect(screen.queryByDisplayValue('Card body')).not.toBeInTheDocument();
+  });
+
+  it('lets the root overview jump directly to a child text layer', () => {
+    useEditorStore.getState().select('card-1');
+    render(<Sidebar />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Title.*Inter.*16px/i }));
+
+    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('card-1', 'title'));
+    expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
+    expect(screen.getByText('Typography')).toBeInTheDocument();
+    expect(screen.queryByText('Padding')).not.toBeInTheDocument();
   });
 
   it('shows typography for the title layer without a content field', () => {
