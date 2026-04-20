@@ -1,15 +1,13 @@
-import { componentTypeLabel } from './component-type-label.ts';
+import {
+  componentTypeLabel,
+  type LayerKind,
+  type LayerTemplateNode,
+  STOCK_LAYER_ROOT_CHILDREN,
+} from './component-registry-data.ts';
 import type { ComponentInstance } from './types.ts';
 
-export type LayerKind =
-  | 'component'
-  | 'group'
-  | 'rectangle'
-  | 'text'
-  | 'circle'
-  | 'triangle'
-  | 'polygon'
-  | 'imported';
+export type { CardLayerId, LayerKind } from './component-registry-data.ts';
+export { CARD_LAYER_SPECS, isCardLayerId } from './component-registry-data.ts';
 
 export type SelectedTarget =
   | { kind: 'instance'; instanceId: string }
@@ -25,22 +23,6 @@ export type LayerNode = {
   selection: SelectedTarget;
   children: LayerNode[];
 };
-
-export const CARD_LAYER_IDS = ['surface', 'title', 'body'] as const;
-export type CardLayerId = (typeof CARD_LAYER_IDS)[number];
-export const CARD_LAYERS: ReadonlyArray<{
-  id: CardLayerId;
-  kind: Extract<LayerKind, 'rectangle' | 'text'>;
-  label: string;
-}> = [
-  { id: 'surface', kind: 'rectangle', label: 'Surface' },
-  { id: 'title', kind: 'text', label: 'Title' },
-  { id: 'body', kind: 'text', label: 'Body' },
-] as const;
-
-export function isCardLayerId(layerId: string): layerId is CardLayerId {
-  return CARD_LAYER_IDS.some((candidate) => candidate === layerId);
-}
 
 const LAYER_TREE_SEP = '\x1f';
 
@@ -103,66 +85,16 @@ function leaf(
   };
 }
 
-function buildCardLayers(source: LayerSource): LayerNode {
-  return rootNode(
-    source,
-    CARD_LAYERS.map((layer) => leaf(source, layer.id, layer.kind, layer.label)),
-  );
-}
-
-function buildButtonLayers(source: LayerSource): LayerNode {
-  return rootNode(source, [
-    leaf(source, 'surface', 'rectangle', 'Surface'),
-    leaf(source, 'label', 'text', 'Label'),
-  ]);
-}
-
-function buildTableLayers(source: LayerSource): LayerNode {
-  return rootNode(source, [
-    leaf(source, 'header', 'group', 'Header', [
-      leaf(source, 'header-surface', 'rectangle', 'Header background'),
-      leaf(source, 'columns', 'text', 'Column labels'),
-    ]),
-    leaf(source, 'body', 'group', 'Body', [leaf(source, 'rows', 'text', 'Rows')]),
-  ]);
-}
-
-function buildLandingLayers(source: LayerSource): LayerNode {
-  return rootNode(source, [
-    leaf(source, 'hero', 'group', 'Hero', [
-      leaf(source, 'hero-surface', 'rectangle', 'Hero surface'),
-      leaf(source, 'hero-title', 'text', 'Hero title'),
-      leaf(source, 'hero-body', 'text', 'Hero body'),
-    ]),
-    leaf(source, 'features', 'group', 'Features', [
-      leaf(source, 'features-surface', 'rectangle', 'Features surface'),
-      leaf(source, 'features-title', 'text', 'Features title'),
-      leaf(source, 'features-list', 'text', 'Feature list'),
-    ]),
-    leaf(source, 'cta', 'group', 'CTA', [
-      leaf(source, 'cta-surface', 'rectangle', 'CTA surface'),
-      leaf(source, 'cta-label', 'text', 'CTA label'),
-    ]),
-  ]);
+function expandLayerTemplate(source: LayerSource, nodes: readonly LayerTemplateNode[]): LayerNode[] {
+  return nodes.map((node) => {
+    const children = node.children?.length ? expandLayerTemplate(source, node.children) : [];
+    return leaf(source, node.id, node.kind, node.label, children);
+  });
 }
 
 export function buildLayerTree(source: LayerSource): LayerNode {
-  switch (source.type) {
-    case 'card':
-      return buildCardLayers(source);
-    case 'button':
-      return buildButtonLayers(source);
-    case 'table':
-      return buildTableLayers(source);
-    case 'landing':
-      return buildLandingLayers(source);
-    case 'imported':
-      return rootNode(source, []);
-    default: {
-      const _exhaustive: never = source.type;
-      return _exhaustive;
-    }
-  }
+  const template = source.type === 'imported' ? null : STOCK_LAYER_ROOT_CHILDREN[source.type];
+  return rootNode(source, template ? expandLayerTemplate(source, template) : []);
 }
 
 export function encodeLayerTreeSignature(instance: ComponentInstance): string {
