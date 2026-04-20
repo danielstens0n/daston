@@ -26,7 +26,7 @@ const MENU_MAX_HEIGHT_PX = 220;
 // like "-" before the digit). Blur/Enter canonicalizes and clamps. External
 // `value` changes are synced during render per React's adjust-state guide.
 export function NumberField({ value, onChange, min, max, step = 1, unit }: Props) {
-  const [draft, setDraft] = useState(String(value));
+  const [draft, setDraft] = useState(formatDisplay(value));
   const [lastValue, setLastValue] = useState(value);
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
@@ -36,7 +36,7 @@ export function NumberField({ value, onChange, min, max, step = 1, unit }: Props
 
   if (lastValue !== value) {
     setLastValue(value);
-    setDraft(String(value));
+    setDraft(formatDisplay(value));
   }
 
   const presets = derivePresets(min, max, step, value);
@@ -96,9 +96,9 @@ export function NumberField({ value, onChange, min, max, step = 1, unit }: Props
     if (Number.isFinite(parsed)) {
       const clamped = clamp(parsed, min, max);
       if (clamped !== value) onChange(clamped);
-      setDraft(String(clamped));
+      setDraft(formatDisplay(clamped));
     } else {
-      setDraft(String(value));
+      setDraft(formatDisplay(value));
     }
   }
 
@@ -110,7 +110,7 @@ export function NumberField({ value, onChange, min, max, step = 1, unit }: Props
         setOpen(false);
       } else {
         flushSync(() => {
-          setDraft(String(value));
+          setDraft(formatDisplay(value));
         });
         event.currentTarget.blur();
       }
@@ -120,7 +120,7 @@ export function NumberField({ value, onChange, min, max, step = 1, unit }: Props
   function applyPreset(n: number) {
     const next = clamp(n, min, max);
     onChange(next);
-    setDraft(String(next));
+    setDraft(formatDisplay(next));
     setOpen(false);
     inputRef.current?.focus();
   }
@@ -181,6 +181,13 @@ export function NumberField({ value, onChange, min, max, step = 1, unit }: Props
 function formatPreset(n: number): string {
   if (Number.isInteger(n)) return String(n);
   return String(n);
+}
+
+// Round to at most 2 decimals and strip trailing zeros so drag-produced
+// floats like 160.0234375 render as 160.02 (and integers stay clean).
+function formatDisplay(value: number): string {
+  if (!Number.isFinite(value)) return String(value);
+  return String(Math.round(value * 100) / 100);
 }
 
 function snapToStep(v: number, min: number, max: number, step: number): number {
