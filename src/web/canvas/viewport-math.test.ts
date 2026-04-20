@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { clampScale, normalizeWheelDelta, screenToWorld, type ViewState, zoomAt } from './viewport-math.ts';
+import {
+  clampScale,
+  normalizeWheelDelta,
+  normalizeWorldRectCorners,
+  screenToWorld,
+  type ViewState,
+  zoomAt,
+} from './viewport-math.ts';
 
 describe('zoomAt', () => {
   it('keeps the world point under the cursor invariant', () => {
@@ -37,6 +44,17 @@ describe('clampScale', () => {
     expect(clampScale(0.01, 0.1, 4)).toBe(0.1);
     expect(clampScale(10, 0.1, 4)).toBe(4);
     expect(clampScale(1, 0.1, 4)).toBe(1);
+  });
+});
+
+describe('normalizeWorldRectCorners', () => {
+  it('builds a normalized axis-aligned rect from diagonal corners', () => {
+    expect(normalizeWorldRectCorners({ x: 10, y: 100 }, { x: 70, y: 20 })).toEqual({
+      x: 10,
+      y: 20,
+      width: 60,
+      height: 80,
+    });
   });
 });
 

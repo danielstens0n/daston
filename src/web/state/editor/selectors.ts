@@ -1,7 +1,15 @@
 import { useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { buildLayerTree, encodeLayerTreeSignature, type LayerNode, type SelectedTarget } from '../layers.ts';
-import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../types.ts';
+import type {
+  ButtonProps,
+  CardProps,
+  ComponentInstance,
+  LandingProps,
+  ShapeProps,
+  TableProps,
+  TextPrimitiveProps,
+} from '../types.ts';
 import { useEditorStore } from './store.ts';
 
 export function useInstanceIds(): string[] {
@@ -64,6 +72,27 @@ export function useLandingProps(id: string): LandingProps | null {
   return useEditorStore((state) => {
     const instance = state.instances.find((i) => i.id === id);
     if (!instance || instance.type !== 'landing') return null;
+    return instance.props;
+  });
+}
+
+export function useShapeProps(id: string): ShapeProps | null {
+  return useEditorStore((state) => {
+    const instance = state.instances.find((i) => i.id === id);
+    if (
+      !instance ||
+      (instance.type !== 'rectangle' && instance.type !== 'ellipse' && instance.type !== 'triangle')
+    ) {
+      return null;
+    }
+    return instance.props;
+  });
+}
+
+export function useTextPrimitiveProps(id: string): TextPrimitiveProps | null {
+  return useEditorStore((state) => {
+    const instance = state.instances.find((i) => i.id === id);
+    if (!instance || instance.type !== 'text') return null;
     return instance.props;
   });
 }

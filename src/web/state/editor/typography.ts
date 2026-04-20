@@ -11,7 +11,8 @@ export type TypographyScopeId =
   | 'table-header'
   | 'table-body'
   | 'landing-heading'
-  | 'landing-body';
+  | 'landing-body'
+  | 'text-root';
 
 function readTypography(
   instance: ComponentInstance | undefined,
@@ -96,6 +97,17 @@ function readTypography(
         decoration: p.bodyDecoration,
       };
     }
+    case 'text-root': {
+      if (instance.type !== 'text') return null;
+      const p = instance.props;
+      return {
+        font: p.textFont,
+        fontSize: p.textFontSize,
+        fontWeight: p.textFontWeight,
+        italic: p.textItalic,
+        decoration: p.textDecoration,
+      };
+    }
     default: {
       const _exhaustive: never = scope;
       return _exhaustive;
@@ -124,6 +136,8 @@ export function buildTypographyPartial(
         return 'heading';
       case 'landing-body':
         return 'body';
+      case 'text-root':
+        return 'text';
       default: {
         const _e: never = scope;
         return _e;
@@ -164,6 +178,8 @@ function readLinkedTextColor(
       return instance.type === 'table' ? instance.props.headerTextColor : undefined;
     case 'table-body':
       return instance.type === 'table' ? instance.props.bodyTextColor : undefined;
+    case 'text-root':
+      return instance.type === 'text' ? instance.props.textColor : undefined;
     default:
       return undefined;
   }
@@ -206,6 +222,8 @@ export function useTypographyScope(id: string, scope: TypographyScopeId): Typogr
         return (value: string) => updateProps({ headerTextColor: value });
       case 'table-body':
         return (value: string) => updateProps({ bodyTextColor: value });
+      case 'text-root':
+        return (value: string) => updateProps({ textColor: value });
       default:
         return undefined;
     }

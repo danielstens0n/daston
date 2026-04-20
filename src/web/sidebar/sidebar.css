@@ -102,3 +102,27 @@
   line-height: 1.55;
   resize: vertical;
 }
+
+.sidebar-align-row {
+  display: flex;
+  gap: 6px;
+}
+
+.sidebar-align-button {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.sidebar-align-button[data-active] {
+  border-color: var(--color-chrome-focus);
+  background: color-mix(in srgb, var(--color-chrome-focus) 14%, transparent);
+  color: var(--color-text-primary);
+}

@@ -1,0 +1,21 @@
+.preview-text-root {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 4px 6px;
+  overflow: hidden;
+}
+
+.preview-text-content {
+  font-family: var(--text-font, system-ui, sans-serif);
+  font-size: var(--text-size, 16px);
+  font-weight: var(--text-weight, 500);
+  font-style: var(--text-style, normal);
+  text-decoration-line: var(--text-decoration-line, none);
+  color: var(--text-color, #18181b);
+  text-align: var(--text-align, left);
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
+  min-height: 100%;
+}

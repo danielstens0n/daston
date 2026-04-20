@@ -21,6 +21,18 @@ export function screenToWorld(point: ViewportPoint, view: ViewState): ViewportPo
   };
 }
 
+/** Axis-aligned rect from two world-space corners (e.g. drag start / end). */
+export function normalizeWorldRectCorners(
+  a: ViewportPoint,
+  b: ViewportPoint,
+): { x: number; y: number; width: number; height: number } {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  const width = Math.abs(b.x - a.x);
+  const height = Math.abs(b.y - a.y);
+  return { x, y, width, height };
+}
+
 // Zoom anchored at the cursor: the world point under the cursor before the zoom
 // stays under the cursor after. With transform `translate(x,y) scale(s)`, the
 // screen→world mapping is worldP = (cursorP - viewP) / s. After scaling to s',

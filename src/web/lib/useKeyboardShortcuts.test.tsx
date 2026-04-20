@@ -51,12 +51,15 @@ beforeEach(() => {
   useEditorStore.setState({
     instances: [baselineA, baselineB],
     selectedId: null,
+    selectedTarget: null,
     nextInstanceId: 2,
     clipboard: null,
     lastPasteId: null,
     past: [],
     future: [],
     historyBatch: null,
+    activeTool: 'select',
+    pendingTextEditInstanceId: null,
   });
 });
 
@@ -79,7 +82,18 @@ describe('useKeyboardShortcuts', () => {
     expect(useEditorStore.getState().instances).toEqual([baselineB]);
   });
 
-  it('clears selection on Escape', () => {
+  it('clears active draw tool on Escape before clearing selection', () => {
+    render(<Harness />);
+    useEditorStore.getState().setActiveTool('rectangle');
+    fireEvent.keyDown(document.body, { key: 'Escape', bubbles: true });
+    expect(useEditorStore.getState().activeTool).toBe('select');
+    useEditorStore.getState().select('a');
+    fireEvent.keyDown(document.body, { key: 'Escape', bubbles: true });
+    expect(useEditorStore.getState().selectedId).toBeNull();
+    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+  });
+
+  it('clears selection on Escape when no tool is active', () => {
     render(<Harness />);
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'Escape', bubbles: true });

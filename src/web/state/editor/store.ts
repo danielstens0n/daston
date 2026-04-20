@@ -38,9 +38,7 @@ type Rect = { x: number; y: number; width: number; height: number };
 type Point = { x: number; y: number };
 
 /** Ephemeral toolbar/canvas tool; not part of undo history. */
-export type CanvasTool =
-  | 'select'
-  | Extract<ComponentId, 'ellipse' | 'rectangle' | 'text' | 'triangle'>;
+export type CanvasTool = 'select' | Extract<ComponentId, 'ellipse' | 'rectangle' | 'text' | 'triangle'>;
 
 function isPristineDefaultCanvas(snapshot: EditorSnapshot): boolean {
   if (snapshot.instances.length !== 1) return false;

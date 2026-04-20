@@ -5,6 +5,8 @@ describe('component-registry-data', () => {
   it('exposes stable display labels', () => {
     expect(componentTypeLabel('card')).toBe('Card');
     expect(componentTypeLabel('landing')).toBe('Landing page');
+    expect(componentTypeLabel('rectangle')).toBe('Rectangle');
+    expect(componentTypeLabel('text')).toBe('Text');
     expect(componentTypeLabel('imported')).toBe('Imported');
   });
 

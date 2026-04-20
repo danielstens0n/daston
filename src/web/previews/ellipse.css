@@ -1,0 +1,12 @@
+.preview-ellipse {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background: var(--shape-fill, #e4e4e7);
+  border: var(--shape-border-width, 1px) solid var(--shape-border-color, #a1a1aa);
+  border-radius: 50%;
+}
+
+.preview-ellipse[data-shadow] {
+  box-shadow: var(--shape-shadow, 0 4px 8px #0000001a);
+}

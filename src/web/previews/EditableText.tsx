@@ -19,12 +19,22 @@ type Props = {
   className?: string;
   multiline?: boolean;
   layerId?: string;
+  /** Open the inline editor once after mount (e.g. new text from the draw tool). */
+  openOnMount?: boolean;
 };
 
-export function EditableText({ value, onChange, className, multiline = false, layerId }: Props) {
+export function EditableText({
+  value,
+  onChange,
+  className,
+  multiline = false,
+  layerId,
+  openOnMount = false,
+}: Props) {
   const instanceId = useInstanceId();
   const anchorKey = useId();
   const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const autoOpenedRef = useRef(false);
   const isAnchorActive = useTextEditActiveForAnchor(anchorKey);
 
   useLayoutEffect(() => {
@@ -33,6 +43,18 @@ export function EditableText({ value, onChange, className, multiline = false, la
       useTextEditStore.getState().unregisterAnchor(anchorKey);
     };
   }, [anchorKey]);
+
+  useLayoutEffect(() => {
+    if (!openOnMount || autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    useEditorStore.getState().setPendingTextEditInstanceId(null);
+    if (layerId) {
+      useEditorStore.getState().selectLayer(layerSelection(instanceId, layerId));
+    } else {
+      useEditorStore.getState().select(instanceId);
+    }
+    useTextEditStore.getState().open({ instanceId, anchorKey, value, multiline, onCommit: onChange });
+  }, [openOnMount, instanceId, anchorKey, value, multiline, onChange, layerId]);
 
   function beginEditing(event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) {
     event.preventDefault();

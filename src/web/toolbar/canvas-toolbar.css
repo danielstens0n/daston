@@ -17,6 +17,107 @@
   box-shadow: var(--shadow-elevated);
 }
 
+.canvas-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.canvas-toolbar-anchor {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.insert-menu-popover {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: min(280px, calc(100vw - 48px));
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-elevated);
+  pointer-events: auto;
+}
+
+.insert-menu-heading {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.insert-menu-heading:not(:first-child) {
+  margin-top: 14px;
+}
+
+.insert-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.insert-menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.insert-menu-tile:hover {
+  border-color: var(--color-chrome-focus);
+  background: color-mix(in srgb, var(--color-chrome-focus) 10%, transparent);
+}
+
+.insert-menu-tile-graphic {
+  display: grid;
+  place-items: center;
+}
+
+.insert-menu-tile-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.insert-menu-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-surface-subtle);
+}
+
+.insert-menu-import-link {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-chrome-focus);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.insert-menu-import-link:hover {
+  background: color-mix(in srgb, var(--color-chrome-focus) 10%, transparent);
+}
+
 .canvas-toolbar-button {
   position: relative;
   width: 36px;

@@ -66,9 +66,45 @@ export function LandingIcon() {
 export function PlusIcon() {
   return (
     <svg {...base}>
-      <title>Import component</title>
+      <title>Insert</title>
       <line x1="10" y1="4" x2="10" y2="16" />
       <line x1="4" y1="10" x2="16" y2="10" />
+    </svg>
+  );
+}
+
+export function RectangleIcon() {
+  return (
+    <svg {...base}>
+      <title>Rectangle</title>
+      <rect x="4" y="5" width="12" height="11" rx="1" />
+    </svg>
+  );
+}
+
+export function EllipseIcon() {
+  return (
+    <svg {...base}>
+      <title>Ellipse</title>
+      <ellipse cx="10" cy="10" rx="7" ry="5" />
+    </svg>
+  );
+}
+
+export function TriangleIcon() {
+  return (
+    <svg {...base}>
+      <title>Triangle</title>
+      <path d="M10 4 L17 16 H3 Z" />
+    </svg>
+  );
+}
+
+export function TextIcon() {
+  return (
+    <svg {...base}>
+      <title>Text</title>
+      <path d="M6 4 h8 M10 4 v12 M7 16 h6" />
     </svg>
   );
 }

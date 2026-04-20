@@ -5,17 +5,26 @@ import {
   useCardProps,
   useEditorStore,
   useLandingProps,
+  useShapeProps,
   useTableProps,
+  useTextPrimitiveProps,
   useTypographyScope,
   useUpdateProps,
 } from '../../state/editor.ts';
 import { layerSelection } from '../../state/layers.ts';
-import type { ButtonProps, CardProps, ComponentInstance, LandingProps } from '../../state/types.ts';
+import type {
+  ButtonProps,
+  CardProps,
+  ComponentInstance,
+  LandingProps,
+  TextAlign,
+} from '../../state/types.ts';
 import { ColorField } from '../fields/ColorField.tsx';
 import { FieldRow } from '../fields/FieldRow.tsx';
 import { NumberField } from '../fields/NumberField.tsx';
 import { Section } from '../fields/Section.tsx';
 import { ToggleField } from '../fields/ToggleField.tsx';
+import { TypographyStyleRows } from '../fields/TypographyStyleRows.tsx';
 import { BorderSection } from '../sections/BorderSection.tsx';
 import { FillSection } from '../sections/FillSection.tsx';
 import { LayoutSection } from '../sections/LayoutSection.tsx';
@@ -53,11 +62,83 @@ function renderOverview(type: Props['type'], id: string) {
       return <TableRootInspector id={id} />;
     case 'landing':
       return <LandingRootInspector id={id} />;
+    case 'rectangle':
+      return <ShapeRootInspector id={id} hideRadius={false} />;
+    case 'ellipse':
+    case 'triangle':
+      return <ShapeRootInspector id={id} hideRadius />;
+    case 'text':
+      return <TextPrimitiveFields id={id} />;
     default: {
       const _exhaustive: never = type;
       return _exhaustive;
     }
   }
+}
+
+function ShapeRootInspector({ id, hideRadius }: { id: string; hideRadius: boolean }) {
+  const props = useShapeProps(id);
+  const onPatch = useUpdateProps(id);
+  if (!props) return null;
+  return (
+    <>
+      <FillSection props={props} onPatch={onPatch as (patch: Partial<typeof props>) => void} />
+      <BorderSection
+        props={props}
+        hideRadius={hideRadius}
+        onPatch={onPatch as (patch: Partial<typeof props>) => void}
+      />
+      <ShadowSection props={props} onPatch={onPatch as (patch: Partial<typeof props>) => void} />
+    </>
+  );
+}
+
+const TEXT_ALIGNS: readonly TextAlign[] = ['left', 'center', 'right'];
+
+/** Text primitive: color, alignment, and typography (instance or `text` layer). */
+export function TextPrimitiveFields({ id }: { id: string }) {
+  const props = useTextPrimitiveProps(id);
+  const onPatch = useUpdateProps(id);
+  const typo = useTypographyScope(id, 'text-root');
+  if (!props || !typo) return null;
+  return (
+    <>
+      <Section title="Text">
+        <FieldRow label="Color">
+          <ColorField
+            value={typo.color ?? props.textColor}
+            onChange={(value) =>
+              typo.onColorChange ? typo.onColorChange(value) : onPatch({ textColor: value })
+            }
+          />
+        </FieldRow>
+        <FieldRow label="Align">
+          <div className="sidebar-align-row">
+            {TEXT_ALIGNS.map((align: TextAlign) => (
+              <button
+                key={align}
+                type="button"
+                className="sidebar-align-button"
+                data-active={props.textAlign === align || undefined}
+                onClick={() => onPatch({ textAlign: align })}
+              >
+                {align}
+              </button>
+            ))}
+          </div>
+        </FieldRow>
+      </Section>
+      <Section title="Typography">
+        <TypographyStyleRows
+          values={typo.values}
+          onChange={typo.onChange}
+          fontRowLabel="Font"
+          fontAriaLabel="Text font"
+          weightAriaLabel="Text weight"
+        />
+      </Section>
+    </>
+  );
 }
 
 function CardRootInspector({ id }: { id: string }) {

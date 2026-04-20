@@ -7,9 +7,11 @@ import { Section } from '../fields/Section.tsx';
 type Props = {
   props: BorderProps;
   onPatch: (patch: Partial<BorderProps>) => void;
+  /** Hide corner radius (e.g. triangle / circle shapes). */
+  hideRadius?: boolean;
 };
 
-export function BorderSection({ props, onPatch }: Props) {
+export function BorderSection({ props, onPatch, hideRadius }: Props) {
   return (
     <Section title="Border">
       <FieldRow label="Color">
@@ -24,15 +26,17 @@ export function BorderSection({ props, onPatch }: Props) {
           unit="px"
         />
       </FieldRow>
-      <FieldRow label="Radius">
-        <NumberField
-          value={props.borderRadius}
-          onChange={(value) => onPatch({ borderRadius: value })}
-          min={0}
-          max={64}
-          unit="px"
-        />
-      </FieldRow>
+      {hideRadius ? null : (
+        <FieldRow label="Radius">
+          <NumberField
+            value={props.borderRadius}
+            onChange={(value) => onPatch({ borderRadius: value })}
+            min={0}
+            max={64}
+            unit="px"
+          />
+        </FieldRow>
+      )}
     </Section>
   );
 }

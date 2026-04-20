@@ -20,6 +20,8 @@ describe('applyInitialThemeFromServer', () => {
       future: [],
       historyBatch: null,
       canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+      activeTool: 'select',
+      pendingTextEditInstanceId: null,
     });
   });
 

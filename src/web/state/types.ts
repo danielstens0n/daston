@@ -178,6 +178,62 @@ export type ImportedInstance = {
   props: ImportedProps;
 };
 
+/** Shared by rectangle, ellipse, triangle previews. */
+export type ShapeProps = FillProps & BorderProps & ShadowProps;
+
+export type RectangleInstance = {
+  id: string;
+  type: 'rectangle';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  props: ShapeProps;
+};
+
+export type EllipseInstance = {
+  id: string;
+  type: 'ellipse';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  props: ShapeProps;
+};
+
+export type TriangleInstance = {
+  id: string;
+  type: 'triangle';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  props: ShapeProps;
+};
+
+export type TextAlign = 'left' | 'center' | 'right';
+
+export type TextPrimitiveProps = {
+  text: string;
+  textColor: string;
+  textAlign: TextAlign;
+  textFont: string;
+  textFontSize: number;
+  textFontWeight: FontWeight;
+  textItalic: boolean;
+  textDecoration: TextDecoration;
+};
+
+export type TextPrimitiveInstance = {
+  id: string;
+  type: 'text';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  props: TextPrimitiveProps;
+};
+
 // The union grows as new component types land. Store callers work against
 // ComponentInstance; only the inspectors/renderers narrow.
 export type ComponentInstance =
@@ -185,4 +241,8 @@ export type ComponentInstance =
   | ButtonInstance
   | TableInstance
   | LandingInstance
+  | RectangleInstance
+  | EllipseInstance
+  | TriangleInstance
+  | TextPrimitiveInstance
   | ImportedInstance;

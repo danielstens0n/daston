@@ -6,7 +6,9 @@ import {
   createDefaultButtonProps,
   createDefaultCardProps,
   createDefaultLandingProps,
+  createDefaultShapeProps,
   createDefaultTableProps,
+  createDefaultTextPrimitiveProps,
   DEFAULT_BUTTON_HEIGHT,
   DEFAULT_BUTTON_WIDTH,
   DEFAULT_CARD_HEIGHT,
@@ -15,8 +17,12 @@ import {
   DEFAULT_IMPORTED_WIDTH,
   DEFAULT_LANDING_HEIGHT,
   DEFAULT_LANDING_WIDTH,
+  DEFAULT_SHAPE_HEIGHT,
+  DEFAULT_SHAPE_WIDTH,
   DEFAULT_TABLE_HEIGHT,
   DEFAULT_TABLE_WIDTH,
+  DEFAULT_TEXT_HEIGHT,
+  DEFAULT_TEXT_WIDTH,
 } from './instance-defaults.ts';
 
 type Rect = { x: number; y: number; width: number; height: number };
@@ -25,6 +31,18 @@ type BaseGeometry = { id: string; x: number; y: number; width: number; height: n
 
 export const MIN_SIZE = 40;
 export const PASTE_OFFSET = 20;
+
+function shapeFactory(type: 'rectangle' | 'ellipse' | 'triangle') {
+  return {
+    width: DEFAULT_SHAPE_WIDTH,
+    height: DEFAULT_SHAPE_HEIGHT,
+    build: (base: BaseGeometry): ComponentInstance => ({
+      ...base,
+      type,
+      props: createDefaultShapeProps(),
+    }),
+  };
+}
 
 const STOCK_INSTANCE_FACTORIES = {
   card: {
@@ -61,6 +79,18 @@ const STOCK_INSTANCE_FACTORIES = {
       ...base,
       type: 'landing',
       props: createDefaultLandingProps(),
+    }),
+  },
+  rectangle: shapeFactory('rectangle'),
+  ellipse: shapeFactory('ellipse'),
+  triangle: shapeFactory('triangle'),
+  text: {
+    width: DEFAULT_TEXT_WIDTH,
+    height: DEFAULT_TEXT_HEIGHT,
+    build: (base: BaseGeometry): ComponentInstance => ({
+      ...base,
+      type: 'text',
+      props: createDefaultTextPrimitiveProps(),
     }),
   },
 } as const satisfies Record<
@@ -124,6 +154,24 @@ export function mutationAddInstance(
     y: worldCenter.y - factory.height / 2,
     width: factory.width,
     height: factory.height,
+  });
+  return commitNewInstance(state, instance);
+}
+
+export function mutationAddInstanceWithRect(
+  state: EditorSnapshot,
+  type: ComponentId,
+  rect: Rect,
+): Partial<EditorSnapshot> {
+  const factory = STOCK_INSTANCE_FACTORIES[type];
+  const width = Math.max(MIN_SIZE, rect.width);
+  const height = Math.max(MIN_SIZE, rect.height);
+  const instance = factory.build({
+    id: `${type}-${state.nextInstanceId}`,
+    x: rect.x,
+    y: rect.y,
+    width,
+    height,
   });
   return commitNewInstance(state, instance);
 }

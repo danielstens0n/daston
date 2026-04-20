@@ -78,7 +78,12 @@ export function useKeyboardShortcuts(): void {
       {
         combo: 'escape',
         run: () => {
-          useEditorStore.getState().select(null);
+          const store = useEditorStore.getState();
+          if (store.activeTool !== 'select') {
+            store.setActiveTool('select');
+            return;
+          }
+          store.select(null);
         },
       },
       {

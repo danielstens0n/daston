@@ -22,6 +22,10 @@ export type LayerTemplateNode = {
 };
 
 export const STOCK_LAYER_ROOT_CHILDREN = {
+  rectangle: [],
+  ellipse: [],
+  triangle: [],
+  text: [{ id: 'text', kind: 'text', label: 'Text' }],
   card: [
     { id: 'surface', kind: 'rectangle', label: 'Surface' },
     { id: 'title', kind: 'text', label: 'Title' },
@@ -79,10 +83,7 @@ export const STOCK_LAYER_ROOT_CHILDREN = {
       ],
     },
   ],
-} as const satisfies Record<
-  Extract<ComponentInstance['type'], 'card' | 'button' | 'table' | 'landing'>,
-  readonly LayerTemplateNode[]
->;
+} as const satisfies Record<Exclude<ComponentInstance['type'], 'imported'>, readonly LayerTemplateNode[]>;
 
 export const CARD_LAYER_SPECS = STOCK_LAYER_ROOT_CHILDREN.card;
 
@@ -102,6 +103,14 @@ export function componentTypeLabel(type: ComponentInstance['type']): string {
       return 'Table';
     case 'landing':
       return 'Landing page';
+    case 'rectangle':
+      return 'Rectangle';
+    case 'ellipse':
+      return 'Ellipse';
+    case 'triangle':
+      return 'Triangle';
+    case 'text':
+      return 'Text';
     case 'imported':
       return 'Imported';
     default: {

@@ -139,6 +139,14 @@ export function encodeLayerTreeSignature(instance: ComponentInstance): string {
   if (instance.type === 'imported') {
     return `imported${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.definitionId}`;
   }
+  if (
+    instance.type === 'rectangle' ||
+    instance.type === 'ellipse' ||
+    instance.type === 'triangle' ||
+    instance.type === 'text'
+  ) {
+    return `${instance.type}${LAYER_TREE_SEP}${instance.id}`;
+  }
   if (instance.type === 'table') {
     return `table${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.props.columns.length}${LAYER_TREE_SEP}${instance.props.rows.length}`;
   }

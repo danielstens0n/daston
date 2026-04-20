@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../editor.ts';
 import { buildLayerTree, instanceSelection, layerSelection } from '../layers.ts';
 import type { CardInstance, ImportedInstance } from '../types.ts';
+import { MIN_SIZE } from './mutations.ts';
 
 // Reset the store to a known two-instance baseline before each test. We
 // exercise the store via its direct get/setters (no React) — selector hooks
@@ -65,6 +66,27 @@ beforeEach(() => {
     future: [],
     historyBatch: null,
     canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
+    activeTool: 'select',
+    pendingTextEditInstanceId: null,
+  });
+});
+
+describe('shape instances', () => {
+  it('addInstance creates a rectangle with default geometry and props', () => {
+    useEditorStore.getState().addInstance('rectangle', { x: 200, y: 200 });
+    const inst = useEditorStore.getState().instances.at(-1);
+    expect(inst?.type).toBe('rectangle');
+    if (inst?.type !== 'rectangle') return;
+    expect(inst.props.fill).toBe('#e4e4e7');
+    expect(inst.width).toBeGreaterThan(0);
+    expect(inst.id).toMatch(/^rectangle-/);
+  });
+
+  it('addInstanceWithRect clamps width and height to MIN_SIZE', () => {
+    useEditorStore.getState().addInstanceWithRect('ellipse', { x: 5, y: 5, width: 4, height: 3 });
+    const inst = useEditorStore.getState().instances.at(-1);
+    expect(inst?.width).toBe(MIN_SIZE);
+    expect(inst?.height).toBe(MIN_SIZE);
   });
 });
 

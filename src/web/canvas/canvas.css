@@ -14,6 +14,25 @@
   cursor: grabbing;
 }
 
+.canvas-viewport[data-active-tool='rectangle'],
+.canvas-viewport[data-active-tool='ellipse'],
+.canvas-viewport[data-active-tool='triangle'] {
+  cursor: crosshair;
+}
+
+.canvas-viewport[data-active-tool='text'] {
+  cursor: text;
+}
+
+.canvas-rubber-band {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--color-chrome-focus);
+  background: color-mix(in srgb, var(--color-chrome-focus) 12%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* The world container is what gets transformed. All previews live inside it
    at world-space coordinates and ride the pan/zoom for free. */
 .canvas-world {

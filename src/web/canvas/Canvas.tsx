@@ -9,16 +9,28 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildCanvasMenuItems } from '../context-menu/items.ts';
+import type { CanvasTool } from '../state/editor.ts';
 import { useEditorStore } from '../state/editor.ts';
-import { normalizeWheelDelta, screenToWorld, type ViewState, zoomAt } from './viewport-math.ts';
+import {
+  normalizeWheelDelta,
+  normalizeWorldRectCorners,
+  screenToWorld,
+  type ViewState,
+  zoomAt,
+} from './viewport-math.ts';
 import './canvas.css';
 
-// Children that need to convert screen-pixel deltas to world-space (e.g. a
-// draggable preview) read the current scale from this context. Separate from
-// the handle context below so scale-only consumers re-render on zoom but not
-// on pan.
+const MIN_DRAG_PX = 4;
+
+function isShapeDrawingTool(tool: CanvasTool): tool is Exclude<CanvasTool, 'select'> {
+  return tool !== 'select';
+}
+
+// Scale value only — pan (`view.x` / `view.y`) does not flow through context,
+// so consumers re-render on zoom changes, not on pure translation.
 const CanvasScaleContext = createContext(1);
 export const useCanvasScale = (): number => useContext(CanvasScaleContext);
 
@@ -44,6 +56,15 @@ type PanState = {
   viewY: number;
 };
 
+type DrawState = {
+  pointerId: number;
+  tool: Exclude<CanvasTool, 'select'>;
+  startX: number;
+  startY: number;
+};
+
+type RubberBand = { left: number; top: number; width: number; height: number };
+
 type Props = {
   children: ReactNode;
   // Rendered inside the viewport but outside the transformed world, so
@@ -55,14 +76,17 @@ export function Canvas({ children, overlay }: Props) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const { openMenu } = useContextMenuHost();
   const [view, setView] = useState<ViewState>({ x: 0, y: 0, scale: 1 });
+  const [rubberBand, setRubberBand] = useState<RubberBand | null>(null);
 
-  // Mirror the view state into a ref so the handle can read the latest value
-  // at click time without re-subscribing consumers on every frame. Assigned
-  // in render (not in an effect) because it's pure derived state.
   const viewRef = useRef<ViewState>(view);
   viewRef.current = view;
 
   const panRef = useRef<PanState | null>(null);
+  const drawRef = useRef<DrawState | null>(null);
+
+  const { activeTool, canvasBackgroundColor } = useEditorStore(
+    useShallow((s) => ({ activeTool: s.activeTool, canvasBackgroundColor: s.canvasBackgroundColor })),
+  );
 
   const handle = useMemo<CanvasHandle>(
     () => ({
@@ -72,9 +96,6 @@ export function Canvas({ children, overlay }: Props) {
     [],
   );
 
-  // Attach `wheel` via addEventListener so we can preventDefault. React's
-  // synthetic onWheel is passive-by-default in React 17+, which would let the
-  // browser zoom the page on pinch / Cmd+scroll instead of us handling it.
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -82,8 +103,6 @@ export function Canvas({ children, overlay }: Props) {
     function onWheel(event: WheelEvent) {
       event.preventDefault();
       const { dx, dy } = normalizeWheelDelta(event);
-      // Trackpad pinch and Cmd/Ctrl+wheel both surface as wheel events with
-      // ctrlKey or metaKey set; everything else is treated as a pan.
       if (event.ctrlKey || event.metaKey) {
         const rect = viewportRef.current?.getBoundingClientRect();
         if (!rect) return;
@@ -98,14 +117,33 @@ export function Canvas({ children, overlay }: Props) {
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
+  function viewportPoint(event: PointerEvent<HTMLDivElement>): { x: number; y: number } | null {
+    const el = viewportRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
-    // Only start a pan when the pointerdown is on the viewport background.
-    // A pointerdown on a child (e.g. the card) has event.target === child,
-    // which stops us from stealing the drag.
     if (event.target !== event.currentTarget) return;
-    // Clicking empty canvas deselects. getState() avoids subscribing Canvas
-    // to store changes — it only writes.
+
+    const tool = useEditorStore.getState().activeTool;
+    if (isShapeDrawingTool(tool)) {
+      const p = viewportPoint(event);
+      if (!p) return;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      drawRef.current = {
+        pointerId: event.pointerId,
+        tool,
+        startX: p.x,
+        startY: p.y,
+      };
+      setRubberBand({ left: p.x, top: p.y, width: 0, height: 0 });
+      event.currentTarget.setAttribute('data-drawing', 'true');
+      return;
+    }
+
     useEditorStore.getState().select(null);
     event.currentTarget.setPointerCapture(event.pointerId);
     panRef.current = {
@@ -119,11 +157,20 @@ export function Canvas({ children, overlay }: Props) {
   }
 
   function onPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const draw = drawRef.current;
+    if (draw && draw.pointerId === event.pointerId) {
+      const p = viewportPoint(event);
+      if (!p) return;
+      const left = Math.min(draw.startX, p.x);
+      const top = Math.min(draw.startY, p.y);
+      const width = Math.abs(p.x - draw.startX);
+      const height = Math.abs(p.y - draw.startY);
+      setRubberBand({ left, top, width, height });
+      return;
+    }
+
     const pan = panRef.current;
     if (!pan || pan.pointerId !== event.pointerId) return;
-    // Pan is 1:1 in screen pixels: the translate is applied before the scale
-    // in the transform, so a screen-pixel delta in view.x/y moves the world
-    // by a screen pixel at any zoom level.
     setView((current) => ({
       ...current,
       x: pan.viewX + (event.clientX - pan.startX),
@@ -131,11 +178,64 @@ export function Canvas({ children, overlay }: Props) {
     }));
   }
 
+  function finishDraw(event: PointerEvent<HTMLDivElement>) {
+    const draw = drawRef.current;
+    if (!draw || draw.pointerId !== event.pointerId) return;
+    drawRef.current = null;
+    event.currentTarget.removeAttribute('data-drawing');
+    setRubberBand(null);
+
+    const p = viewportPoint(event);
+    const el = viewportRef.current;
+    if (!p || !el) return;
+
+    const dx = p.x - draw.startX;
+    const dy = p.y - draw.startY;
+    const viewNow = viewRef.current;
+    const store = useEditorStore.getState();
+
+    if (Math.hypot(dx, dy) < MIN_DRAG_PX) {
+      store.addInstance(draw.tool, screenToWorld({ x: p.x, y: p.y }, viewNow));
+    } else {
+      const w1 = screenToWorld({ x: draw.startX, y: draw.startY }, viewNow);
+      const w2 = screenToWorld({ x: p.x, y: p.y }, viewNow);
+      store.addInstanceWithRect(draw.tool, normalizeWorldRectCorners(w1, w2));
+    }
+
+    store.setActiveTool('select');
+    if (draw.tool === 'text') {
+      const createdId = store.selectedId;
+      if (createdId) {
+        store.setPendingTextEditInstanceId(createdId);
+      }
+    }
+  }
+
   function endPan(event: PointerEvent<HTMLDivElement>) {
     const pan = panRef.current;
     if (!pan || pan.pointerId !== event.pointerId) return;
     panRef.current = null;
     event.currentTarget.removeAttribute('data-panning');
+  }
+
+  function onPointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (drawRef.current && drawRef.current.pointerId === event.pointerId) {
+      finishDraw(event);
+      return;
+    }
+    endPan(event);
+  }
+
+  function onPointerCancel(event: PointerEvent<HTMLDivElement>) {
+    const draw = drawRef.current;
+    if (draw && draw.pointerId === event.pointerId) {
+      drawRef.current = null;
+      event.currentTarget.removeAttribute('data-drawing');
+      setRubberBand(null);
+      useEditorStore.getState().setActiveTool('select');
+      return;
+    }
+    endPan(event);
   }
 
   function onContextMenu(event: MouseEvent<HTMLDivElement>) {
@@ -156,7 +256,7 @@ export function Canvas({ children, overlay }: Props) {
     });
   }
 
-  const canvasBackgroundColor = useEditorStore((s) => s.canvasBackgroundColor);
+  const showOverlayShell = Boolean(overlay || rubberBand);
 
   return (
     <CanvasHandleContext.Provider value={handle}>
@@ -165,10 +265,11 @@ export function Canvas({ children, overlay }: Props) {
         ref={viewportRef}
         className="canvas-viewport"
         style={{ background: canvasBackgroundColor }}
+        data-active-tool={activeTool !== 'select' ? activeTool : undefined}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={endPan}
-        onPointerCancel={endPan}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
         onContextMenu={onContextMenu}
       >
         <div
@@ -177,7 +278,22 @@ export function Canvas({ children, overlay }: Props) {
         >
           <CanvasScaleContext.Provider value={view.scale}>{children}</CanvasScaleContext.Provider>
         </div>
-        {overlay ? <div className="canvas-overlay">{overlay}</div> : null}
+        {showOverlayShell ? (
+          <div className="canvas-overlay">
+            {rubberBand ? (
+              <div
+                className="canvas-rubber-band"
+                style={{
+                  left: rubberBand.left,
+                  top: rubberBand.top,
+                  width: rubberBand.width,
+                  height: rubberBand.height,
+                }}
+              />
+            ) : null}
+            {overlay}
+          </div>
+        ) : null}
       </div>
     </CanvasHandleContext.Provider>
   );
