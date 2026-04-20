@@ -7,7 +7,8 @@
     "daston": "dist/bin/daston.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "SKILL.md"
   ],
   "scripts": {
     "dev:web": "vite",

@@ -38,6 +38,9 @@ Open the printed URL in a browser. You get a pannable canvas with previews of st
 ```bash
 daston init                 # create .daston/config.json in the target project
 daston start                # start the canvas and print http://127.0.0.1:<port>/
+daston inspect --json       # machine-readable project + theme inspection
+daston prompt apply-theme   # prompt text for applying the current theme
+daston prompt add-component --component button
 daston <cmd> --project <p>  # override the target project directory
 ```
 
@@ -58,6 +61,16 @@ If two or more apps match, daston exits and lists the candidates so you can pass
 3. Click **Add Component** to generate a prompt describing the change. Paste it back into the agent to have it apply the change to the actual source files.
 
 daston itself never touches your source — it only writes to `.daston/config.json`. The agent is what edits components.
+
+## Skill
+
+The package also ships a first-party `SKILL.md` artifact. It documents the intended agent workflow and points agents at the machine-friendly CLI entrypoints:
+
+- `daston inspect --json`
+- `daston prompt apply-theme`
+- `daston prompt add-component --component <id>`
+
+Use those commands when you want structured project/theme context instead of scraping terminal text.
 
 ## Storage
 

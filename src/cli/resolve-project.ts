@@ -3,9 +3,25 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { dependencyNames } from '../shared/package-json.ts';
 
-export type ResolveProjectResult =
-  | { ok: true; projectRoot: string }
-  | { ok: false; kind: 'invalid_path' | 'not_found' | 'ambiguous'; message: string; candidates?: string[] };
+export type ProjectResolution =
+  | { kind: 'explicit'; requestedPath: string }
+  | { kind: 'ancestor' }
+  | { kind: 'workspace_child'; workspaceRoot: string };
+
+export type ResolveProjectSuccess = {
+  ok: true;
+  projectRoot: string;
+  resolution: ProjectResolution;
+};
+
+export type ResolveProjectFailure = {
+  ok: false;
+  kind: 'invalid_path' | 'not_found' | 'ambiguous';
+  message: string;
+  candidates?: string[];
+};
+
+export type ResolveProjectResult = ResolveProjectSuccess | ResolveProjectFailure;
 
 const APP_SIGNAL_DEPS = [
   'react',
@@ -71,12 +87,16 @@ export async function resolveProject(options: {
     if (!st?.isDirectory()) {
       return { ok: false, kind: 'invalid_path', message: `Not a directory: ${explicitProject}` };
     }
-    return { ok: true, projectRoot: abs };
+    return {
+      ok: true,
+      projectRoot: abs,
+      resolution: { kind: 'explicit', requestedPath: explicitProject },
+    };
   }
 
   for (const dir of ancestors(cwd)) {
     if (existsSync(join(dir, 'package.json')) && (await isLikelyAppPackage(dir))) {
-      return { ok: true, projectRoot: dir };
+      return { ok: true, projectRoot: dir, resolution: { kind: 'ancestor' } };
     }
   }
 
@@ -85,7 +105,11 @@ export async function resolveProject(options: {
     const apps = await findChildAppsNearRoot(dir);
     const [first, second] = apps;
     if (first !== undefined && second === undefined) {
-      return { ok: true, projectRoot: first };
+      return {
+        ok: true,
+        projectRoot: first,
+        resolution: { kind: 'workspace_child', workspaceRoot: dir },
+      };
     }
     if (second !== undefined) {
       return {

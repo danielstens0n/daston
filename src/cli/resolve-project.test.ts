@@ -21,7 +21,10 @@ describe('resolveProject', () => {
     roots.push(app);
     const r = await resolveProject({ cwd: tmpdir(), explicitProject: app });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.projectRoot).toBe(app);
+    if (r.ok) {
+      expect(r.projectRoot).toBe(app);
+      expect(r.resolution).toEqual({ kind: 'explicit', requestedPath: app });
+    }
   });
 
   it('rejects a non-directory explicit path', async () => {
@@ -38,7 +41,10 @@ describe('resolveProject', () => {
     await mkdir(nested, { recursive: true });
     const r = await resolveProject({ cwd: nested, explicitProject: undefined });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.projectRoot).toBe(app);
+    if (r.ok) {
+      expect(r.projectRoot).toBe(app);
+      expect(r.resolution).toEqual({ kind: 'ancestor' });
+    }
   });
 
   it('picks the only child app in a workspace root', async () => {
@@ -50,7 +56,10 @@ describe('resolveProject', () => {
     await writePkg(pkg, { dependencies: { react: '^19.0.0' } });
     const r = await resolveProject({ cwd: ws, explicitProject: undefined });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.projectRoot).toBe(pkg);
+    if (r.ok) {
+      expect(r.projectRoot).toBe(pkg);
+      expect(r.resolution).toEqual({ kind: 'workspace_child', workspaceRoot: ws });
+    }
   });
 
   it('returns ambiguous when multiple child apps exist', async () => {

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
-import type { ComponentId, PromptRequest, PromptResponse, ThemeConfig } from '../../shared/types.ts';
-import { getComponent, isComponentId } from '../components-catalog.ts';
+import type { PromptRequest } from '../../shared/types.ts';
+import { isComponentId } from '../components-catalog.ts';
+import { renderPromptResponse } from '../prompt.ts';
 import { readThemeConfig } from '../storage.ts';
 
 // Generates copy-pasteable prompts for the user's coding agent.
@@ -21,9 +22,7 @@ export function createPromptRoutes({ projectRoot }: PromptRoutesOptions): Hono {
 
     // Theme is the source of truth on disk; always read fresh so prompts reflect the latest state.
     const theme = await readThemeConfig(projectRoot);
-    const prompt = renderPrompt(request, theme);
-
-    const response: PromptResponse = { kind: request.kind, prompt };
+    const response = renderPromptResponse(request, theme);
     return c.json(response);
   });
 
@@ -45,51 +44,4 @@ function parsePromptRequest(input: unknown): PromptRequest | null {
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-function renderPrompt(request: PromptRequest, theme: ThemeConfig): string {
-  switch (request.kind) {
-    case 'add-component':
-      return renderAddComponent(request.component, theme);
-    case 'apply-theme':
-      return renderApplyTheme(theme);
-  }
-}
-
-function renderAddComponent(component: ComponentId, theme: ThemeConfig): string {
-  // Lowercase for inline use ("a button component" / "a landing page component").
-  // The `?? component` fallback is dead code (parsePromptRequest already validated
-  // the id via isComponentId), but it lets us avoid a non-null assertion.
-  const label = (getComponent(component)?.label ?? component).toLowerCase();
-  return [
-    `Please add a ${label} component to my project, styled with this theme:`,
-    '',
-    formatTheme(theme),
-    '',
-    "Match my project's existing component conventions (framework, file layout, styling approach) and place the file somewhere that fits the current structure.",
-  ].join('\n');
-}
-
-function renderApplyTheme(theme: ThemeConfig): string {
-  return [
-    'Please update my project to use the following design theme:',
-    '',
-    formatTheme(theme),
-    '',
-    "Apply these via the project's existing theming mechanism (CSS variables, Tailwind config, design tokens — whatever's already in use). Don't change component logic, only styling.",
-  ].join('\n');
-}
-
-function formatTheme(theme: ThemeConfig): string {
-  // Sorted for stable output — easier to diff prompts during dev.
-  const colorLines = Object.entries(theme.colors)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, value]) => `  - ${name}: ${value}`);
-  const colorsBlock = colorLines.length > 0 ? colorLines.join('\n') : '  (none configured)';
-  return [
-    `- Heading font: ${theme.fonts.heading}`,
-    `- Body font: ${theme.fonts.body}`,
-    '- Colors:',
-    colorsBlock,
-  ].join('\n');
 }
