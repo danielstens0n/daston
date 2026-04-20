@@ -2,14 +2,31 @@
 
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  baseCardBodyTextProps,
+  baseCardTitleTextProps,
+  layoutCardTextChildRects,
+} from '../state/editor/instance-defaults.ts';
 import { useEditorStore } from '../state/editor.ts';
-import type { CardInstance } from '../state/types.ts';
+import type { CardInstance, TextPrimitiveInstance } from '../state/types.ts';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts.ts';
 
 function Harness() {
   useKeyboardShortcuts();
   return null;
 }
+
+const baselineCardProps = {
+  padding: 20,
+  fill: '#ffffff',
+  borderColor: '#e4e4e7',
+  borderWidth: 1,
+  borderRadius: 12,
+  shadowEnabled: true,
+  shadowColor: '#0000001a',
+  shadowBlur: 12,
+  shadowOffsetY: 4,
+} as const satisfies CardInstance['props'];
 
 const baselineA: CardInstance = {
   id: 'a',
@@ -18,38 +35,47 @@ const baselineA: CardInstance = {
   y: 20,
   width: 280,
   height: 180,
-  props: {
-    padding: 20,
-    fill: '#ffffff',
-    borderColor: '#e4e4e7',
-    borderWidth: 1,
-    borderRadius: 12,
-    shadowEnabled: true,
-    shadowColor: '#0000001a',
-    shadowBlur: 12,
-    shadowOffsetY: 4,
-    title: 'Card',
-    body: 'Card body',
-    titleColor: '#18181b',
-    bodyColor: '#52525b',
-    titleFont: 'inter',
-    titleFontSize: 16,
-    titleFontWeight: 600,
-    titleItalic: false,
-    titleDecoration: 'none',
-    bodyFont: 'inter',
-    bodyFontSize: 13,
-    bodyFontWeight: 400,
-    bodyItalic: false,
-    bodyDecoration: 'none',
-  },
+  parentId: null,
+  props: baselineCardProps,
+};
+const ra = layoutCardTextChildRects(baselineA);
+const titleA: TextPrimitiveInstance = {
+  id: 'a-title',
+  type: 'text',
+  parentId: 'a',
+  ...ra.title,
+  props: { ...baseCardTitleTextProps(), text: 'Card' },
+};
+const bodyA: TextPrimitiveInstance = {
+  id: 'a-body',
+  type: 'text',
+  parentId: 'a',
+  ...ra.body,
+  props: { ...baseCardBodyTextProps(), text: 'Card body' },
 };
 
 const baselineB: CardInstance = { ...baselineA, id: 'b', x: 200, y: 200 };
+const rb = layoutCardTextChildRects(baselineB);
+const titleB: TextPrimitiveInstance = {
+  id: 'b-title',
+  type: 'text',
+  parentId: 'b',
+  ...rb.title,
+  props: { ...baseCardTitleTextProps(), text: 'Card' },
+};
+const bodyB: TextPrimitiveInstance = {
+  id: 'b-body',
+  type: 'text',
+  parentId: 'b',
+  ...rb.body,
+  props: { ...baseCardBodyTextProps(), text: 'Card body' },
+};
+
+const keyboardForest = [baselineA, titleA, bodyA, baselineB, titleB, bodyB] as const;
 
 beforeEach(() => {
   useEditorStore.setState({
-    instances: [baselineA, baselineB],
+    instances: [...keyboardForest],
     selectedId: null,
     selectedTarget: null,
     nextInstanceId: 2,
@@ -72,14 +98,14 @@ describe('useKeyboardShortcuts', () => {
     render(<Harness />);
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'Delete', bubbles: true });
-    expect(useEditorStore.getState().instances).toEqual([baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([baselineB, titleB, bodyB]);
   });
 
   it('removes the selected instance on Backspace', () => {
     render(<Harness />);
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'Backspace', bubbles: true });
-    expect(useEditorStore.getState().instances).toEqual([baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([baselineB, titleB, bodyB]);
   });
 
   it('clears active draw tool on Escape before clearing selection', () => {
@@ -90,7 +116,7 @@ describe('useKeyboardShortcuts', () => {
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'Escape', bubbles: true });
     expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...keyboardForest]);
   });
 
   it('clears selection on Escape when no tool is active', () => {
@@ -98,36 +124,49 @@ describe('useKeyboardShortcuts', () => {
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'Escape', bubbles: true });
     expect(useEditorStore.getState().selectedId).toBeNull();
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...keyboardForest]);
   });
 
   it('nudges the selected instance with arrow keys', () => {
     render(<Harness />);
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'ArrowLeft', bubbles: true });
-    expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 9, y: 20 });
+    expect(useEditorStore.getState().instances.find((i) => i.id === 'a')).toMatchObject({
+      id: 'a',
+      x: 9,
+      y: 20,
+    });
     fireEvent.keyDown(document.body, { key: 'ArrowUp', bubbles: true });
-    expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 9, y: 19 });
+    expect(useEditorStore.getState().instances.find((i) => i.id === 'a')).toMatchObject({
+      id: 'a',
+      x: 9,
+      y: 19,
+    });
   });
 
   it('nudges by 10px when Shift is held', () => {
     render(<Harness />);
     useEditorStore.getState().select('a');
     fireEvent.keyDown(document.body, { key: 'ArrowRight', shiftKey: true, bubbles: true });
-    expect(useEditorStore.getState().instances[0]).toMatchObject({ id: 'a', x: 20, y: 20 });
+    expect(useEditorStore.getState().instances.find((i) => i.id === 'a')).toMatchObject({
+      id: 'a',
+      x: 20,
+      y: 20,
+    });
   });
 
   it('undos on mod+z and redoes on mod+shift+z', () => {
     render(<Harness />);
     useEditorStore.getState().duplicate('a');
-    expect(useEditorStore.getState().instances).toHaveLength(3);
+    expect(useEditorStore.getState().instances).toHaveLength(9);
 
     fireEvent.keyDown(document.body, { key: 'z', metaKey: true, bubbles: true });
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...keyboardForest]);
 
     fireEvent.keyDown(document.body, { key: 'Z', metaKey: true, shiftKey: true, bubbles: true });
-    expect(useEditorStore.getState().instances).toHaveLength(3);
-    expect(useEditorStore.getState().instances.at(-1)).toMatchObject({ id: 'card-2', type: 'card' });
+    expect(useEditorStore.getState().instances).toHaveLength(9);
+    const dup = useEditorStore.getState().instances.find((i) => i.id === 'card-2' && i.type === 'card');
+    expect(dup).toMatchObject({ id: 'card-2', type: 'card' });
   });
 
   it('does not run canvas shortcuts while a text field is focused', () => {
@@ -141,7 +180,7 @@ describe('useKeyboardShortcuts', () => {
     const input = document.querySelector('.test-sidebar-input') as HTMLInputElement;
     input.focus();
     fireEvent.keyDown(input, { key: 'Delete', bubbles: true });
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...keyboardForest]);
   });
 
   it('does not run canvas shortcuts inside a shortcut block (e.g. modal)', () => {
@@ -159,6 +198,6 @@ describe('useKeyboardShortcuts', () => {
     const btn = document.querySelector('.test-modal-btn') as HTMLButtonElement;
     btn.focus();
     fireEvent.keyDown(btn, { key: 'Delete', bubbles: true });
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...keyboardForest]);
   });
 });

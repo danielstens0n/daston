@@ -9,13 +9,13 @@ import { getLayerLabel } from '../state/layers.ts';
 import {
   renderImportedInstanceInspector,
   renderLayerInspector,
-  renderStockInstanceInspector,
 } from '../state/registry/component-registry.tsx';
 import { componentTypeLabel } from '../state/registry/data.ts';
 import type { ComponentInstance } from '../state/types.ts';
 import { ColorField } from './fields/ColorField.tsx';
 import { FieldRow } from './fields/FieldRow.tsx';
 import { Section } from './fields/Section.tsx';
+import { StockInstanceInspector } from './inspectors/StockInstanceInspector.tsx';
 import './fields/fields.css';
 import './sidebar.css';
 
@@ -73,7 +73,7 @@ function renderInspector(meta: SelectedTargetMeta) {
   if (meta.type === 'imported') {
     return renderImportedInstanceInspector(meta.instanceId);
   }
-  return renderStockInstanceInspector(meta.type, meta.instanceId);
+  return <StockInstanceInspector type={meta.type} id={meta.instanceId} />;
 }
 
 function describeSelection(

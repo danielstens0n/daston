@@ -1,3 +1,22 @@
+/* Every anchor is a <button> for a11y — strip UA chrome even when callers pass a custom `className`. */
+.preview-editable-text-anchor {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  white-space: inherit;
+  cursor: text;
+  appearance: none;
+  box-shadow: none;
+}
+
 .preview-inline-text {
   display: block;
   min-width: 0;

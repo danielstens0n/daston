@@ -14,6 +14,7 @@ const tableInstance: TableInstance = {
   y: 0,
   width: 320,
   height: 220,
+  parentId: null,
   props: createDefaultTableProps(),
 };
 

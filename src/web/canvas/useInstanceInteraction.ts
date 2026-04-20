@@ -1,5 +1,6 @@
 import { type PointerEvent as ReactPointerEvent, useRef } from 'react';
 import { useEditorStore, useIsSelected } from '../state/editor.ts';
+import { pickDropTarget } from '../state/hierarchy.ts';
 import { useCanvasScale } from './Canvas.tsx';
 
 // Tracks the last pointer position + running world position so each frame's
@@ -15,6 +16,7 @@ type DragState = {
   originWorldY: number;
   targetId: string;
   altDuplicated: boolean;
+  dropTargetId: string | null;
 };
 
 export const SHIFT_AXIS_LOCK_THRESHOLD_PX = 4;
@@ -86,6 +88,7 @@ export function useInstanceInteraction(id: string) {
       originWorldY: instance.y,
       targetId,
       altDuplicated,
+      dropTargetId: null,
     };
     event.currentTarget.setAttribute('data-dragging', 'true');
   }
@@ -118,13 +121,31 @@ export function useInstanceInteraction(id: string) {
       SHIFT_AXIS_LOCK_THRESHOLD_PX,
     );
     store.move(drag.targetId, { x, y });
+
+    // Preview the parent the drop will land in; the actual reparent happens
+    // on pointerup so mid-drag overlaps don't churn history.
+    const after = useEditorStore.getState();
+    const moved = after.instances.find((candidate) => candidate.id === drag.targetId);
+    if (moved) {
+      const targetParent = pickDropTarget(after.instances, moved.id, moved);
+      if (drag.dropTargetId !== targetParent) {
+        drag.dropTargetId = targetParent;
+        after.setDropTargetId(targetParent);
+      }
+    }
   }
 
   function endDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dragRef.current = null;
-    useEditorStore.getState().endHistoryBatch();
+    const store = useEditorStore.getState();
+    const moved = store.instances.find((candidate) => candidate.id === drag.targetId);
+    if (moved && moved.parentId !== drag.dropTargetId) {
+      store.setParent(moved.id, drag.dropTargetId);
+    }
+    store.setDropTargetId(null);
+    store.endHistoryBatch();
     event.currentTarget.removeAttribute('data-dragging');
   }
 

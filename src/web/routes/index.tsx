@@ -8,8 +8,7 @@ import { LayersSidebar } from '../layers/LayersSidebar.tsx';
 import { fetchTheme } from '../lib/api.ts';
 import { useKeyboardShortcuts } from '../lib/useKeyboardShortcuts.ts';
 import { Sidebar } from '../sidebar/Sidebar.tsx';
-import { useEditorStore, useInstance, useInstanceIds } from '../state/editor.ts';
-import { renderPreviewBody } from '../state/registry/component-registry.tsx';
+import { useEditorStore, useOrderedInstanceIds } from '../state/editor.ts';
 import { useImportedComponentsStore } from '../state/registry/imported.ts';
 import { CanvasToolbar } from '../toolbar/CanvasToolbar.tsx';
 import './route.css';
@@ -28,9 +27,9 @@ function CanvasRoute() {
   useEffect(() => {
     void useImportedComponentsStore.getState().load();
   }, []);
-  // Subscribing only to the id list keeps the route stable across drags and
-  // prop edits — each PreviewSlot pulls its own instance data.
-  const instanceIds = useInstanceIds();
+  // Subscribing only to the ordered id list keeps the route stable across
+  // drags and prop edits; each PreviewWrapper subscribes to its own instance.
+  const instanceIds = useOrderedInstanceIds();
   return (
     <ContextMenuProvider>
       <div className="route-shell">
@@ -38,7 +37,7 @@ function CanvasRoute() {
         <div className="route-canvas">
           <Canvas overlay={<CanvasToolbar />}>
             {instanceIds.map((id) => (
-              <PreviewSlot key={id} id={id} />
+              <PreviewWrapper key={id} id={id} />
             ))}
             <TextEditLayer />
           </Canvas>
@@ -47,12 +46,4 @@ function CanvasRoute() {
       </div>
     </ContextMenuProvider>
   );
-}
-
-// PreviewWrapper owns position and selection outline; the body is dispatched
-// on instance.type so each preview subscribes to its own props by id.
-function PreviewSlot({ id }: { id: string }) {
-  const instance = useInstance(id);
-  if (!instance) return null;
-  return <PreviewWrapper id={id}>{renderPreviewBody(instance)}</PreviewWrapper>;
 }

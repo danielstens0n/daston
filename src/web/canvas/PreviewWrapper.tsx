@@ -1,7 +1,8 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildInstanceMenuItems } from '../context-menu/items.ts';
-import { useEditorStore, useInstance } from '../state/editor.ts';
+import { useEditorStore, useInstance, useIsDropTarget } from '../state/editor.ts';
+import { renderPreviewBody } from '../state/registry/component-registry.tsx';
 import { InstanceIdProvider, useInstanceId } from './InstanceIdContext.tsx';
 import { useInstanceInteraction } from './useInstanceInteraction.ts';
 import { type ResizeCorner, useResizeInteraction } from './useResizeInteraction.ts';
@@ -9,7 +10,8 @@ import './preview-wrapper.css';
 
 type Props = {
   id: string;
-  children: ReactNode;
+  /** Tests and special cases can inject markup; otherwise the body comes from `renderPreviewBody`. */
+  children?: ReactNode;
 };
 
 const CORNERS: readonly ResizeCorner[] = ['nw', 'ne', 'sw', 'se'];
@@ -21,8 +23,10 @@ const CORNERS: readonly ResizeCorner[] = ['nw', 'ne', 'sw', 'se'];
 export function PreviewWrapper({ id, children }: Props) {
   const instance = useInstance(id);
   const { isSelected, handlers } = useInstanceInteraction(id);
+  const isDropTarget = useIsDropTarget(id);
   const { openMenu } = useContextMenuHost();
   if (!instance) return null;
+  const body = children ?? renderPreviewBody(instance);
 
   function onContextMenu(event: MouseEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -41,6 +45,7 @@ export function PreviewWrapper({ id, children }: Props) {
       <div
         className="preview-wrapper"
         data-selected={isSelected || undefined}
+        data-drop-target={isDropTarget || undefined}
         style={{
           transform: `translate(${instance.x}px, ${instance.y}px)`,
           width: `${instance.width}px`,
@@ -49,7 +54,7 @@ export function PreviewWrapper({ id, children }: Props) {
         {...handlers}
         onContextMenu={onContextMenu}
       >
-        {children}
+        {body}
         {isSelected ? CORNERS.map((corner) => <ResizeHandle key={corner} corner={corner} />) : null}
       </div>
     </InstanceIdProvider>

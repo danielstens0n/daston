@@ -1,56 +1,25 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  createDefaultCardInstances,
+  DEFAULT_SEED_CARD_INSTANCE_IDS,
+} from '../state/editor/instance-defaults.ts';
 import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../state/editor.ts';
-import { layerSelection } from '../state/layers.ts';
-import type { CardInstance } from '../state/types.ts';
+import { instanceSelection } from '../state/layers.ts';
 import { Sidebar } from './Sidebar.tsx';
 
 afterEach(() => {
   cleanup();
 });
 
-const card: CardInstance = {
-  id: 'card-1',
-  type: 'card',
-  x: 120,
-  y: 120,
-  width: 280,
-  height: 180,
-  props: {
-    padding: 20,
-    fill: '#ffffff',
-    borderColor: '#e4e4e7',
-    borderWidth: 1,
-    borderRadius: 12,
-    shadowEnabled: true,
-    shadowColor: '#0000001a',
-    shadowBlur: 12,
-    shadowOffsetY: 4,
-    title: 'Card title',
-    body: 'Card body',
-    titleColor: '#18181b',
-    bodyColor: '#52525b',
-    titleFont: 'inter',
-    titleFontSize: 16,
-    titleFontWeight: 600,
-    titleItalic: false,
-    titleDecoration: 'none',
-    bodyFont: 'inter',
-    bodyFontSize: 13,
-    bodyFontWeight: 400,
-    bodyItalic: false,
-    bodyDecoration: 'none',
-  },
-};
-
 beforeEach(() => {
   useEditorStore.setState({
-    instances: [card],
+    instances: createDefaultCardInstances(null),
     selectedId: null,
     selectedTarget: null,
-    nextInstanceId: 2,
+    nextInstanceId: 4,
     clipboard: null,
     lastPasteId: null,
     past: [],
@@ -69,8 +38,8 @@ describe('Sidebar', () => {
     expect(screen.queryByRole('heading', { name: 'Frame' })).not.toBeInTheDocument();
   });
 
-  it('shows the frame inspector plus component overview when the root is selected', () => {
-    useEditorStore.getState().select('card-1');
+  it('shows the frame inspector for the card root without text-style shortcuts', () => {
+    useEditorStore.getState().select(DEFAULT_SEED_CARD_INSTANCE_IDS.root);
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Card' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Frame' })).toBeInTheDocument();
@@ -79,49 +48,25 @@ describe('Sidebar', () => {
     expect(screen.getByRole('heading', { name: 'Fill' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Border' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Shadow' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Text styles' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Title.*Inter.*16px/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Body.*Inter.*13px/i })).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('Card title')).not.toBeInTheDocument();
-    expect(screen.queryByDisplayValue('Card body')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Text styles' })).not.toBeInTheDocument();
   });
 
-  it('lets the root overview jump directly to a child text layer', () => {
-    useEditorStore.getState().select('card-1');
+  it('shows the text primitive inspector when the title child instance is selected', () => {
+    useEditorStore.getState().select(DEFAULT_SEED_CARD_INSTANCE_IDS.titleText);
     render(<Sidebar />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Title.*Inter.*16px/i }));
-
-    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('card-1', 'title'));
-    expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
-    expect(screen.getByText('Typography')).toBeInTheDocument();
-    expect(screen.queryByText('Padding')).not.toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole('heading', { name: 'Text' })
+        .some((el) => el.className.includes('sidebar-section-title')),
+    ).toBe(true);
+    expect(screen.getByRole('heading', { name: 'Typography' })).toBeInTheDocument();
+    expect(screen.getByText(/text · text-2/)).toBeInTheDocument();
   });
 
-  it('shows typography for the title layer without a content field', () => {
-    useEditorStore.getState().selectLayer(layerSelection('card-1', 'title'));
-    render(<Sidebar />);
-    expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('Card title')).not.toBeInTheDocument();
-    expect(screen.getByText('Typography')).toBeInTheDocument();
-    expect(screen.queryByText('Padding')).not.toBeInTheDocument();
-  });
-
-  it('shows typography for the body layer without a content field', () => {
-    useEditorStore.getState().selectLayer(layerSelection('card-1', 'body'));
-    render(<Sidebar />);
-    expect(screen.getByRole('heading', { name: 'Body' })).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('Card body')).not.toBeInTheDocument();
-    expect(screen.getByText('Typography')).toBeInTheDocument();
-  });
-
-  it('focuses surface controls when the surface layer is selected', () => {
-    useEditorStore.getState().selectLayer(layerSelection('card-1', 'surface'));
-    render(<Sidebar />);
-    expect(screen.getByRole('heading', { name: 'Surface' })).toBeInTheDocument();
-    expect(screen.getByText('Layout')).toBeInTheDocument();
-    expect(screen.getByText('Fill')).toBeInTheDocument();
-    expect(screen.getByText('Border')).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('Card title')).not.toBeInTheDocument();
+  it('selecting the title row uses instance selection', () => {
+    useEditorStore.getState().select(DEFAULT_SEED_CARD_INSTANCE_IDS.titleText);
+    expect(useEditorStore.getState().selectedTarget).toEqual(
+      instanceSelection(DEFAULT_SEED_CARD_INSTANCE_IDS.titleText),
+    );
   });
 });

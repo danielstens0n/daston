@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
+import { onAccentLabel, readableInkOnFill } from '../lib/readableInkOnFill.ts';
 import { useLandingProps, useUpdateProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './landing.css';
@@ -13,11 +14,19 @@ export function Landing({ id }: Props) {
   const updateProps = useUpdateProps(id);
   if (!p) return null;
 
+  const heroInk = readableInkOnFill(p.heroFill);
+  const featuresInk = readableInkOnFill(p.featuresFill);
+
   const style: CSSProperties & Record<string, string> = {
     '--landing-page-fill': p.pageFill,
     '--landing-hero-fill': p.heroFill,
     '--landing-features-fill': p.featuresFill,
     '--landing-accent': p.accentColor,
+    '--landing-hero-heading-color': heroInk.heading,
+    '--landing-hero-body-color': heroInk.body,
+    '--landing-features-heading-color': featuresInk.muted,
+    '--landing-features-list-color': featuresInk.body,
+    '--landing-cta-text-color': onAccentLabel(p.accentColor),
     '--landing-border-radius': `${p.borderRadius}px`,
     '--landing-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
     ...previewTypographyVars(

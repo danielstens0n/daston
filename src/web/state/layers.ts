@@ -6,8 +6,7 @@ import {
 } from './registry/data.ts';
 import type { ComponentInstance } from './types.ts';
 
-export type { CardLayerId, LayerKind } from './registry/data.ts';
-export { CARD_LAYER_SPECS, isCardLayerId } from './registry/data.ts';
+export type { LayerKind } from './registry/data.ts';
 
 export type SelectedTarget =
   | { kind: 'instance'; instanceId: string }
@@ -130,22 +129,41 @@ function injectDynamicChildren(
 
 export function buildLayerTree(instance: ComponentInstance): LayerNode {
   const source = instanceToLayerSource(instance);
-  const template = instance.type === 'imported' ? null : STOCK_LAYER_ROOT_CHILDREN[instance.type];
+  const template = instance.type === 'imported' ? null : (STOCK_LAYER_ROOT_CHILDREN[instance.type] ?? null);
   const baseChildren = template ? expandLayerTemplate(source, template) : [];
   return rootNode(source, injectDynamicChildren(instance, source, baseChildren));
 }
 
+// Build the sidebar forest from the flat instance array: one layer tree per
+// instance, hung off its parent's root so the sidebar mirrors canvas z-order.
+export function buildInstanceLayerForest(instances: readonly ComponentInstance[]): LayerNode[] {
+  const nodeByInstanceId = new Map<string, LayerNode>();
+  for (const instance of instances) {
+    nodeByInstanceId.set(instance.id, buildLayerTree(instance));
+  }
+  const roots: LayerNode[] = [];
+  for (const instance of instances) {
+    const node = nodeByInstanceId.get(instance.id);
+    if (!node) continue;
+    const parentNode = instance.parentId ? nodeByInstanceId.get(instance.parentId) : null;
+    if (parentNode) {
+      parentNode.children = [...parentNode.children, node];
+    } else {
+      roots.push(node);
+    }
+  }
+  return roots;
+}
+
 export function encodeLayerTreeSignature(instance: ComponentInstance): string {
+  const prefix = instance.parentId ? `${instance.parentId}${LAYER_TREE_SEP}` : '';
+  const core = encodeLayerTreeCore(instance);
+  return `${prefix}${core}`;
+}
+
+function encodeLayerTreeCore(instance: ComponentInstance): string {
   if (instance.type === 'imported') {
     return `imported${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.definitionId}`;
-  }
-  if (
-    instance.type === 'rectangle' ||
-    instance.type === 'ellipse' ||
-    instance.type === 'triangle' ||
-    instance.type === 'text'
-  ) {
-    return `${instance.type}${LAYER_TREE_SEP}${instance.id}`;
   }
   if (instance.type === 'table') {
     return `table${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.props.columns.length}${LAYER_TREE_SEP}${instance.props.rows.length}`;
@@ -168,7 +186,8 @@ export function findLayerNode(node: LayerNode, layerId: string): LayerNode | nul
 }
 
 export function getLayerLabel(instance: ComponentInstance, layerId: string): string | null {
-  return findLayerNode(buildLayerTree(instance), layerId)?.label ?? null;
+  const tree = buildLayerTree(instance);
+  return findLayerNode(tree, layerId)?.label ?? null;
 }
 
 export function selectedTargetsEqual(a: SelectedTarget | null, b: SelectedTarget): boolean {

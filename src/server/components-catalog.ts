@@ -6,8 +6,18 @@ import type { Component, ComponentId } from '../shared/types.ts';
 // add its entry here.
 
 export const COMPONENTS: readonly Component[] = [
-  { id: 'button', label: 'Button', description: 'A single clickable button.' },
-  { id: 'card', label: 'Card', description: 'A container with title, body, and optional actions.' },
+  {
+    id: 'button',
+    label: 'Button',
+    description:
+      'A clickable button: a styled root plus a nested text child for the label (reposition and style the label as its own instance).',
+  },
+  {
+    id: 'card',
+    label: 'Card',
+    description:
+      'A card frame (fill, border, shadow, padding) with two nested text children for title and body, each editable and draggable like other instances.',
+  },
   { id: 'ellipse', label: 'Ellipse', description: 'An elliptical shape with fill and stroke.' },
   {
     id: 'landing',

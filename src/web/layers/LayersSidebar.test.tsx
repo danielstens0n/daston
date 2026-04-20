@@ -3,15 +3,32 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
-import { createDefaultTableProps } from '../state/editor/instance-defaults.ts';
+import {
+  baseCardBodyTextProps,
+  baseCardTitleTextProps,
+  createDefaultTableProps,
+  layoutCardTextChildRects,
+} from '../state/editor/instance-defaults.ts';
 import { useEditorStore } from '../state/editor.ts';
-import { instanceSelection, layerSelection } from '../state/layers.ts';
-import type { CardInstance, TableInstance } from '../state/types.ts';
+import { instanceSelection } from '../state/layers.ts';
+import type { CardInstance, TableInstance, TextPrimitiveInstance } from '../state/types.ts';
 import { LayersSidebar } from './LayersSidebar.tsx';
 
 afterEach(() => {
   cleanup();
 });
+
+const baselineCardProps = {
+  padding: 20,
+  fill: '#ffffff',
+  borderColor: '#e4e4e7',
+  borderWidth: 1,
+  borderRadius: 12,
+  shadowEnabled: true,
+  shadowColor: '#0000001a',
+  shadowBlur: 12,
+  shadowOffsetY: 4,
+} as const satisfies CardInstance['props'];
 
 const cardA: CardInstance = {
   id: 'a',
@@ -21,41 +38,50 @@ const cardA: CardInstance = {
   width: 280,
   height: 180,
   parentId: null,
-  props: {
-    padding: 20,
-    fill: '#ffffff',
-    borderColor: '#e4e4e7',
-    borderWidth: 1,
-    borderRadius: 12,
-    shadowEnabled: true,
-    shadowColor: '#0000001a',
-    shadowBlur: 12,
-    shadowOffsetY: 4,
-    title: 'Card',
-    body: 'Card body',
-    titleColor: '#18181b',
-    bodyColor: '#52525b',
-    titleFont: 'inter',
-    titleFontSize: 16,
-    titleFontWeight: 600,
-    titleItalic: false,
-    titleDecoration: 'none',
-    bodyFont: 'inter',
-    bodyFontSize: 13,
-    bodyFontWeight: 400,
-    bodyItalic: false,
-    bodyDecoration: 'none',
-  },
+  props: baselineCardProps,
+};
+
+const ra = layoutCardTextChildRects(cardA);
+const titleA: TextPrimitiveInstance = {
+  id: 'a-title',
+  type: 'text',
+  parentId: 'a',
+  ...ra.title,
+  props: { ...baseCardTitleTextProps(), text: 'Card' },
+};
+const bodyA: TextPrimitiveInstance = {
+  id: 'a-body',
+  type: 'text',
+  parentId: 'a',
+  ...ra.body,
+  props: { ...baseCardBodyTextProps(), text: 'Card body' },
 };
 
 const cardB: CardInstance = { ...cardA, id: 'b', x: 200, y: 200 };
+const rb = layoutCardTextChildRects(cardB);
+const titleB: TextPrimitiveInstance = {
+  id: 'b-title',
+  type: 'text',
+  parentId: 'b',
+  ...rb.title,
+  props: { ...baseCardTitleTextProps(), text: 'Card' },
+};
+const bodyB: TextPrimitiveInstance = {
+  id: 'b-body',
+  type: 'text',
+  parentId: 'b',
+  ...rb.body,
+  props: { ...baseCardBodyTextProps(), text: 'Card body' },
+};
+
+const twoCardForest = [cardA, titleA, bodyA, cardB, titleB, bodyB] as const;
 
 beforeEach(() => {
   useEditorStore.setState({
-    instances: [cardA, cardB],
+    instances: [...twoCardForest],
     selectedId: null,
     selectedTarget: null,
-    nextInstanceId: 3,
+    nextInstanceId: 10,
     clipboard: null,
     lastPasteId: null,
     past: [],
@@ -78,26 +104,24 @@ describe('LayersSidebar', () => {
 
     const list = screen.getByRole('list', { name: 'Layers tree' });
     const rows = Array.from(list.querySelectorAll<HTMLButtonElement>('.layers-row'));
-    expect(rows).toHaveLength(8);
+    expect(rows).toHaveLength(10);
     const frontRoot = rows.at(0);
-    const backRoot = rows.at(4);
+    const backRoot = rows.at(5);
     if (frontRoot === undefined || backRoot === undefined) {
       throw new Error('expected root rows');
     }
     expect(within(frontRoot).getByText('b')).toBeInTheDocument();
     expect(within(backRoot).getByText('a')).toBeInTheDocument();
-    expect(screen.getAllByText('Surface')).toHaveLength(2);
-    expect(screen.getAllByText('Title')).toHaveLength(2);
-    expect(screen.getAllByText('Body')).toHaveLength(2);
+    expect(screen.getAllByText('Text')).toHaveLength(8);
   });
 
-  it('selects either the component root or an internal layer row', () => {
+  it('selects the component root or a nested text instance row', () => {
     renderLayersSidebar();
 
     const list = screen.getByRole('list', { name: 'Layers tree' });
     const rows = Array.from(list.querySelectorAll<HTMLButtonElement>('.layers-row'));
     const rootRow = rows.at(0);
-    const titleRow = rows.at(2);
+    const titleRow = rows.at(1);
     if (!rootRow || !titleRow) throw new Error('expected root and title rows');
 
     fireEvent.click(rootRow);
@@ -105,22 +129,22 @@ describe('LayersSidebar', () => {
     expect(useEditorStore.getState().selectedTarget).toEqual(instanceSelection('b'));
 
     fireEvent.click(titleRow);
-    expect(useEditorStore.getState().selectedId).toBe('b');
-    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('b', 'title'));
+    expect(useEditorStore.getState().selectedId).toBe('b-title');
+    expect(useEditorStore.getState().selectedTarget).toEqual(instanceSelection('b-title'));
   });
 
   it('can collapse component rows independently and restore them', () => {
     renderLayersSidebar();
 
-    expect(screen.getAllByText('Title')).toHaveLength(2);
+    expect(screen.getAllByText('Text')).toHaveLength(8);
     const collapseButton = screen.getAllByRole('button', { name: 'Collapse Card' }).at(0);
     if (!collapseButton) throw new Error('expected collapse button');
     fireEvent.click(collapseButton);
-    expect(screen.getAllByText('Title')).toHaveLength(1);
+    expect(screen.getAllByText('Text')).toHaveLength(4);
 
     const expandButton = screen.getByRole('button', { name: 'Expand Card' });
     fireEvent.click(expandButton);
-    expect(screen.getAllByText('Title')).toHaveLength(2);
+    expect(screen.getAllByText('Text')).toHaveLength(8);
   });
 
   it('collapses into a slim rail and can expand again', () => {
@@ -163,19 +187,24 @@ describe('LayersSidebar', () => {
     expect(screen.getByRole('menuitem', { name: 'Add column' })).toBeInTheDocument();
   });
 
-  it('opens context menu on a child row and deletes the owning instance', () => {
+  it('opens context menu on a card root row and deletes the whole subtree', () => {
     renderLayersSidebar();
 
     const list = screen.getByRole('list', { name: 'Layers tree' });
     const rows = Array.from(list.querySelectorAll<HTMLButtonElement>('.layers-row'));
-    const titleRow = rows.at(2);
-    if (!titleRow) throw new Error('expected title row');
+    const bRoot = rows.find((r) => within(r).queryByText('b') && within(r).queryByText('Card'));
+    if (!bRoot) throw new Error('expected card b root row');
 
-    fireEvent.contextMenu(titleRow, { clientX: 50, clientY: 50, bubbles: true });
+    fireEvent.contextMenu(bRoot, { clientX: 50, clientY: 50, bubbles: true });
     fireEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
 
-    expect(useEditorStore.getState().instances).toHaveLength(1);
-    expect(useEditorStore.getState().instances[0]?.id).toBe('a');
+    expect(useEditorStore.getState().instances).toHaveLength(3);
+    expect(
+      useEditorStore
+        .getState()
+        .instances.map((i) => i.id)
+        .sort(),
+    ).toEqual(['a', 'a-body', 'a-title']);
   });
 
   it('drags a root row onto another to reparent it', () => {
@@ -199,13 +228,9 @@ describe('LayersSidebar', () => {
   });
 
   it('drops a sibling-child onto another sibling center — reorders, never reparents', () => {
-    // Two children under a shared parent. When the user drags one onto its
-    // sibling, the middle "onto" zone should collapse to nearest-edge so the
-    // drop reorders z-index instead of nesting a sibling into its sibling
-    // (which is almost never the user's intent).
-    const c1: CardInstance = { ...cardA, id: 'c1', parentId: 'a', x: 20, y: 20 };
-    const c2: CardInstance = { ...cardA, id: 'c2', parentId: 'a', x: 40, y: 40 };
-    useEditorStore.setState({ instances: [cardA, c1, c2], selectedTarget: null });
+    const c1: CardInstance = { ...cardA, id: 'c1', parentId: 'a', x: 20, y: 20, props: baselineCardProps };
+    const c2: CardInstance = { ...cardA, id: 'c2', parentId: 'a', x: 40, y: 40, props: baselineCardProps };
+    useEditorStore.setState({ instances: [cardA, titleA, bodyA, c1, c2], selectedTarget: null });
 
     renderLayersSidebar();
     const rows = Array.from(document.querySelectorAll<HTMLElement>('.layers-row-shell'));
@@ -218,8 +243,6 @@ describe('LayersSidebar', () => {
     c2Row.getBoundingClientRect = rectAt(100, 40);
     const dataTransfer = makeDataTransfer();
 
-    // Drop in the lower half of c2 (previously "onto" → reparent). Now it
-    // resolves to "below" because the target is a direct sibling.
     dispatchDragEvent('dragstart', c1Row, { clientY: 0, dataTransfer });
     dispatchDragEvent('dragover', c2Row, { clientY: 128, dataTransfer });
     dispatchDragEvent('drop', c2Row, { clientY: 128, dataTransfer });
@@ -228,6 +251,30 @@ describe('LayersSidebar', () => {
     expect(c1After?.parentId).toBe('a');
     const ids = useEditorStore.getState().instances.map((i) => i.id);
     expect(ids.indexOf('c1')).toBeGreaterThan(ids.indexOf('c2'));
+  });
+
+  it('reorders title text above body text under the same card', () => {
+    useEditorStore.setState({
+      instances: [cardA, bodyA, titleA, cardB, titleB, bodyB],
+      selectedTarget: null,
+    });
+    renderLayersSidebar();
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.layers-row-shell'));
+    const rowFor = (id: string) =>
+      rows.find((r) => r.querySelector('.layers-row-secondary')?.textContent === id);
+    const titleRow = rowFor('a-title');
+    const bodyRow = rowFor('a-body');
+    if (!titleRow || !bodyRow) throw new Error('expected title and body rows');
+
+    bodyRow.getBoundingClientRect = rectAt(100, 40);
+    const dataTransfer = makeDataTransfer();
+
+    dispatchDragEvent('dragstart', titleRow, { clientY: 0, dataTransfer });
+    dispatchDragEvent('dragover', bodyRow, { clientY: 5, dataTransfer });
+    dispatchDragEvent('drop', bodyRow, { clientY: 5, dataTransfer });
+
+    const ids = useEditorStore.getState().instances.map((i) => i.id);
+    expect(ids.indexOf('a-title')).toBeLessThan(ids.indexOf('a-body'));
   });
 });
 
@@ -259,8 +306,6 @@ function makeDataTransfer() {
   };
 }
 
-// jsdom's synthetic drag events don't carry MouseEvent fields like clientY, so
-// we dispatch a native Event with them manually defined.
 function dispatchDragEvent(
   type: string,
   target: HTMLElement,

@@ -151,13 +151,6 @@ function CardRootInspector({ id }: { id: string }) {
       <FillSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
       <BorderSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
       <ShadowSection props={props} onPatch={onPatch as (patch: Partial<CardProps>) => void} />
-      <TextStyleOverviewSection
-        id={id}
-        items={[
-          { label: 'Title', layerId: 'title', scope: 'card-title' },
-          { label: 'Body', layerId: 'body', scope: 'card-body' },
-        ]}
-      />
     </>
   );
 }
@@ -191,10 +184,6 @@ function ButtonRootInspector({ id }: { id: string }) {
           />
         </FieldRow>
       </Section>
-      <TextStyleOverviewSection
-        id={id}
-        items={[{ label: 'Label', layerId: 'label', scope: 'button-label' }]}
-      />
     </>
   );
 }

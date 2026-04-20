@@ -1,6 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { buildLayerTree, encodeLayerTreeSignature, type LayerNode, type SelectedTarget } from '../layers.ts';
+import { orderedInstanceIds } from '../hierarchy.ts';
+import {
+  buildInstanceLayerForest,
+  encodeLayerTreeSignature,
+  type LayerNode,
+  type SelectedTarget,
+  selectedTargetsEqual,
+} from '../layers.ts';
 import type {
   ButtonProps,
   CardProps,
@@ -12,8 +19,23 @@ import type {
 } from '../types.ts';
 import { useEditorStore } from './store.ts';
 
-export function useInstanceIds(): string[] {
-  return useEditorStore(useShallow((state) => state.instances.map((instance) => instance.id)));
+/**
+ * Render order: parents first, then each subtree depth-first. Children land
+ * after their ancestor in the DOM so later-nested elements paint on top
+ * without the canvas having to juggle z-indexes.
+ */
+export function useOrderedInstanceIds(): string[] {
+  const orderMemoKey = useEditorStore(
+    useShallow((state) =>
+      state.instances.map((instance) => `${instance.id}:${instance.parentId ?? ''}`).join('|'),
+    ),
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `orderMemoKey` captures the structural data that affects render order; the callback reads fresh instances from the store.
+  return useMemo(() => orderedInstanceIds(useEditorStore.getState().instances), [orderMemoKey]);
+}
+
+export function useIsDropTarget(id: string): boolean {
+  return useEditorStore((state) => state.dropTargetId === id);
 }
 
 export function useLayerTree(): LayerNode[] {
@@ -21,10 +43,7 @@ export function useLayerTree(): LayerNode[] {
     useShallow((state) => state.instances.map((i) => `${i.id}:${encodeLayerTreeSignature(i)}`).join('|')),
   );
   // biome-ignore lint/correctness/useExhaustiveDependencies: `layerMemoKey` is the stable cache key for derived trees (ids + structure signatures); the callback reads fresh instances from the store.
-  return useMemo(
-    () => useEditorStore.getState().instances.map((instance) => buildLayerTree(instance)),
-    [layerMemoKey],
-  );
+  return useMemo(() => buildInstanceLayerForest(useEditorStore.getState().instances), [layerMemoKey]);
 }
 
 export function useInstance(id: string): ComponentInstance | null {
@@ -110,19 +129,20 @@ export function useSelectedTargetMeta(): SelectedTargetMeta | null {
   return useEditorStore(
     useShallow((state): SelectedTargetMeta | null => {
       if (!state.selectedTarget) return null;
-      const instance = state.instances.find((candidate) => candidate.id === state.selectedTarget?.instanceId);
+      const target = state.selectedTarget;
+      const instance = state.instances.find((candidate) => candidate.id === target.instanceId);
       if (!instance) return null;
-      return state.selectedTarget.kind === 'instance'
+      return target.kind === 'instance'
         ? {
             kind: 'instance',
-            instanceId: state.selectedTarget.instanceId,
+            instanceId: target.instanceId,
             type: instance.type,
           }
         : {
             kind: 'layer',
-            instanceId: state.selectedTarget.instanceId,
+            instanceId: target.instanceId,
             type: instance.type,
-            layerId: state.selectedTarget.layerId,
+            layerId: target.layerId,
           };
     }),
   );
@@ -143,20 +163,13 @@ export function useUpdateProps(id: string): (patch: Record<string, unknown>) => 
   );
 }
 
-function selectedTargetKey(target: SelectedTarget): string {
-  return target.kind === 'instance' ? `i:${target.instanceId}` : `l:${target.instanceId}:${target.layerId}`;
-}
-
 export function useIsLayerSelected(target: SelectedTarget): boolean {
-  const key = selectedTargetKey(target);
   return useEditorStore(
     useCallback(
       (state) => {
-        const sel = state.selectedTarget;
-        if (!sel) return false;
-        return selectedTargetKey(sel) === key;
+        return selectedTargetsEqual(state.selectedTarget, target);
       },
-      [key],
+      [target],
     ),
   );
 }

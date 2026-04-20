@@ -40,59 +40,37 @@ export type TypographyValues = {
   decoration: TextDecoration;
 };
 
-export type CardProps = LayoutProps &
-  FillProps &
-  BorderProps &
-  ShadowProps &
-  TextColorProps & {
-    title: string;
-    body: string;
-    titleFont: string;
-    titleFontSize: number;
-    titleFontWeight: FontWeight;
-    titleItalic: boolean;
-    titleDecoration: TextDecoration;
-    bodyFont: string;
-    bodyFontSize: number;
-    bodyFontWeight: FontWeight;
-    bodyItalic: boolean;
-    bodyDecoration: TextDecoration;
-  };
+export type CardProps = LayoutProps & FillProps & BorderProps & ShadowProps;
 
-// Size lives on the instance root alongside x/y — resize handles on the
-// wrapper read and write width/height directly, symmetric with how drag
-// updates x/y. Type-specific props stay in `props`.
-export type CardInstance = {
+// Shared geometry for every instance. `parentId` is `null` for roots and the
+// owning instance's id for nested elements — world `x`/`y` stay absolute so
+// rendering can skip ancestor lookups. Size lives on the instance root
+// alongside x/y — resize handles on the wrapper read and write width/height
+// directly, symmetric with how drag updates x/y. Type-specific props stay in
+// `props`.
+export type InstanceGeometry = {
   id: string;
-  type: 'card';
   x: number;
   y: number;
   width: number;
   height: number;
+  parentId: string | null;
+};
+
+export type CardInstance = InstanceGeometry & {
+  type: 'card';
   props: CardProps;
 };
 
 export type ButtonProps = FillProps &
   BorderProps &
   ShadowProps & {
-    label: string;
-    labelFont: string;
-    labelFontSize: number;
-    labelFontWeight: FontWeight;
-    labelItalic: boolean;
-    labelDecoration: TextDecoration;
-    textColor: string;
     paddingX: number;
     paddingY: number;
   };
 
-export type ButtonInstance = {
-  id: string;
+export type ButtonInstance = InstanceGeometry & {
   type: 'button';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: ButtonProps;
 };
 
@@ -122,13 +100,8 @@ export type TableProps = {
   rows: string[][];
 };
 
-export type TableInstance = {
-  id: string;
+export type TableInstance = InstanceGeometry & {
   type: 'table';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: TableProps;
 };
 
@@ -155,59 +128,34 @@ export type LandingProps = ShadowProps & {
   borderRadius: number;
 };
 
-export type LandingInstance = {
-  id: string;
+export type LandingInstance = InstanceGeometry & {
   type: 'landing';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: LandingProps;
 };
 
 export type ImportedProps = Record<string, never>;
 
-export type ImportedInstance = {
-  id: string;
+export type ImportedInstance = InstanceGeometry & {
   type: 'imported';
   definitionId: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: ImportedProps;
 };
 
 /** Shared by rectangle, ellipse, triangle previews. */
 export type ShapeProps = FillProps & BorderProps & ShadowProps;
 
-export type RectangleInstance = {
-  id: string;
+export type RectangleInstance = InstanceGeometry & {
   type: 'rectangle';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: ShapeProps;
 };
 
-export type EllipseInstance = {
-  id: string;
+export type EllipseInstance = InstanceGeometry & {
   type: 'ellipse';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: ShapeProps;
 };
 
-export type TriangleInstance = {
-  id: string;
+export type TriangleInstance = InstanceGeometry & {
   type: 'triangle';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: ShapeProps;
 };
 
@@ -224,13 +172,8 @@ export type TextPrimitiveProps = {
   textDecoration: TextDecoration;
 };
 
-export type TextPrimitiveInstance = {
-  id: string;
+export type TextPrimitiveInstance = InstanceGeometry & {
   type: 'text';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   props: TextPrimitiveProps;
 };
 

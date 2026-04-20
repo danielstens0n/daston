@@ -21,20 +21,14 @@ export type LayerTemplateNode = {
   readonly children?: readonly LayerTemplateNode[];
 };
 
-export const STOCK_LAYER_ROOT_CHILDREN = {
+/** Stock types with no template rows use `[]` or omit; card/button use real child instances. */
+export const STOCK_LAYER_ROOT_CHILDREN: Partial<
+  Record<Exclude<ComponentInstance['type'], 'imported'>, readonly LayerTemplateNode[]>
+> = {
   rectangle: [],
   ellipse: [],
   triangle: [],
   text: [{ id: 'text', kind: 'text', label: 'Text' }],
-  card: [
-    { id: 'surface', kind: 'rectangle', label: 'Surface' },
-    { id: 'title', kind: 'text', label: 'Title' },
-    { id: 'body', kind: 'text', label: 'Body' },
-  ],
-  button: [
-    { id: 'surface', kind: 'rectangle', label: 'Surface' },
-    { id: 'label', kind: 'text', label: 'Label' },
-  ],
   table: [
     {
       id: 'header',
@@ -83,15 +77,7 @@ export const STOCK_LAYER_ROOT_CHILDREN = {
       ],
     },
   ],
-} as const satisfies Record<Exclude<ComponentInstance['type'], 'imported'>, readonly LayerTemplateNode[]>;
-
-export const CARD_LAYER_SPECS = STOCK_LAYER_ROOT_CHILDREN.card;
-
-export type CardLayerId = (typeof CARD_LAYER_SPECS)[number]['id'];
-
-export function isCardLayerId(layerId: string): layerId is CardLayerId {
-  return CARD_LAYER_SPECS.some((candidate) => candidate.id === layerId);
-}
+};
 
 export function componentTypeLabel(type: ComponentInstance['type']): string {
   switch (type) {

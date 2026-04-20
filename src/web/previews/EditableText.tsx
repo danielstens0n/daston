@@ -87,12 +87,14 @@ export function EditableText({
     beginEditing(event);
   }
 
+  const anchorClass = `${className ?? 'preview-inline-text'} preview-editable-text-anchor`;
+
   return (
     <button
       ref={anchorRef}
       type="button"
       data-preview-interactive="true"
-      className={className ?? 'preview-inline-text'}
+      className={anchorClass}
       style={{ visibility: isAnchorActive ? 'hidden' : 'visible' }}
       onPointerDown={onPointerDown}
       onFocus={onFocus}

@@ -10,8 +10,18 @@ import {
   restoreSnapshotKeepingCanvas,
   snapshotsEqual,
 } from './history.ts';
-import { baseCardProps, createDefaultCardProps, defaultCard } from './instance-defaults.ts';
 import {
+  baseCardBodyTextProps,
+  baseCardProps,
+  baseCardTitleTextProps,
+  createDefaultCardBodyTextProps,
+  createDefaultCardInstances,
+  createDefaultCardProps,
+  createDefaultCardTitleTextProps,
+  DEFAULT_SEED_CARD_INSTANCE_IDS,
+} from './instance-defaults.ts';
+import {
+  clipboardPayloadFromRoot,
   mutationAddImportedInstance,
   mutationAddInstance,
   mutationAddInstanceWithRect,
@@ -27,7 +37,9 @@ import {
   mutationRemoveLandingFeature,
   mutationRemoveTableColumn,
   mutationRemoveTableRow,
+  mutationReorderInstance,
   mutationResize,
+  mutationSetParent,
   mutationUpdateProps,
 } from './mutations.ts';
 
@@ -41,10 +53,19 @@ type Point = { x: number; y: number };
 export type CanvasTool = 'select' | Extract<ComponentId, 'ellipse' | 'rectangle' | 'text' | 'triangle'>;
 
 function isPristineDefaultCanvas(snapshot: EditorSnapshot): boolean {
-  if (snapshot.instances.length !== 1) return false;
-  const only = snapshot.instances[0];
-  if (!only || only.type !== 'card' || only.id !== 'card-1') return false;
-  return JSON.stringify(only.props) === JSON.stringify(baseCardProps());
+  if (snapshot.instances.length !== 3) return false;
+  const { root, titleText, bodyText } = DEFAULT_SEED_CARD_INSTANCE_IDS;
+  const card = snapshot.instances.find((i) => i.id === root);
+  const title = snapshot.instances.find((i) => i.id === titleText);
+  const body = snapshot.instances.find((i) => i.id === bodyText);
+  if (!card || card.type !== 'card') return false;
+  if (!title || title.type !== 'text' || title.parentId !== root) return false;
+  if (!body || body.type !== 'text' || body.parentId !== root) return false;
+  return (
+    JSON.stringify(card.props) === JSON.stringify(baseCardProps()) &&
+    JSON.stringify(title.props) === JSON.stringify(baseCardTitleTextProps()) &&
+    JSON.stringify(body.props) === JSON.stringify(baseCardBodyTextProps())
+  );
 }
 
 type EditorStoreActions = {
@@ -57,6 +78,9 @@ type EditorStoreActions = {
   /** Set by the canvas after creating a text instance; Text preview consumes to open the inline editor. */
   pendingTextEditInstanceId: string | null;
   setPendingTextEditInstanceId: (id: string | null) => void;
+  /** Ephemeral preview of the parent an in-progress drag will land inside; not part of undo history. */
+  dropTargetId: string | null;
+  setDropTargetId: (id: string | null) => void;
   setCanvasBackgroundColor: (color: string) => void;
   applyInitialThemeFromServer: (theme: ThemeConfig) => void;
   select: (id: string | null) => void;
@@ -71,6 +95,8 @@ type EditorStoreActions = {
   addInstanceWithRect: (type: ComponentId, rect: Rect) => void;
   addImportedInstance: (definitionId: string, worldCenter: Point) => void;
   updateProps: (id: string, patch: Record<string, unknown>) => void;
+  setParent: (id: string, parentId: string | null) => void;
+  reorderInstance: (id: string, target: { parentId: string | null; beforeId: string | null }) => void;
   remove: (id: string) => void;
   duplicate: (id: string) => void;
   duplicateInPlaceForDrag: (id: string) => string | null;
@@ -108,10 +134,10 @@ export const useEditorStore = create<FullEditorStore>((set) => {
   }
 
   return {
-    instances: [defaultCard],
+    instances: createDefaultCardInstances(null),
     selectedId: null,
     selectedTarget: null,
-    nextInstanceId: 2,
+    nextInstanceId: 4,
     clipboard: null,
     lastPasteId: null,
     past: [],
@@ -122,6 +148,8 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     setActiveTool: (tool) => set({ activeTool: tool }),
     pendingTextEditInstanceId: null,
     setPendingTextEditInstanceId: (id) => set({ pendingTextEditInstanceId: id }),
+    dropTargetId: null,
+    setDropTargetId: (id) => set({ dropTargetId: id }),
     setCanvasBackgroundColor: (color) => set({ canvasBackgroundColor: color }),
     applyInitialThemeFromServer: (theme) =>
       set((state) => {
@@ -130,12 +158,20 @@ export const useEditorStore = create<FullEditorStore>((set) => {
         if (!isPristineDefaultCanvas(snapshot)) {
           return {};
         }
-        const only = state.instances[0];
-        if (!only || only.type !== 'card') {
-          return {};
-        }
+        const { root, titleText, bodyText } = DEFAULT_SEED_CARD_INSTANCE_IDS;
         return {
-          instances: [{ ...only, props: createDefaultCardProps(theme) }],
+          instances: state.instances.map((inst) => {
+            if (inst.id === root && inst.type === 'card') {
+              return { ...inst, props: createDefaultCardProps(theme) };
+            }
+            if (inst.id === titleText && inst.type === 'text') {
+              return { ...inst, props: createDefaultCardTitleTextProps(theme) };
+            }
+            if (inst.id === bodyText && inst.type === 'text') {
+              return { ...inst, props: createDefaultCardBodyTextProps(theme) };
+            }
+            return inst;
+          }),
         };
       }),
     select: (id) =>
@@ -197,6 +233,9 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     addImportedInstance: (definitionId, worldCenter) =>
       applyMutation((snapshot) => mutationAddImportedInstance(snapshot, definitionId, worldCenter)),
     updateProps: (id, patch) => applyMutation((snapshot) => mutationUpdateProps(snapshot, id, patch)),
+    setParent: (id, parentId) => applyMutation((snapshot) => mutationSetParent(snapshot, id, parentId)),
+    reorderInstance: (id, target) =>
+      applyMutation((snapshot) => mutationReorderInstance(snapshot, id, target)),
     remove: (id) => applyMutation((snapshot) => mutationRemove(snapshot, id)),
     duplicate: (id) => applyMutation((snapshot) => mutationDuplicate(snapshot, id)),
     duplicateInPlaceForDrag: (id) => {
@@ -211,9 +250,8 @@ export const useEditorStore = create<FullEditorStore>((set) => {
     },
     copy: (id) =>
       set((state) => {
-        const src = state.instances.find((instance) => instance.id === id);
-        if (!src) return state;
-        return { clipboard: structuredClone(src), lastPasteId: null };
+        if (!state.instances.some((instance) => instance.id === id)) return state;
+        return { clipboard: clipboardPayloadFromRoot(state.instances, id), lastPasteId: null };
       }),
     cut: (id) => applyMutation((snapshot) => mutationCut(snapshot, id)),
     paste: (options) => applyMutation((snapshot) => mutationPaste(snapshot, options)),

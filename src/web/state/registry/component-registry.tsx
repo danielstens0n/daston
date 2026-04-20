@@ -9,17 +9,12 @@ import { Table } from '../../previews/Table.tsx';
 import { Text } from '../../previews/Text.tsx';
 import { Triangle } from '../../previews/Triangle.tsx';
 import { Section } from '../../sidebar/fields/Section.tsx';
-import { ButtonLayerInspector } from '../../sidebar/inspectors/ButtonLayerInspector.tsx';
-import { CardLayerInspector } from '../../sidebar/inspectors/CardLayerInspector.tsx';
 import { ImportedLayerInspector } from '../../sidebar/inspectors/ImportedLayerInspector.tsx';
 import { LandingLayerInspector } from '../../sidebar/inspectors/LandingLayerInspector.tsx';
-import {
-  StockInstanceInspector,
-  TextPrimitiveFields,
-} from '../../sidebar/inspectors/StockInstanceInspector.tsx';
+import { TextPrimitiveFields } from '../../sidebar/inspectors/StockInstanceInspector.tsx';
 import { TableLayerInspector } from '../../sidebar/inspectors/TableLayerInspector.tsx';
 import type { ComponentInstance } from '../types.ts';
-import { componentTypeLabel, isCardLayerId } from './data.ts';
+import { componentTypeLabel } from './data.ts';
 
 export function renderPreviewBody(instance: ComponentInstance): ReactNode {
   switch (instance.type) {
@@ -48,13 +43,6 @@ export function renderPreviewBody(instance: ComponentInstance): ReactNode {
   }
 }
 
-export function renderStockInstanceInspector(
-  type: Exclude<ComponentInstance['type'], 'imported'>,
-  instanceId: string,
-): ReactNode {
-  return <StockInstanceInspector type={type} id={instanceId} />;
-}
-
 export function renderImportedInstanceInspector(instanceId: string): ReactNode {
   return <ImportedLayerInspector id={instanceId} />;
 }
@@ -64,12 +52,6 @@ export function renderLayerInspector(meta: {
   instanceId: string;
   layerId: string;
 }): ReactNode {
-  if (meta.type === 'card' && isCardLayerId(meta.layerId)) {
-    return <CardLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
-  }
-  if (meta.type === 'button') {
-    return <ButtonLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
-  }
   if (meta.type === 'table') {
     return <TableLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
   }

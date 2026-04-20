@@ -42,19 +42,13 @@ function useLayerRowContext(): LayerRowContextValue {
   return ctx;
 }
 
-// Three-way split (Figma-style layer panel): top/bottom 25% reorder above/below
-// the target; the middle 50% reparents under it. When `allowOnto` is false the
-// middle collapses so the whole row becomes a nearest-edge reorder — used when
-// dropping "onto" would be pointless or almost never the user's intent (e.g.
-// landing on a direct sibling under a real parent).
-// Which instance ids are valid "onto" (reparent) targets for `dragged`. Built
-// once per drag so we can answer this in O(1) on every dragover. Excluded:
-// - rows already in `dragged`'s subtree (cycles; also filtered separately)
-// - `dragged`'s current parent (reparenting to the same parent is a no-op)
-// - siblings under a real (non-null) parent (they'd become grandchildren,
-//   which is almost never the intent — user wants to reorder z-order)
-// Root siblings (both `parentId === null`) remain valid targets because that's
-// the only way to nest root-level instances under each other.
+// Three-way split (Figma-style): top/bottom 25% reorder above/below; middle 50%
+// reparents under the row. When `allowOnto` is false the middle collapses to
+// edge-only reorder (e.g. sibling rows where "onto" would be a bad default).
+// `buildOntoTargets` lists valid reparent targets for `dragged`, built once per
+// drag: exclude `dragged`'s subtree, its current parent, and siblings under a
+// non-null parent (reorder z-order instead). Root siblings stay valid so roots
+// can nest under each other.
 function buildOntoTargets(instances: readonly ComponentInstance[], draggedId: string): Set<string> {
   const dragged = instances.find((i) => i.id === draggedId);
   if (!dragged) return new Set();

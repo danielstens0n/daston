@@ -19,6 +19,13 @@
   outline-offset: 2px;
 }
 
+/* Drop-target preview while another element is being dragged over this one.
+   Dashed + inset so it reads differently from the solid selection outline. */
+.preview-wrapper[data-drop-target] {
+  outline: 2px dashed var(--color-chrome-focus);
+  outline-offset: -2px;
+}
+
 /* Resize handles are 10×10 squares at each corner, offset so they straddle
    the selection outline. Only rendered when the wrapper is selected. */
 .preview-resize-handle {

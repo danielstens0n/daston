@@ -1,15 +1,18 @@
 import { ACCENT_BORDER_HEX, ACCENT_HEX } from '../../../shared/chrome-colors.ts';
 import type { ThemeConfig } from '../../../shared/types.ts';
 import { DEFAULT_BODY_FONT_ID, DEFAULT_HEADING_FONT_ID } from '../../lib/fonts.ts';
+import { onAccentLabel, readableInkOnFill } from '../../lib/readableInkOnFill.ts';
 import { getResolvedThemeConfig } from '../../lib/theme-defaults-context.ts';
 import { themeFontIds } from '../../lib/theme-fonts.ts';
 import type {
   ButtonProps,
   CardInstance,
   CardProps,
+  ComponentInstance,
   LandingProps,
   ShapeProps,
   TableProps,
+  TextPrimitiveInstance,
   TextPrimitiveProps,
 } from '../types.ts';
 
@@ -29,10 +32,58 @@ export const DEFAULT_SHAPE_HEIGHT = 100;
 export const DEFAULT_TEXT_WIDTH = 200;
 export const DEFAULT_TEXT_HEIGHT = 44;
 
+/** Vertical block for the title text instance inside a card (world units). */
+export const DEFAULT_CARD_TITLE_BLOCK_HEIGHT = 28;
+/** Gap between title and body text blocks inside a card. */
+export const DEFAULT_CARD_TITLE_BODY_GAP = 8;
+
+export const DEFAULT_SEED_CARD_INSTANCE_IDS = {
+  root: 'card-1',
+  titleText: 'text-2',
+  bodyText: 'text-3',
+} as const;
+
+type WorldRect = { x: number; y: number; width: number; height: number };
+
+export function layoutCardTextChildRects(root: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  props: { padding: number };
+}): { title: WorldRect; body: WorldRect } {
+  const p = root.props.padding;
+  const innerLeft = root.x + p;
+  const innerTop = root.y + p;
+  const innerW = Math.max(0, root.width - 2 * p);
+  const titleH = DEFAULT_CARD_TITLE_BLOCK_HEIGHT;
+  const gap = DEFAULT_CARD_TITLE_BODY_GAP;
+  const bodyTop = innerTop + titleH + gap;
+  const bodyH = Math.max(40, root.height - 2 * p - titleH - gap);
+  return {
+    title: { x: innerLeft, y: innerTop, width: innerW, height: titleH },
+    body: { x: innerLeft, y: bodyTop, width: innerW, height: bodyH },
+  };
+}
+
+export function layoutButtonLabelRect(root: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  props: { paddingX: number; paddingY: number };
+}): WorldRect {
+  const { paddingX, paddingY } = root.props;
+  return {
+    x: root.x + paddingX,
+    y: root.y + paddingY,
+    width: Math.max(1, root.width - 2 * paddingX),
+    height: Math.max(1, root.height - 2 * paddingY),
+  };
+}
+
 export function baseCardProps(): CardProps {
   return {
-    title: 'Card',
-    body: 'A simple card preview. Double-click text to edit.',
     padding: 20,
     fill: '#ffffff',
     borderColor: '#e4e4e7',
@@ -42,43 +93,23 @@ export function baseCardProps(): CardProps {
     shadowColor: '#0000001a',
     shadowBlur: 12,
     shadowOffsetY: 4,
-    titleColor: '#18181b',
-    bodyColor: '#52525b',
-    titleFont: DEFAULT_HEADING_FONT_ID,
-    titleFontSize: 16,
-    titleFontWeight: 600,
-    titleItalic: false,
-    titleDecoration: 'none',
-    bodyFont: DEFAULT_BODY_FONT_ID,
-    bodyFontSize: 13,
-    bodyFontWeight: 400,
-    bodyItalic: false,
-    bodyDecoration: 'none',
   };
 }
 
 function mergeCard(base: CardProps, theme: ThemeConfig): CardProps {
-  const fonts = themeFontIds(theme);
   const c = theme.colors;
   return {
     ...base,
-    titleFont: fonts.heading,
-    bodyFont: fonts.body,
     fill: c.card ?? c.background ?? base.fill,
-    titleColor: c.foreground ?? base.titleColor,
-    bodyColor: c.mutedForeground ?? c.foreground ?? base.bodyColor,
     borderColor: c.border ?? base.borderColor,
   };
 }
 
 function mergeButton(base: ButtonProps, theme: ThemeConfig): ButtonProps {
-  const fonts = themeFontIds(theme);
   const c = theme.colors;
   return {
     ...base,
-    labelFont: fonts.heading,
     fill: c.primary ?? base.fill,
-    textColor: c.primaryForeground ?? base.textColor,
     borderColor: c.border ?? base.borderColor,
   };
 }
@@ -86,7 +117,7 @@ function mergeButton(base: ButtonProps, theme: ThemeConfig): ButtonProps {
 function mergeTable(base: TableProps, theme: ThemeConfig): TableProps {
   const fonts = themeFontIds(theme);
   const c = theme.colors;
-  return {
+  const merged: TableProps = {
     ...base,
     headerFont: fonts.heading,
     bodyFont: fonts.body,
@@ -95,6 +126,11 @@ function mergeTable(base: TableProps, theme: ThemeConfig): TableProps {
     borderColor: c.border ?? base.borderColor,
     headerTextColor: c.foreground ?? base.headerTextColor,
     bodyTextColor: c.mutedForeground ?? c.foreground ?? base.bodyTextColor,
+  };
+  return {
+    ...merged,
+    headerTextColor: readableInkOnFill(merged.headerFill).heading,
+    bodyTextColor: readableInkOnFill(merged.rowFill).body,
   };
 }
 
@@ -124,15 +160,76 @@ export function createDefaultCardProps(theme?: ThemeConfig | null): CardProps {
   return mergeCard(base, t);
 }
 
+export function baseCardTitleTextProps(): TextPrimitiveProps {
+  return {
+    text: 'Card',
+    textColor: '#18181b',
+    textAlign: 'left',
+    textFont: DEFAULT_HEADING_FONT_ID,
+    textFontSize: 16,
+    textFontWeight: 600,
+    textItalic: false,
+    textDecoration: 'none',
+  };
+}
+
+export function baseCardBodyTextProps(): TextPrimitiveProps {
+  return {
+    text: 'A simple card preview. Double-click text to edit.',
+    textColor: '#52525b',
+    textAlign: 'left',
+    textFont: DEFAULT_BODY_FONT_ID,
+    textFontSize: 13,
+    textFontWeight: 400,
+    textItalic: false,
+    textDecoration: 'none',
+  };
+}
+
+function mergeCardTitleText(base: TextPrimitiveProps, theme: ThemeConfig): TextPrimitiveProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
+  const cardFill =
+    (typeof c.card === 'string' && c.card) ||
+    (typeof c.background === 'string' && c.background) ||
+    baseCardProps().fill;
+  return {
+    ...base,
+    textFont: fonts.heading,
+    textColor: c.foreground ?? readableInkOnFill(cardFill).heading,
+  };
+}
+
+function mergeCardBodyText(base: TextPrimitiveProps, theme: ThemeConfig): TextPrimitiveProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
+  const cardFill =
+    (typeof c.card === 'string' && c.card) ||
+    (typeof c.background === 'string' && c.background) ||
+    baseCardProps().fill;
+  return {
+    ...base,
+    textFont: fonts.body,
+    textColor: c.mutedForeground ?? c.foreground ?? readableInkOnFill(cardFill).body,
+  };
+}
+
+export function createDefaultCardTitleTextProps(theme?: ThemeConfig | null): TextPrimitiveProps {
+  const base = baseCardTitleTextProps();
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeCardTitleText(base, t);
+}
+
+export function createDefaultCardBodyTextProps(theme?: ThemeConfig | null): TextPrimitiveProps {
+  const base = baseCardBodyTextProps();
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeCardBodyText(base, t);
+}
+
 export function createDefaultButtonProps(theme?: ThemeConfig | null): ButtonProps {
   const base: ButtonProps = {
-    label: 'Button',
-    labelFont: DEFAULT_HEADING_FONT_ID,
-    labelFontSize: 14,
-    labelFontWeight: 600,
-    labelItalic: false,
-    labelDecoration: 'none',
-    textColor: '#ffffff',
     fill: ACCENT_HEX,
     borderColor: ACCENT_BORDER_HEX,
     borderWidth: 1,
@@ -147,6 +244,37 @@ export function createDefaultButtonProps(theme?: ThemeConfig | null): ButtonProp
   const t = resolveTheme(theme);
   if (!t) return base;
   return mergeButton(base, t);
+}
+
+export function baseButtonLabelTextProps(): TextPrimitiveProps {
+  return {
+    text: 'Button',
+    textColor: '#ffffff',
+    textAlign: 'center',
+    textFont: DEFAULT_HEADING_FONT_ID,
+    textFontSize: 14,
+    textFontWeight: 600,
+    textItalic: false,
+    textDecoration: 'none',
+  };
+}
+
+function mergeButtonLabelText(base: TextPrimitiveProps, theme: ThemeConfig): TextPrimitiveProps {
+  const fonts = themeFontIds(theme);
+  const c = theme.colors;
+  const primary = typeof c.primary === 'string' ? c.primary : ACCENT_HEX;
+  return {
+    ...base,
+    textFont: fonts.heading,
+    textColor: c.primaryForeground ?? onAccentLabel(primary),
+  };
+}
+
+export function createDefaultButtonLabelTextProps(theme?: ThemeConfig | null): TextPrimitiveProps {
+  const base = baseButtonLabelTextProps();
+  const t = resolveTheme(theme);
+  if (!t) return base;
+  return mergeButtonLabelText(base, t);
 }
 
 export function createDefaultTableProps(theme?: ThemeConfig | null): TableProps {
@@ -244,7 +372,7 @@ export function createDefaultLandingProps(theme?: ThemeConfig | null): LandingPr
     accentColor: ACCENT_HEX,
     pageFill: '#f7f7f8',
     heroFill: '#ffffff',
-    featuresFill: '#f4f4f5',
+    featuresFill: '#e8e8ec',
     borderRadius: 12,
     shadowEnabled: true,
     shadowColor: '#0000001a',
@@ -256,12 +384,32 @@ export function createDefaultLandingProps(theme?: ThemeConfig | null): LandingPr
   return mergeLanding(base, t);
 }
 
-export const defaultCard: CardInstance = {
-  id: 'card-1',
-  type: 'card',
-  x: 120,
-  y: 120,
-  width: DEFAULT_CARD_WIDTH,
-  height: DEFAULT_CARD_HEIGHT,
-  props: createDefaultCardProps(),
-};
+export function createDefaultCardInstances(theme?: ThemeConfig | null): ComponentInstance[] {
+  const rootProps = createDefaultCardProps(theme);
+  const root: CardInstance = {
+    id: DEFAULT_SEED_CARD_INSTANCE_IDS.root,
+    type: 'card',
+    x: 120,
+    y: 120,
+    width: DEFAULT_CARD_WIDTH,
+    height: DEFAULT_CARD_HEIGHT,
+    parentId: null,
+    props: rootProps,
+  };
+  const rects = layoutCardTextChildRects(root);
+  const title: TextPrimitiveInstance = {
+    id: DEFAULT_SEED_CARD_INSTANCE_IDS.titleText,
+    type: 'text',
+    ...rects.title,
+    parentId: root.id,
+    props: createDefaultCardTitleTextProps(theme),
+  };
+  const body: TextPrimitiveInstance = {
+    id: DEFAULT_SEED_CARD_INSTANCE_IDS.bodyText,
+    type: 'text',
+    ...rects.body,
+    parentId: root.id,
+    props: createDefaultCardBodyTextProps(theme),
+  };
+  return [root, title, body];
+}

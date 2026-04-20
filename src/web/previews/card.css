@@ -1,7 +1,7 @@
 .preview-card {
   box-sizing: border-box;
-  /* Size is owned by the PreviewWrapper (resize handles write to the
-     instance's width/height), so the body just fills the wrapper. */
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   padding: var(--card-padding, 20px) calc(var(--card-padding, 20px) * 1.2);
@@ -11,29 +11,6 @@
   overflow: hidden;
 }
 
-/* Shadow opts in per instance via the data-shadow attribute so toggling it
-   off is a single attribute flip rather than a var override. */
 .preview-card[data-shadow] {
   box-shadow: var(--card-shadow, var(--shadow-card));
-}
-
-.preview-card-title {
-  margin: 0 0 8px;
-  font-family: var(--card-title-font, system-ui, sans-serif);
-  font-size: var(--card-title-size, 16px);
-  font-weight: var(--card-title-weight, 600);
-  font-style: var(--card-title-style, normal);
-  text-decoration-line: var(--card-title-decoration-line, none);
-  color: var(--card-title-color, var(--color-text-primary));
-}
-
-.preview-card-body {
-  margin: 0;
-  font-family: var(--card-body-font, system-ui, sans-serif);
-  font-size: var(--card-body-size, 13px);
-  font-weight: var(--card-body-weight, 400);
-  font-style: var(--card-body-style, normal);
-  text-decoration-line: var(--card-body-decoration-line, none);
-  line-height: 1.5;
-  color: var(--card-body-color, var(--color-text-secondary));
 }

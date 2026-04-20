@@ -104,10 +104,43 @@
 }
 
 .layers-row-shell {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 2px;
   margin: 0 0 2px;
+}
+
+.layers-row-shell[data-dragging] {
+  opacity: 0.45;
+}
+
+/* Drop indicators: a 2px line hugs the top/bottom edge for sibling inserts;
+   the whole row gets a dashed outline when dropping would make it the new
+   parent. Pseudo-elements sit above the row so they never shift layout. */
+.layers-row-shell[data-drop-zone='above']::before,
+.layers-row-shell[data-drop-zone='below']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-chrome-focus);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.layers-row-shell[data-drop-zone='above']::before {
+  top: -2px;
+}
+
+.layers-row-shell[data-drop-zone='below']::after {
+  bottom: -2px;
+}
+
+.layers-row-shell[data-drop-zone='onto'] > .layers-row {
+  outline: 2px dashed var(--color-chrome-focus);
+  outline-offset: -2px;
 }
 
 .layers-row {

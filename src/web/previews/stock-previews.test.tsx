@@ -8,6 +8,7 @@ import { Button } from './Button.tsx';
 import { Card } from './Card.tsx';
 import { Landing } from './Landing.tsx';
 import { Table } from './Table.tsx';
+import { Text } from './Text.tsx';
 
 afterEach(() => {
   cleanup();
@@ -33,25 +34,37 @@ describe('stock preview bodies', () => {
 
   it('renders button label from the store', () => {
     useEditorStore.getState().addInstance('button', { x: 0, y: 0 });
-    expect(useEditorStore.getState().instances.at(-1)?.id).toBe('button-1');
+    const label = useEditorStore.getState().instances.find((i) => i.parentId === 'button-1');
+    expect(label?.id).toBe('text-2');
     render(
-      <InstanceIdProvider id="button-1">
-        <Button id="button-1" />
-      </InstanceIdProvider>,
+      <>
+        <InstanceIdProvider id="button-1">
+          <Button id="button-1" />
+        </InstanceIdProvider>
+        <InstanceIdProvider id="text-2">
+          <Text id="text-2" />
+        </InstanceIdProvider>
+      </>,
     );
     expect(screen.getByText('Button')).toBeInTheDocument();
   });
 
   it('renders card copy from the store', () => {
     useEditorStore.getState().addInstance('card', { x: 0, y: 0 });
-    useEditorStore.getState().updateProps('card-1', {
-      title: 'Overview',
-      body: 'Quarterly metrics and owner notes.',
-    });
+    useEditorStore.getState().updateProps('text-2', { text: 'Overview' });
+    useEditorStore.getState().updateProps('text-3', { text: 'Quarterly metrics and owner notes.' });
     render(
-      <InstanceIdProvider id="card-1">
-        <Card id="card-1" />
-      </InstanceIdProvider>,
+      <>
+        <InstanceIdProvider id="card-1">
+          <Card id="card-1" />
+        </InstanceIdProvider>
+        <InstanceIdProvider id="text-2">
+          <Text id="text-2" />
+        </InstanceIdProvider>
+        <InstanceIdProvider id="text-3">
+          <Text id="text-3" />
+        </InstanceIdProvider>
+      </>,
     );
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Quarterly metrics and owner notes.')).toBeInTheDocument();

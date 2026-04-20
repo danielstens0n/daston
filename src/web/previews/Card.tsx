@@ -1,17 +1,14 @@
 import type { CSSProperties } from 'react';
-import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
-import { useCardProps, useUpdateProps } from '../state/editor.ts';
-import { EditableText } from './EditableText.tsx';
+import { useCardProps } from '../state/editor.ts';
 import './card.css';
 
 type Props = {
   id: string;
 };
 
-// CardProps → CSS variables; PreviewWrapper owns layout and selection chrome.
+/** Card surface (fill, border, shadow, padding). Title/body are separate `text` child instances. */
 export function Card({ id }: Props) {
   const p = useCardProps(id);
-  const updateProps = useUpdateProps(id);
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
@@ -21,51 +18,7 @@ export function Card({ id }: Props) {
     '--card-border-radius': `${p.borderRadius}px`,
     '--card-padding': `${p.padding}px`,
     '--card-shadow': `0 ${p.shadowOffsetY}px ${p.shadowBlur}px ${p.shadowColor}`,
-    '--card-title-color': p.titleColor,
-    '--card-body-color': p.bodyColor,
-    ...previewTypographyVars(
-      {
-        font: '--card-title-font',
-        size: '--card-title-size',
-        weight: '--card-title-weight',
-        style: '--card-title-style',
-        decorationLine: '--card-title-decoration-line',
-      },
-      p.titleFont,
-      p.titleFontSize,
-      p.titleFontWeight,
-      p.titleItalic,
-      p.titleDecoration,
-    ),
-    ...previewTypographyVars(
-      {
-        font: '--card-body-font',
-        size: '--card-body-size',
-        weight: '--card-body-weight',
-        style: '--card-body-style',
-        decorationLine: '--card-body-decoration-line',
-      },
-      p.bodyFont,
-      p.bodyFontSize,
-      p.bodyFontWeight,
-      p.bodyItalic,
-      p.bodyDecoration,
-    ),
   };
 
-  return (
-    <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style}>
-      <h3 className="preview-card-title">
-        <EditableText
-          value={p.title}
-          onChange={(title) => updateProps({ title })}
-          multiline
-          layerId="title"
-        />
-      </h3>
-      <p className="preview-card-body">
-        <EditableText value={p.body} onChange={(body) => updateProps({ body })} multiline layerId="body" />
-      </p>
-    </div>
-  );
+  return <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style} />;
 }

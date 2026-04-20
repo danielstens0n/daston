@@ -5,9 +5,6 @@ import { useUpdateProps } from './selectors.ts';
 import { useEditorStore } from './store.ts';
 
 export type TypographyScopeId =
-  | 'card-title'
-  | 'card-body'
-  | 'button-label'
   | 'table-header'
   | 'table-body'
   | 'landing-heading'
@@ -20,39 +17,6 @@ function readTypography(
 ): TypographyValues | null {
   if (!instance) return null;
   switch (scope) {
-    case 'card-title': {
-      if (instance.type !== 'card') return null;
-      const p = instance.props;
-      return {
-        font: p.titleFont,
-        fontSize: p.titleFontSize,
-        fontWeight: p.titleFontWeight,
-        italic: p.titleItalic,
-        decoration: p.titleDecoration,
-      };
-    }
-    case 'card-body': {
-      if (instance.type !== 'card') return null;
-      const p = instance.props;
-      return {
-        font: p.bodyFont,
-        fontSize: p.bodyFontSize,
-        fontWeight: p.bodyFontWeight,
-        italic: p.bodyItalic,
-        decoration: p.bodyDecoration,
-      };
-    }
-    case 'button-label': {
-      if (instance.type !== 'button') return null;
-      const p = instance.props;
-      return {
-        font: p.labelFont,
-        fontSize: p.labelFontSize,
-        fontWeight: p.labelFontWeight,
-        italic: p.labelItalic,
-        decoration: p.labelDecoration,
-      };
-    }
     case 'table-header': {
       if (instance.type !== 'table') return null;
       const p = instance.props;
@@ -122,12 +86,6 @@ export function buildTypographyPartial(
   const out: Record<string, unknown> = {};
   const prefix = (() => {
     switch (scope) {
-      case 'card-title':
-        return 'title';
-      case 'card-body':
-        return 'body';
-      case 'button-label':
-        return 'label';
       case 'table-header':
         return 'header';
       case 'table-body':
@@ -168,12 +126,6 @@ function readLinkedTextColor(
 ): string | undefined {
   if (!instance) return undefined;
   switch (scope) {
-    case 'card-title':
-      return instance.type === 'card' ? instance.props.titleColor : undefined;
-    case 'card-body':
-      return instance.type === 'card' ? instance.props.bodyColor : undefined;
-    case 'button-label':
-      return instance.type === 'button' ? instance.props.textColor : undefined;
     case 'table-header':
       return instance.type === 'table' ? instance.props.headerTextColor : undefined;
     case 'table-body':
@@ -212,12 +164,6 @@ export function useTypographyScope(id: string, scope: TypographyScopeId): Typogr
   );
   const onColorChange = useMemo(() => {
     switch (scope) {
-      case 'card-title':
-        return (value: string) => updateProps({ titleColor: value });
-      case 'card-body':
-        return (value: string) => updateProps({ bodyColor: value });
-      case 'button-label':
-        return (value: string) => updateProps({ textColor: value });
       case 'table-header':
         return (value: string) => updateProps({ headerTextColor: value });
       case 'table-body':

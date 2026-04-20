@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_LAYER_SPECS, componentTypeLabel, isCardLayerId, STOCK_LAYER_ROOT_CHILDREN } from './data.ts';
+import { componentTypeLabel, STOCK_LAYER_ROOT_CHILDREN } from './data.ts';
 
 describe('component-registry-data', () => {
   it('exposes stable display labels', () => {
@@ -10,10 +10,8 @@ describe('component-registry-data', () => {
     expect(componentTypeLabel('imported')).toBe('Imported');
   });
 
-  it('keeps card layer ids aligned with the layer tree template', () => {
-    expect(STOCK_LAYER_ROOT_CHILDREN.card).toEqual(CARD_LAYER_SPECS);
-    expect(CARD_LAYER_SPECS.map((layer) => layer.id)).toEqual(['surface', 'title', 'body']);
-    expect(isCardLayerId('title')).toBe(true);
-    expect(isCardLayerId('unknown')).toBe(false);
+  it('omits card and button from template layers (nested instances replace templates)', () => {
+    expect(STOCK_LAYER_ROOT_CHILDREN.card).toBeUndefined();
+    expect(STOCK_LAYER_ROOT_CHILDREN.button).toBeUndefined();
   });
 });

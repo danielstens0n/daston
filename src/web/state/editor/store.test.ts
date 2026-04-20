@@ -1,12 +1,28 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../editor.ts';
-import { buildLayerTree, instanceSelection, layerSelection } from '../layers.ts';
-import type { CardInstance, ImportedInstance } from '../types.ts';
-import { MIN_SIZE } from './mutations.ts';
+import { buildInstanceLayerForest, buildLayerTree, instanceSelection, layerSelection } from '../layers.ts';
+import type { CardInstance, ImportedInstance, TextPrimitiveInstance } from '../types.ts';
+import {
+  baseCardBodyTextProps,
+  baseCardTitleTextProps,
+  createDefaultTextPrimitiveProps,
+  layoutCardTextChildRects,
+} from './instance-defaults.ts';
+import { clipboardPayloadFromRoot, MIN_SIZE } from './mutations.ts';
 
-// Reset the store to a known two-instance baseline before each test. We
-// exercise the store via its direct get/setters (no React) — selector hooks
-// are just `useEditorStore(selector)` wrappers.
+// Reset the store to two cards with nested title/body text children before each test.
+
+const baselineCardProps = {
+  padding: 20,
+  fill: '#ffffff',
+  borderColor: '#e4e4e7',
+  borderWidth: 1,
+  borderRadius: 12,
+  shadowEnabled: true,
+  shadowColor: '#0000001a',
+  shadowBlur: 12,
+  shadowOffsetY: 4,
+} as const satisfies CardInstance['props'];
 
 const baselineA: CardInstance = {
   id: 'a',
@@ -15,34 +31,45 @@ const baselineA: CardInstance = {
   y: 20,
   width: 280,
   height: 180,
-  props: {
-    padding: 20,
-    fill: '#ffffff',
-    borderColor: '#e4e4e7',
-    borderWidth: 1,
-    borderRadius: 12,
-    shadowEnabled: true,
-    shadowColor: '#0000001a',
-    shadowBlur: 12,
-    shadowOffsetY: 4,
-    title: 'Card',
-    body: 'Card body',
-    titleColor: '#18181b',
-    bodyColor: '#52525b',
-    titleFont: 'inter',
-    titleFontSize: 16,
-    titleFontWeight: 600,
-    titleItalic: false,
-    titleDecoration: 'none',
-    bodyFont: 'inter',
-    bodyFontSize: 13,
-    bodyFontWeight: 400,
-    bodyItalic: false,
-    bodyDecoration: 'none',
-  },
+  parentId: null,
+  props: baselineCardProps,
+};
+
+const rectsA = layoutCardTextChildRects(baselineA);
+const titleA: TextPrimitiveInstance = {
+  id: 'a-title',
+  type: 'text',
+  parentId: 'a',
+  ...rectsA.title,
+  props: { ...baseCardTitleTextProps(), text: 'Card' },
+};
+const bodyA: TextPrimitiveInstance = {
+  id: 'a-body',
+  type: 'text',
+  parentId: 'a',
+  ...rectsA.body,
+  props: { ...baseCardBodyTextProps(), text: 'Card body' },
 };
 
 const baselineB: CardInstance = { ...baselineA, id: 'b', x: 200, y: 200 };
+const rectsB = layoutCardTextChildRects(baselineB);
+const titleB: TextPrimitiveInstance = {
+  id: 'b-title',
+  type: 'text',
+  parentId: 'b',
+  ...rectsB.title,
+  props: { ...baseCardTitleTextProps(), text: 'Card' },
+};
+const bodyB: TextPrimitiveInstance = {
+  id: 'b-body',
+  type: 'text',
+  parentId: 'b',
+  ...rectsB.body,
+  props: { ...baseCardBodyTextProps(), text: 'Card body' },
+};
+
+const baselineInstances = [baselineA, titleA, bodyA, baselineB, titleB, bodyB] as const;
+
 const importedBaseline: ImportedInstance = {
   id: 'imported-1',
   type: 'imported',
@@ -51,12 +78,13 @@ const importedBaseline: ImportedInstance = {
   y: 50,
   width: 320,
   height: 220,
+  parentId: null,
   props: {},
 };
 
 beforeEach(() => {
   useEditorStore.setState({
-    instances: [baselineA, baselineB],
+    instances: [...baselineInstances],
     selectedId: null,
     selectedTarget: null,
     nextInstanceId: 2,
@@ -104,22 +132,39 @@ describe('select', () => {
   });
 
   it('tracks a selected layer while keeping the owning instance selected', () => {
-    useEditorStore.getState().selectLayer(layerSelection('a', 'title'));
-    expect(useEditorStore.getState().selectedId).toBe('a');
-    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('a', 'title'));
+    const loneText: TextPrimitiveInstance = {
+      id: 't1',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 40,
+      parentId: null,
+      props: createDefaultTextPrimitiveProps(null),
+    };
+    useEditorStore.setState({ instances: [loneText], nextInstanceId: 2 });
+    useEditorStore.getState().selectLayer(layerSelection('t1', 'text'));
+    expect(useEditorStore.getState().selectedId).toBe('t1');
+    expect(useEditorStore.getState().selectedTarget).toEqual(layerSelection('t1', 'text'));
   });
 });
 
 describe('layer tree projection', () => {
-  it('derives nested card layers from the flat instance list', () => {
-    const tree = useEditorStore.getState().instances.map((instance) => buildLayerTree(instance));
-    expect(tree[0]).toMatchObject({
+  it('card root has no template sub-layers (title/body are real instances)', () => {
+    const tree = buildLayerTree(baselineA);
+    expect(tree).toMatchObject({
       instanceId: 'a',
       label: 'Card',
       selection: { kind: 'instance', instanceId: 'a' },
     });
-    expect(tree[0]?.children.map((child) => child.label)).toEqual(['Surface', 'Title', 'Body']);
-    expect(tree[0]?.children.map((child) => child.kind)).toEqual(['rectangle', 'text', 'text']);
+    expect(tree.children).toEqual([]);
+  });
+
+  it('forest nests card text children under the card root', () => {
+    const forest = buildInstanceLayerForest([...baselineInstances]);
+    const cardNode = forest.find((n) => n.instanceId === 'a');
+    expect(cardNode?.children.some((c) => c.instanceId === 'a-title')).toBe(true);
+    expect(cardNode?.children.some((c) => c.instanceId === 'a-body')).toBe(true);
   });
 
   it('keeps imported components as opaque leaves', () => {
@@ -138,8 +183,12 @@ describe('move', () => {
   it('updates only the matching instance position', () => {
     useEditorStore.getState().move('a', { x: 111, y: 222 });
     const { instances } = useEditorStore.getState();
-    expect(instances[0]).toMatchObject({ id: 'a', x: 111, y: 222 });
-    expect(instances[1]).toEqual(baselineB);
+    expect(instances.find((i) => i.id === 'a')).toMatchObject({ id: 'a', x: 111, y: 222 });
+    expect(instances.find((i) => i.id === 'a-title')).toMatchObject({
+      x: rectsA.title.x + 101,
+      y: rectsA.title.y + 202,
+    });
+    expect(instances.find((i) => i.id === 'b')).toEqual(baselineB);
   });
 
   it('leaves props untouched on the moved instance', () => {
@@ -185,7 +234,7 @@ describe('resize', () => {
 
   it('does not affect other instances', () => {
     useEditorStore.getState().resize('a', { x: 0, y: 0, width: 100, height: 100 });
-    expect(useEditorStore.getState().instances[1]).toEqual(baselineB);
+    expect(useEditorStore.getState().instances.find((i) => i.id === 'b')).toEqual(baselineB);
   });
 
   it('leaves props untouched', () => {
@@ -197,7 +246,8 @@ describe('resize', () => {
 describe('addInstance', () => {
   it('centers a new card at the given world point', () => {
     useEditorStore.getState().addInstance('card', { x: 500, y: 400 });
-    const added = useEditorStore.getState().instances.at(-1);
+    const roots = useEditorStore.getState().instances.filter((i) => i.type === 'card');
+    const added = roots.at(-1);
     expect(added).toMatchObject({
       type: 'card',
       x: 500 - 280 / 2,
@@ -210,7 +260,8 @@ describe('addInstance', () => {
   it('selects the new instance', () => {
     useEditorStore.getState().addInstance('card', { x: 0, y: 0 });
     const state = useEditorStore.getState();
-    expect(state.selectedId).toBe(state.instances.at(-1)?.id);
+    const newRoot = state.instances.filter((i) => i.type === 'card').at(-1);
+    expect(state.selectedId).toBe(newRoot?.id);
   });
 
   it('assigns a unique id on each call', () => {
@@ -219,12 +270,13 @@ describe('addInstance', () => {
     const state = useEditorStore.getState();
     const ids = state.instances.map((i) => i.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(state.nextInstanceId).toBe(4);
+    expect(state.nextInstanceId).toBe(8);
   });
 
   it('centers a new button at the given world point', () => {
     useEditorStore.getState().addInstance('button', { x: 100, y: 80 });
-    const added = useEditorStore.getState().instances.at(-1);
+    const roots = useEditorStore.getState().instances.filter((i) => i.type === 'button');
+    const added = roots.at(-1);
     expect(added).toMatchObject({
       type: 'button',
       x: 100 - 160 / 2,
@@ -284,7 +336,7 @@ describe('addImportedInstance', () => {
 describe('updateProps', () => {
   it('merges partial patches without overwriting other keys', () => {
     useEditorStore.getState().updateProps('a', { fill: '#ff0000', borderRadius: 8 });
-    const updated = useEditorStore.getState().instances[0];
+    const updated = useEditorStore.getState().instances.find((i) => i.id === 'a');
     expect(updated?.props).toMatchObject({
       ...baselineA.props,
       fill: '#ff0000',
@@ -294,12 +346,12 @@ describe('updateProps', () => {
 
   it('does not affect other instances', () => {
     useEditorStore.getState().updateProps('a', { fill: '#ff0000' });
-    expect(useEditorStore.getState().instances[1]).toEqual(baselineB);
+    expect(useEditorStore.getState().instances.find((i) => i.id === 'b')).toEqual(baselineB);
   });
 
   it('is a no-op when the id is unknown', () => {
     useEditorStore.getState().updateProps('missing', { fill: '#ff0000' });
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...baselineInstances]);
   });
 });
 
@@ -307,7 +359,7 @@ describe('remove', () => {
   it('drops the matching instance and leaves others alone', () => {
     useEditorStore.getState().remove('a');
     const { instances } = useEditorStore.getState();
-    expect(instances).toEqual([baselineB]);
+    expect(instances).toEqual([baselineB, titleB, bodyB]);
   });
 
   it('clears selectedId when it matches the removed id', () => {
@@ -317,7 +369,7 @@ describe('remove', () => {
   });
 
   it('clears selectedTarget when removing the owning instance', () => {
-    useEditorStore.getState().selectLayer(layerSelection('a', 'body'));
+    useEditorStore.getState().selectLayer(layerSelection('a-body', 'text'));
     useEditorStore.getState().remove('a');
     expect(useEditorStore.getState().selectedTarget).toBeNull();
   });
@@ -336,15 +388,16 @@ describe('remove', () => {
 
   it('is a no-op when the id is unknown', () => {
     useEditorStore.getState().remove('missing');
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...baselineInstances]);
   });
 });
 
 describe('duplicate', () => {
-  it('clones the instance with +20 offset on x and y', () => {
+  it('clones the subtree with +20 offset on every instance x and y', () => {
     useEditorStore.getState().duplicate('a');
-    const added = useEditorStore.getState().instances.at(-1);
-    expect(added).toMatchObject({
+    const state = useEditorStore.getState();
+    const root = state.instances.find((i) => i.id === state.selectedId);
+    expect(root).toMatchObject({
       type: 'card',
       x: baselineA.x + 20,
       y: baselineA.y + 20,
@@ -352,33 +405,40 @@ describe('duplicate', () => {
       height: baselineA.height,
       props: baselineA.props,
     });
+    const children = state.instances.filter((i) => i.parentId === root?.id);
+    expect(children).toHaveLength(2);
+    expect(children.every((c) => c.type === 'text')).toBe(true);
+    expect(children[0]?.x).toBe(titleA.x + 20);
+    expect(children[0]?.y).toBe(titleA.y + 20);
   });
 
-  it('assigns a fresh id and bumps the counter', () => {
+  it('assigns fresh ids and bumps the counter by subtree size', () => {
     useEditorStore.getState().duplicate('a');
     const state = useEditorStore.getState();
-    expect(state.instances.at(-1)?.id).toBe('card-2');
-    expect(state.nextInstanceId).toBe(3);
+    expect(state.selectedId).toBe('card-2');
+    expect(state.nextInstanceId).toBe(5);
   });
 
-  it('selects the new instance', () => {
+  it('selects the new root instance', () => {
     useEditorStore.getState().duplicate('a');
     const state = useEditorStore.getState();
-    expect(state.selectedId).toBe(state.instances.at(-1)?.id);
+    expect(state.selectedId).toBe('card-2');
+    expect(state.instances.find((i) => i.id === 'card-2')?.type).toBe('card');
   });
 
   it('does not touch clipboard or lastPasteId', () => {
-    useEditorStore.setState({ clipboard: baselineB, lastPasteId: 'b' });
+    const clip = { instances: [baselineB] };
+    useEditorStore.setState({ clipboard: clip, lastPasteId: 'b' });
     useEditorStore.getState().duplicate('a');
     const state = useEditorStore.getState();
-    expect(state.clipboard).toBe(baselineB);
+    expect(state.clipboard).toBe(clip);
     expect(state.lastPasteId).toBe('b');
   });
 
   it('is a no-op when the id is unknown', () => {
     useEditorStore.getState().duplicate('missing');
     const state = useEditorStore.getState();
-    expect(state.instances).toEqual([baselineA, baselineB]);
+    expect(state.instances).toEqual([...baselineInstances]);
     expect(state.nextInstanceId).toBe(2);
   });
 
@@ -403,11 +463,11 @@ describe('duplicate', () => {
 });
 
 describe('duplicateInPlaceForDrag', () => {
-  it('clones at the same x and y as the source', () => {
+  it('clones the subtree at the same x and y as the source', () => {
     const id = useEditorStore.getState().duplicateInPlaceForDrag('a');
     expect(id).toBe('card-2');
-    const added = useEditorStore.getState().instances.at(-1);
-    expect(added).toMatchObject({
+    const root = useEditorStore.getState().instances.find((i) => i.id === 'card-2');
+    expect(root).toMatchObject({
       id: 'card-2',
       type: 'card',
       x: baselineA.x,
@@ -416,35 +476,43 @@ describe('duplicateInPlaceForDrag', () => {
       height: baselineA.height,
       props: baselineA.props,
     });
+    const texts = useEditorStore
+      .getState()
+      .instances.filter((i) => i.parentId === 'card-2' && i.type === 'text');
+    expect(texts).toHaveLength(2);
+    expect(texts.some((t) => t.x === titleA.x && t.y === titleA.y)).toBe(true);
   });
 
   it('returns null and leaves state unchanged when the id is unknown', () => {
     const id = useEditorStore.getState().duplicateInPlaceForDrag('missing');
     expect(id).toBeNull();
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...baselineInstances]);
     expect(useEditorStore.getState().nextInstanceId).toBe(2);
   });
 
-  it('selects the clone and bumps nextInstanceId', () => {
+  it('selects the clone and bumps nextInstanceId by subtree size', () => {
     useEditorStore.getState().duplicateInPlaceForDrag('a');
     const state = useEditorStore.getState();
     expect(state.selectedId).toBe('card-2');
-    expect(state.nextInstanceId).toBe(3);
+    expect(state.nextInstanceId).toBe(5);
   });
 
   it('does not touch clipboard or lastPasteId', () => {
-    useEditorStore.setState({ clipboard: baselineB, lastPasteId: 'b' });
+    const clip = { instances: [baselineB] };
+    useEditorStore.setState({ clipboard: clip, lastPasteId: 'b' });
     useEditorStore.getState().duplicateInPlaceForDrag('a');
     const state = useEditorStore.getState();
-    expect(state.clipboard).toBe(baselineB);
+    expect(state.clipboard).toBe(clip);
     expect(state.lastPasteId).toBe('b');
   });
 });
 
 describe('copy', () => {
-  it('stores a snapshot in clipboard', () => {
+  it('stores the full subtree in clipboard', () => {
     useEditorStore.getState().copy('a');
-    expect(useEditorStore.getState().clipboard).toEqual(baselineA);
+    expect(useEditorStore.getState().clipboard).toEqual(
+      clipboardPayloadFromRoot([...baselineInstances], 'a'),
+    );
   });
 
   it('resets lastPasteId so the next paste starts fresh', () => {
@@ -455,7 +523,7 @@ describe('copy', () => {
 
   it('does not mutate instances', () => {
     useEditorStore.getState().copy('a');
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...baselineInstances]);
   });
 
   it('is a no-op when the id is unknown', () => {
@@ -465,11 +533,11 @@ describe('copy', () => {
 });
 
 describe('cut', () => {
-  it('stores the snapshot and removes the source', () => {
+  it('stores the subtree snapshot and removes the source', () => {
     useEditorStore.getState().cut('a');
     const state = useEditorStore.getState();
-    expect(state.clipboard).toEqual(baselineA);
-    expect(state.instances).toEqual([baselineB]);
+    expect(state.clipboard).toEqual(clipboardPayloadFromRoot([...baselineInstances], 'a'));
+    expect(state.instances).toEqual([baselineB, titleB, bodyB]);
   });
 
   it('clears selectedId when the cut instance was selected', () => {
@@ -482,20 +550,22 @@ describe('cut', () => {
     useEditorStore.getState().cut('missing');
     const state = useEditorStore.getState();
     expect(state.clipboard).toBeNull();
-    expect(state.instances).toEqual([baselineA, baselineB]);
+    expect(state.instances).toEqual([...baselineInstances]);
   });
 
   it('restores instances and clears clipboard on undo, then reapplies cut on redo', () => {
     useEditorStore.getState().cut('a');
-    expect(useEditorStore.getState().instances).toEqual([baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([baselineB, titleB, bodyB]);
 
     useEditorStore.getState().undo();
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...baselineInstances]);
     expect(useEditorStore.getState().clipboard).toBeNull();
 
     useEditorStore.getState().redo();
-    expect(useEditorStore.getState().instances).toEqual([baselineB]);
-    expect(useEditorStore.getState().clipboard).toEqual(baselineA);
+    expect(useEditorStore.getState().instances).toEqual([baselineB, titleB, bodyB]);
+    expect(useEditorStore.getState().clipboard).toEqual(
+      clipboardPayloadFromRoot([...baselineInstances], 'a'),
+    );
   });
 });
 
@@ -503,28 +573,29 @@ describe('paste', () => {
   it('is a no-op when the clipboard is empty', () => {
     useEditorStore.getState().paste();
     const state = useEditorStore.getState();
-    expect(state.instances).toEqual([baselineA, baselineB]);
+    expect(state.instances).toEqual([...baselineInstances]);
     expect(state.nextInstanceId).toBe(2);
   });
 
   it('offsets the first paste from the clipboard snapshot', () => {
     useEditorStore.getState().copy('a');
     useEditorStore.getState().paste();
-    const added = useEditorStore.getState().instances.at(-1);
-    expect(added).toMatchObject({
+    const state = useEditorStore.getState();
+    const root = state.instances.find((i) => i.id === state.selectedId);
+    expect(root).toMatchObject({
       type: 'card',
       x: baselineA.x + 20,
       y: baselineA.y + 20,
     });
   });
 
-  it('selects the pasted instance and tracks it as lastPasteId', () => {
+  it('selects the pasted root and tracks it as lastPasteId', () => {
     useEditorStore.getState().copy('a');
     useEditorStore.getState().paste();
     const state = useEditorStore.getState();
-    const pastedId = state.instances.at(-1)?.id;
-    expect(state.selectedId).toBe(pastedId);
-    expect(state.lastPasteId).toBe(pastedId);
+    const root = state.instances.find((i) => i.id === state.selectedId);
+    expect(root?.type).toBe('card');
+    expect(state.lastPasteId).toBe(state.selectedId);
   });
 
   it('cascades subsequent pastes from the previously pasted instance', () => {
@@ -532,9 +603,9 @@ describe('paste', () => {
     useEditorStore.getState().paste();
     useEditorStore.getState().paste();
     const state = useEditorStore.getState();
-    const second = state.instances.at(-1);
-    // Two pastes → x/y offset by 2 × 20 from the clipboard snapshot.
-    expect(second).toMatchObject({
+    const secondRoot = state.instances.find((i) => i.id === state.selectedId);
+    // Two pastes → root x/y offset by 2 × 20 from the clipboard snapshot.
+    expect(secondRoot).toMatchObject({
       x: baselineA.x + 40,
       y: baselineA.y + 40,
     });
@@ -547,8 +618,10 @@ describe('paste', () => {
     if (!firstPasteId) throw new Error('expected lastPasteId to be set after paste');
     useEditorStore.getState().move(firstPasteId, { x: 500, y: 500 });
     useEditorStore.getState().paste();
-    const second = useEditorStore.getState().instances.at(-1);
-    expect(second).toMatchObject({ x: 520, y: 520 });
+    const secondRoot = useEditorStore
+      .getState()
+      .instances.find((i) => i.id === useEditorStore.getState().selectedId);
+    expect(secondRoot).toMatchObject({ x: 520, y: 520 });
   });
 
   it('resets the cascade on copy so the first subsequent paste starts from the new snapshot', () => {
@@ -557,8 +630,10 @@ describe('paste', () => {
     // Re-copy a different instance — cascade should reset to its snapshot.
     useEditorStore.getState().copy('b');
     useEditorStore.getState().paste();
-    const added = useEditorStore.getState().instances.at(-1);
-    expect(added).toMatchObject({ x: baselineB.x + 20, y: baselineB.y + 20 });
+    const root = useEditorStore
+      .getState()
+      .instances.find((i) => i.id === useEditorStore.getState().selectedId);
+    expect(root).toMatchObject({ x: baselineB.x + 20, y: baselineB.y + 20 });
   });
 
   it('preserves definitionId when pasting an imported component', () => {
@@ -575,8 +650,10 @@ describe('paste', () => {
     });
     useEditorStore.getState().copy('imported-1');
     useEditorStore.getState().paste();
-    const added = useEditorStore.getState().instances.at(-1);
-    expect(added).toMatchObject({
+    const root = useEditorStore
+      .getState()
+      .instances.find((i) => i.id === useEditorStore.getState().selectedId);
+    expect(root).toMatchObject({
       type: 'imported',
       definitionId: 'imported-def-9',
       x: importedBaseline.x + 20,
@@ -587,8 +664,10 @@ describe('paste', () => {
   it('centers the pasted clone on `at` when provided', () => {
     useEditorStore.getState().copy('a');
     useEditorStore.getState().paste({ at: { x: 500, y: 400 } });
-    const added = useEditorStore.getState().instances.at(-1);
-    expect(added).toMatchObject({
+    const root = useEditorStore
+      .getState()
+      .instances.find((i) => i.id === useEditorStore.getState().selectedId);
+    expect(root).toMatchObject({
       type: 'card',
       x: 500 - baselineA.width / 2,
       y: 400 - baselineA.height / 2,
@@ -602,30 +681,141 @@ describe('paste', () => {
     useEditorStore.getState().paste({ at: { x: 1000, y: 1000 } });
     const firstId = useEditorStore.getState().lastPasteId;
     useEditorStore.getState().paste();
-    const second = useEditorStore.getState().instances.at(-1);
+    const secondRoot = useEditorStore
+      .getState()
+      .instances.find((i) => i.id === useEditorStore.getState().selectedId);
     const first = useEditorStore.getState().instances.find((i) => i.id === firstId);
     expect(first).toBeDefined();
-    expect(second).toMatchObject({
+    expect(secondRoot).toMatchObject({
       x: (first?.x ?? 0) + 20,
       y: (first?.y ?? 0) + 20,
     });
   });
 });
 
+describe('parent/child hierarchy', () => {
+  it('setParent rejects self-parenting, cycles, and unknown parents', () => {
+    useEditorStore.setState({
+      instances: [
+        { ...baselineA, parentId: null },
+        { ...baselineB, parentId: 'a' },
+      ],
+    });
+    useEditorStore.getState().setParent('a', 'a');
+    expect(useEditorStore.getState().instances[0]?.parentId).toBe(null);
+    useEditorStore.getState().setParent('a', 'b');
+    expect(useEditorStore.getState().instances[0]?.parentId).toBe(null);
+    useEditorStore.getState().setParent('b', 'missing');
+    expect(useEditorStore.getState().instances[1]?.parentId).toBe('a');
+  });
+
+  it('move cascades the delta to every descendant', () => {
+    useEditorStore.setState({
+      instances: [
+        { ...baselineA, x: 0, y: 0, parentId: null },
+        { ...baselineB, x: 10, y: 10, parentId: 'a' },
+      ],
+    });
+    useEditorStore.getState().move('a', { x: 100, y: 50 });
+    const [parent, child] = useEditorStore.getState().instances;
+    expect(parent).toMatchObject({ id: 'a', x: 100, y: 50 });
+    expect(child).toMatchObject({ id: 'b', x: 110, y: 60 });
+  });
+
+  it('remove drops the whole subtree in one step', () => {
+    useEditorStore.setState({
+      instances: [
+        { ...baselineA, parentId: null },
+        { ...baselineB, parentId: 'a' },
+      ],
+    });
+    useEditorStore.getState().remove('a');
+    expect(useEditorStore.getState().instances).toHaveLength(0);
+  });
+
+  it('paste always produces a root clone even when the clipboard carried a parent', () => {
+    useEditorStore.setState({
+      instances: [baselineA, { ...baselineB, parentId: 'a' }],
+      clipboard: { instances: [{ ...baselineB, parentId: 'a' }] },
+      lastPasteId: null,
+    });
+    useEditorStore.getState().paste();
+    const pastedRoot = useEditorStore
+      .getState()
+      .instances.find((i) => i.id === useEditorStore.getState().selectedId);
+    expect(pastedRoot?.parentId).toBe(null);
+  });
+});
+
+describe('reorderInstance', () => {
+  const c: CardInstance = { ...baselineA, id: 'c' };
+
+  it('moves an instance before another sibling in the flat array', () => {
+    useEditorStore.setState({ instances: [baselineA, baselineB, c] });
+    useEditorStore.getState().reorderInstance('c', { parentId: null, beforeId: 'a' });
+    expect(useEditorStore.getState().instances.map((i) => i.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('appends as last sibling when beforeId is null', () => {
+    useEditorStore.setState({ instances: [baselineA, baselineB, c] });
+    useEditorStore.getState().reorderInstance('a', { parentId: null, beforeId: null });
+    expect(useEditorStore.getState().instances.map((i) => i.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('reparents into another instance while updating parentId', () => {
+    useEditorStore.setState({ instances: [baselineA, baselineB] });
+    useEditorStore.getState().reorderInstance('b', { parentId: 'a', beforeId: null });
+    const [, child] = useEditorStore.getState().instances;
+    expect(child?.id).toBe('b');
+    expect(child?.parentId).toBe('a');
+  });
+
+  it('rejects cycles (reparent under own descendant)', () => {
+    useEditorStore.setState({
+      instances: [
+        { ...baselineA, parentId: null },
+        { ...baselineB, parentId: 'a' },
+      ],
+    });
+    useEditorStore.getState().reorderInstance('a', { parentId: 'b', beforeId: null });
+    expect(useEditorStore.getState().instances[0]?.parentId).toBe(null);
+  });
+
+  it('rejects when beforeId does not share the target parent', () => {
+    useEditorStore.setState({
+      instances: [
+        { ...baselineA, parentId: null },
+        { ...baselineB, parentId: 'a' },
+        { ...c, parentId: null },
+      ],
+    });
+    useEditorStore.getState().reorderInstance('c', { parentId: null, beforeId: 'b' });
+    expect(useEditorStore.getState().instances.map((i) => i.id)).toEqual(['a', 'b', 'c']);
+  });
+});
+
 describe('undo/redo', () => {
   it('undoes and redoes addInstance', () => {
     useEditorStore.getState().addInstance('card', { x: 400, y: 300 });
-    expect(useEditorStore.getState().instances).toHaveLength(3);
+    expect(useEditorStore.getState().instances).toHaveLength(9);
 
     useEditorStore.getState().undo();
-    expect(useEditorStore.getState().instances).toEqual([baselineA, baselineB]);
+    expect(useEditorStore.getState().instances).toEqual([...baselineInstances]);
 
     useEditorStore.getState().redo();
-    expect(useEditorStore.getState().instances).toHaveLength(3);
-    expect(useEditorStore.getState().instances.at(-1)).toMatchObject({ id: 'card-2', type: 'card' });
+    expect(useEditorStore.getState().instances).toHaveLength(9);
+    const newCard = useEditorStore.getState().instances.find((i) => i.id === 'card-2' && i.type === 'card');
+    expect(newCard).toMatchObject({ id: 'card-2', type: 'card' });
   });
 
   it('clears redo history when a new mutation happens after undo', () => {
+    useEditorStore.setState({
+      instances: [baselineA, baselineB],
+      nextInstanceId: 2,
+      past: [],
+      future: [],
+      historyBatch: null,
+    });
     useEditorStore.getState().duplicate('a');
     useEditorStore.getState().undo();
     useEditorStore.getState().move('b', { x: 250, y: 260 });

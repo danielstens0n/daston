@@ -1,12 +1,15 @@
 import type { SelectedTarget } from '../layers.ts';
 import type { ComponentInstance } from '../types.ts';
 
+/** Clipboard always stores a flat forest (typically one root + descendants) with internal `parentId` links. */
+export type EditorClipboard = { readonly instances: ComponentInstance[] };
+
 export type EditorSnapshot = {
   instances: ComponentInstance[];
   selectedId: string | null;
   selectedTarget: SelectedTarget | null;
   nextInstanceId: number;
-  clipboard: ComponentInstance | null;
+  clipboard: EditorClipboard | null;
   lastPasteId: string | null;
 };
 

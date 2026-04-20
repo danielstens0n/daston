@@ -1,9 +1,19 @@
 // @vitest-environment node
 
 import { describe, expect, it } from 'vitest';
-import { createDefaultLandingProps, createDefaultTableProps } from './editor/instance-defaults.ts';
-import { buildLayerTree, encodeLayerTreeSignature, getLayerLabel } from './layers.ts';
-import type { LandingInstance, TableInstance } from './types.ts';
+import {
+  createDefaultLandingProps,
+  createDefaultShapeProps,
+  createDefaultTableProps,
+  createDefaultTextPrimitiveProps,
+} from './editor/instance-defaults.ts';
+import {
+  buildInstanceLayerForest,
+  buildLayerTree,
+  encodeLayerTreeSignature,
+  getLayerLabel,
+} from './layers.ts';
+import type { LandingInstance, RectangleInstance, TableInstance, TextPrimitiveInstance } from './types.ts';
 
 const tableBase: Omit<TableInstance, 'props'> = {
   id: 'table-1',
@@ -12,6 +22,7 @@ const tableBase: Omit<TableInstance, 'props'> = {
   y: 0,
   width: 320,
   height: 220,
+  parentId: null,
 };
 
 const landingBase: Omit<LandingInstance, 'props'> = {
@@ -21,6 +32,7 @@ const landingBase: Omit<LandingInstance, 'props'> = {
   y: 0,
   width: 360,
   height: 480,
+  parentId: null,
 };
 
 describe('buildLayerTree', () => {
@@ -83,6 +95,37 @@ describe('buildLayerTree', () => {
     const props = createDefaultLandingProps();
     const instance: LandingInstance = { ...landingBase, props };
     expect(encodeLayerTreeSignature(instance)).toBe(`landing\x1flanding-1\x1f${props.features.length}`);
+  });
+});
+
+describe('buildInstanceLayerForest', () => {
+  it('nests child instances under their parent root and leaves roots at top level', () => {
+    const parent: RectangleInstance = {
+      id: 'rect-1',
+      type: 'rectangle',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 200,
+      parentId: null,
+      props: createDefaultShapeProps(),
+    };
+    const child: TextPrimitiveInstance = {
+      id: 'text-1',
+      type: 'text',
+      x: 20,
+      y: 20,
+      width: 60,
+      height: 24,
+      parentId: 'rect-1',
+      props: createDefaultTextPrimitiveProps(null),
+    };
+    const unrelated: RectangleInstance = { ...parent, id: 'rect-2' };
+
+    const forest = buildInstanceLayerForest([parent, child, unrelated]);
+    expect(forest).toHaveLength(2);
+    const parentNode = forest.find((node) => node.instanceId === 'rect-1');
+    expect(parentNode?.children.some((node) => node.instanceId === 'text-1')).toBe(true);
   });
 });
 
