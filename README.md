@@ -1,88 +1,110 @@
-# Overview
+# daston
 
-A companion tool for Claude Code, Codex, OpenCode, and similar terminal agents — for setting a project's design theme visually from the terminal.
+Visual design companion for terminal coding agents. Pairs with Claude Code, Codex, OpenCode, and friends — edit your project's fonts, colors, and components on a Figma-like canvas, then hand the changes back to the agent as prompts.
 
-Still early. The idea: run `/daston` as a skill inside your agent. It prints a localhost URL that opens a minimal, Figma-like canvas where you pick fonts, colors, and tweak components.
+## Installation
 
-## Flow
+### Global (recommended)
 
-1. Run `/daston` — initializes and outputs a localhost URL.
-2. Open the URL. A free-panning canvas loads with stock previews (button, card, table, landing page). Config is stored locally, scoped to the current folder.
-3. Make theme changes. Click **Add Component** to emit a prompt you can paste into Claude or Codex (ideally auto-populated).
-
-# Software stack
-
-- **CLI** — Node + Commander. Single binary distributed via npm, run with `npx daston`.
-- **Server** — Hono. Lightweight local HTTP layer; serves the prebuilt web bundle in production and exposes a thin API for theme, components, and prompt generation. Vite dev server proxies to it in development.
-- **Frontend** — Vite + React + TanStack Router (file-based). SPA rendered into a pannable/zoomable canvas.
-- **Shared types** — `src/shared/types.ts`, type-only so server code can't leak into the browser bundle.
-- **Storage** — plain JSON on disk. Per-project config in `.daston/config.json` (git-ignorable); global defaults in `~/.daston/`. Schema is versioned from day one.
-- **Build** — `tsup` compiles the CLI and server to `dist/`; Vite builds the web SPA to `dist/web/`. Both ship in the npm package so end users need no build step.
-- **No backend service** — everything runs in the user's local Node process. No network calls beyond localhost.
-
-# Project overview
-
-```
-daston/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts             # builds src/web/ → dist/web/
-├── tsup.config.ts             # builds src/cli/ + src/server/ → dist/
-├── bin/
-│   └── daston.ts              # source; dist/bin/daston.js is the shipped entry
-├── src/
-│   ├── cli/
-│   │   ├── index.ts
-│   │   └── commands/
-│   │       ├── init.ts
-│   │       ├── init.test.ts
-│   │       ├── start.ts
-│   │       └── start.test.ts
-│   ├── server/                # Hono
-│   │   ├── index.ts           # serves dist/web/ in prod; Vite proxies in dev
-│   │   ├── routes/
-│   │   │   ├── theme.ts
-│   │   │   ├── components.ts
-│   │   │   └── prompt.ts
-│   │   ├── storage.ts         # project: .daston/config.json · global: ~/.daston/
-│   │   └── storage.test.ts
-│   ├── web/                   # Vite + React + TanStack Router
-│   │   ├── index.html
-│   │   ├── main.tsx
-│   │   ├── tokens.css
-│   │   ├── routeTree.gen.ts   # generated, gitignored
-│   │   ├── routes/            # TanStack Router (file-based)
-│   │   │   ├── __root.tsx
-│   │   │   └── index.tsx      # mounts the canvas + chrome
-│   │   ├── canvas/            # pan/zoom viewport, PreviewWrapper, TextEditLayer, interaction hooks
-│   │   ├── previews/          # themed Button/Card/Table/Landing samples rendered inside the canvas
-│   │   ├── sidebar/           # right-hand inspector (fields, sections, inspectors)
-│   │   ├── layers/            # left-hand layers panel
-│   │   ├── toolbar/           # top-of-canvas toolbar + import dialog
-│   │   ├── context-menu/      # right-click menu
-│   │   ├── state/             # Zustand stores (see layout below)
-│   │   │   ├── editor.ts      # barrel for the editor store + selectors
-│   │   │   ├── editor/        # store, mutations, selectors, history, instance defaults
-│   │   │   ├── registry/      # component registry + imported-components store
-│   │   │   ├── layers.ts      # layer-tree helpers (shared by editor and sidebar)
-│   │   │   ├── text-edit.ts   # separate store for in-canvas text editing sessions
-│   │   │   └── types.ts       # ComponentInstance + props types
-│   │   └── lib/               # api client, fonts, keyboard shortcut hook, CSS utils
-│   └── shared/
-│       └── types.ts           # type-only; no runtime imports
-└── dist/                      # published to npm
-    ├── bin/daston.js          # package.json#bin target
-    └── web/                   # prebuilt SPA served by Hono
+```bash
+npm install -g daston
 ```
 
-## A note on `src/web/` layout (vs Next.js)
+### One-off (no install)
 
-`src/web/` is organized by **feature**, not by role. There is no top-level
-`components/` bucket; instead each surface of the app (`canvas/`, `sidebar/`,
-`layers/`, `toolbar/`, `context-menu/`, `previews/`) owns its components,
-CSS, hooks, and tests together. Cross-cutting pieces live in `state/` (Zustand
-stores) and `lib/` (api client, fonts, keyboard shortcut hook, CSS helpers).
+```bash
+npx daston start
+```
 
-`routes/` only exists because TanStack Router is file-based; this is a
-single-page canvas app, so `routes/index.tsx` just composes the feature
-folders and `__root.tsx` is the outer layout.
+### Project dependency
+
+```bash
+npm install --save-dev daston
+```
+
+## Quick start
+
+From inside your app's repo:
+
+```bash
+daston init    # create .daston/config.json in this project
+daston start   # boot the local server and print a localhost URL
+```
+
+Open the printed URL in a browser. You get a pannable canvas with previews of stock components (Button, Card, Table, Landing) styled with your project's theme. Edit on the canvas; the config file updates on disk.
+
+## Commands
+
+```bash
+daston init                 # create .daston/config.json in the target project
+daston start                # start the canvas and print http://127.0.0.1:<port>/
+daston <cmd> --project <p>  # override the target project directory
+```
+
+### Target-project resolution
+
+Both commands resolve "which project am I acting on?" in this order:
+
+1. `--project <path>` if provided.
+2. Nearest ancestor of the current directory whose `package.json` looks like an app (React, Vite, Next, TanStack Router, Vue, Svelte, Astro, Nuxt, Remix, …).
+3. A single app package under a workspace root (reads root `package.json#workspaces`, `pnpm-workspace.yaml`, `packages/*`, `apps/*`).
+
+If two or more apps match, daston exits and lists the candidates so you can pass `--project` explicitly.
+
+## Agent workflow
+
+1. Your agent (or you) runs `daston start`.
+2. You open the URL and tweak fonts, colors, and component styling visually.
+3. Click **Add Component** to generate a prompt describing the change. Paste it back into the agent to have it apply the change to the actual source files.
+
+daston itself never touches your source — it only writes to `.daston/config.json`. The agent is what edits components.
+
+## Storage
+
+- **Per-project:** `<project>/.daston/config.json`. Schema-versioned. Safe to commit or gitignore.
+- **Global defaults:** `~/.daston/` (reserved for future shared settings).
+
+Everything runs locally in your Node process. No network calls beyond `127.0.0.1`.
+
+## Requirements
+
+- Node.js 20 or newer.
+
+## Development
+
+```bash
+git clone <this repo>
+cd daston
+npm install
+npm run build        # builds dist/ (CLI + server + web)
+npm link             # makes `daston` available globally from source
+```
+
+Dev loop with hot reload:
+
+```bash
+npm run build:web    # once, to produce dist/web/
+npm run dev:server   # Hono + CLI via tsx
+npm run dev:web      # Vite dev server with /api proxied to Hono
+```
+
+Checks:
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+```
+
+## Stack
+
+- **CLI** — Node + [Commander](https://github.com/tj/commander.js), bundled with [tsup](https://tsup.egoist.dev/).
+- **Server** — [Hono](https://hono.dev/) on `@hono/node-server`. Serves the built SPA and a thin `/api/{theme,components,imported-components,prompt}` surface.
+- **Frontend** — [Vite](https://vitejs.dev/) + React 19 + [TanStack Router](https://tanstack.com/router) (file-based). State via [Zustand](https://zustand.docs.pmnd.rs/).
+- **Storage** — plain JSON on disk, schema-versioned from day one.
+
+Source is organized by feature (`src/web/canvas/`, `src/web/sidebar/`, `src/web/layers/`, `src/web/toolbar/`, `src/web/previews/`), not by role — each surface owns its components, CSS, and tests.
+
+## License
+
+ISC.

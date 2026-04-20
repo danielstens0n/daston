@@ -1,11 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import {
-  buildLayerTree,
-  encodeLayerTreeSignature,
-  type LayerNode,
-  type SelectedTarget,
-} from '../layers.ts';
+import { buildLayerTree, encodeLayerTreeSignature, type LayerNode, type SelectedTarget } from '../layers.ts';
 import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../types.ts';
 import { useEditorStore } from './store.ts';
 
