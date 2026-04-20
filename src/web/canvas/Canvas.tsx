@@ -12,6 +12,7 @@ import {
 import { useShallow } from 'zustand/react/shallow';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildCanvasMenuItems } from '../context-menu/items.ts';
+import { TRIANGLE_POLYGON_POINTS } from '../previews/Triangle.tsx';
 import type { CanvasTool } from '../state/editor.ts';
 import { useEditorStore } from '../state/editor.ts';
 import {
@@ -63,7 +64,13 @@ type DrawState = {
   startY: number;
 };
 
-type RubberBand = { left: number; top: number; width: number; height: number };
+type RubberBand = {
+  tool: Exclude<CanvasTool, 'select'>;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 
 type Props = {
   children: ReactNode;
@@ -139,7 +146,7 @@ export function Canvas({ children, overlay }: Props) {
         startX: p.x,
         startY: p.y,
       };
-      setRubberBand({ left: p.x, top: p.y, width: 0, height: 0 });
+      setRubberBand({ tool, left: p.x, top: p.y, width: 0, height: 0 });
       event.currentTarget.setAttribute('data-drawing', 'true');
       return;
     }
@@ -165,7 +172,7 @@ export function Canvas({ children, overlay }: Props) {
       const top = Math.min(draw.startY, p.y);
       const width = Math.abs(p.x - draw.startX);
       const height = Math.abs(p.y - draw.startY);
-      setRubberBand({ left, top, width, height });
+      setRubberBand({ tool: draw.tool, left, top, width, height });
       return;
     }
 
@@ -280,21 +287,32 @@ export function Canvas({ children, overlay }: Props) {
         </div>
         {showOverlayShell ? (
           <div className="canvas-overlay">
-            {rubberBand ? (
-              <div
-                className="canvas-rubber-band"
-                style={{
-                  left: rubberBand.left,
-                  top: rubberBand.top,
-                  width: rubberBand.width,
-                  height: rubberBand.height,
-                }}
-              />
-            ) : null}
+            {rubberBand ? <RubberBandPreview band={rubberBand} /> : null}
             {overlay}
           </div>
         ) : null}
       </div>
     </CanvasHandleContext.Provider>
   );
+}
+
+// Triangle uses SVG because CSS dashed borders can't follow a clip-path.
+function RubberBandPreview({ band }: { band: RubberBand }) {
+  const style = {
+    left: band.left,
+    top: band.top,
+    width: band.width,
+    height: band.height,
+  };
+  if (band.tool === 'triangle') {
+    return (
+      <div className="canvas-rubber-band" data-tool="triangle" style={style}>
+        <svg className="canvas-rubber-band-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          <title>Triangle preview</title>
+          <polygon className="canvas-rubber-band-polygon" points={TRIANGLE_POLYGON_POINTS} />
+        </svg>
+      </div>
+    );
+  }
+  return <div className="canvas-rubber-band" data-tool={band.tool} style={style} />;
 }

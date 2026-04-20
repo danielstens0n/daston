@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 import { useShapeProps } from '../state/editor.ts';
 import './triangle.css';
 
+export const TRIANGLE_POLYGON_POINTS = '50,2 98,98 2,98';
+
 type Props = {
   id: string;
 };
@@ -25,7 +27,7 @@ export function Triangle({ id }: Props) {
       <title>Triangle</title>
       <polygon
         className="preview-triangle-polygon"
-        points="50,2 98,98 2,98"
+        points={TRIANGLE_POLYGON_POINTS}
         fill={p.fill}
         stroke={p.borderWidth > 0 ? p.borderColor : 'none'}
         strokeWidth={p.borderWidth > 0 ? p.borderWidth : 0}

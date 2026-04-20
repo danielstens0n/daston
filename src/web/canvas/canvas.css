@@ -33,6 +33,31 @@
   z-index: 0;
 }
 
+.canvas-rubber-band[data-tool='ellipse'] {
+  border-radius: 50%;
+}
+
+.canvas-rubber-band[data-tool='triangle'] {
+  border: none;
+  background: none;
+}
+
+.canvas-rubber-band-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.canvas-rubber-band-polygon {
+  fill: color-mix(in srgb, var(--color-chrome-focus) 12%, transparent);
+  stroke: var(--color-chrome-focus);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
 /* The world container is what gets transformed. All previews live inside it
    at world-space coordinates and ride the pan/zoom for free. */
 .canvas-world {
