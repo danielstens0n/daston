@@ -44,6 +44,25 @@ import {
   mutationUpdateProps,
 } from './mutations.ts';
 
+/**
+ * Global editor store (Zustand). Single source of truth for everything on the
+ * canvas: component instances, selection, undo/redo, clipboard, canvas chrome,
+ * and the current server theme. Components read slices via the hooks in
+ * `selectors.ts` and write via the action methods here — nothing else should
+ * mutate this state directly.
+ *
+ * The store's shape is three concerns layered together:
+ *
+ *   1. `EditorSnapshot` (defined in `history.ts`) — the part of state that
+ *      undo/redo restores: instances, selection, next-id counter, clipboard.
+ *   2. `EditorAmbientState` — state that lives in the store but is NOT
+ *      undoable: the undo/redo stacks themselves, the active tool, canvas
+ *      background, ephemeral drag/edit hints, and the server theme.
+ *   3. `EditorActions` — the write API. Undoable mutations go through
+ *      `applyMutation`, which pushes the pre-change snapshot onto `past`;
+ *      ambient setters use plain `set(...)`.
+ */
+
 /** Canvas viewport fill (Figma-style); independent of app chrome theme. */
 export const DEFAULT_CANVAS_BACKGROUND = '#3a3d43';
 
@@ -69,30 +88,38 @@ function isPristineDefaultCanvas(snapshot: EditorSnapshot): boolean {
   );
 }
 
-type EditorStoreActions = {
+/** Store state that is NOT part of undo/redo (history stacks, tool, theme, ephemeral drag hints). */
+type EditorAmbientState = {
   past: EditorSnapshot[];
   future: EditorSnapshot[];
   historyBatch: EditorSnapshot | null;
   canvasBackgroundColor: string;
   activeTool: CanvasTool;
-  setActiveTool: (tool: CanvasTool) => void;
   /** Set by the canvas after creating a text instance; Text preview consumes to open the inline editor. */
   pendingTextEditInstanceId: string | null;
-  setPendingTextEditInstanceId: (id: string | null) => void;
   /** Ephemeral preview of the parent an in-progress drag will land inside; not part of undo history. */
   dropTargetId: string | null;
-  setDropTargetId: (id: string | null) => void;
-  setCanvasBackgroundColor: (color: string) => void;
   /** Last theme from server; drives color variables in the picker. */
   themeConfig: ThemeConfig | null;
+};
+
+type EditorActions = {
+  setActiveTool: (tool: CanvasTool) => void;
+  setPendingTextEditInstanceId: (id: string | null) => void;
+  setDropTargetId: (id: string | null) => void;
+  setCanvasBackgroundColor: (color: string) => void;
+
   applyInitialThemeFromServer: (theme: ThemeConfig) => void;
   upsertThemeColor: (name: string, hex: string) => Promise<void>;
+
   select: (id: string | null) => void;
   selectLayer: (target: Extract<SelectedTarget, { kind: 'layer' }>) => void;
+
   beginHistoryBatch: () => void;
   endHistoryBatch: () => void;
   undo: () => void;
   redo: () => void;
+
   move: (id: string, pos: Point) => void;
   resize: (id: string, rect: Rect) => void;
   addInstance: (type: ComponentId, worldCenter: Point) => void;
@@ -104,9 +131,11 @@ type EditorStoreActions = {
   remove: (id: string) => void;
   duplicate: (id: string) => void;
   duplicateInPlaceForDrag: (id: string) => string | null;
+
   copy: (id: string) => void;
   cut: (id: string) => void;
   paste: (options?: { at?: Point }) => void;
+
   insertTableColumn: (id: string, atIndex?: number) => void;
   removeTableColumn: (id: string, index: number) => void;
   insertTableRow: (id: string, atIndex?: number) => void;
@@ -115,9 +144,9 @@ type EditorStoreActions = {
   removeLandingFeature: (id: string, index: number) => void;
 };
 
-type FullEditorStore = EditorSnapshot & EditorStoreActions;
+export type EditorStore = EditorSnapshot & EditorAmbientState & EditorActions;
 
-export const useEditorStore = create<FullEditorStore>((set) => {
+export const useEditorStore = create<EditorStore>((set) => {
   function applyMutation(recipe: (snapshot: EditorSnapshot) => Partial<EditorSnapshot> | null): void {
     set((state) => {
       const snapshot = pickEditorSnapshot(state);
