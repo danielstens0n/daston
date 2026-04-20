@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -28,7 +28,15 @@ describe('start', () => {
   it('sets exit code when the web bundle is missing', async () => {
     const emptyWeb = await mkdtemp(join(tmpdir(), 'daston-start-web-'));
     roots.push(emptyWeb);
-    await start({ project: appRoot, webRoot: emptyWeb });
+    await start({ project: appRoot, webRoot: emptyWeb, open: false });
     expect(process.exitCode).toBe(1);
+  });
+
+  it('does not seed the project config when the web bundle is missing', async () => {
+    const emptyWeb = await mkdtemp(join(tmpdir(), 'daston-start-web-'));
+    roots.push(emptyWeb);
+    await start({ project: appRoot, webRoot: emptyWeb, open: false });
+    const configPath = join(appRoot, '.daston', 'config.json');
+    await expect(readFile(configPath, 'utf8')).rejects.toThrow();
   });
 });

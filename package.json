@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "dev:web": "vite",
-    "dev:server": "tsx bin/daston.ts start",
+    "dev:server": "tsx bin/daston.ts --no-open",
     "build": "tsup && vite build",
     "build:cli": "tsup",
     "build:web": "vite build",
