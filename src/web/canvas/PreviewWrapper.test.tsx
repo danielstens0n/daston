@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
-import { useEditorStore } from '../state/editor.ts';
+import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../state/editor.ts';
 import { PreviewWrapper } from './PreviewWrapper.tsx';
 
 afterEach(() => {
@@ -48,12 +48,14 @@ beforeEach(() => {
       },
     ],
     selectedId: null,
+    selectedTarget: null,
     nextInstanceId: 2,
     clipboard: null,
     lastPasteId: null,
     past: [],
     future: [],
     historyBatch: null,
+    canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
   });
 });
 

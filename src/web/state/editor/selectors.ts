@@ -1,6 +1,7 @@
+import { useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import {
-  buildLayerTreeFromSignature,
+  buildLayerTree,
   encodeLayerTreeSignature,
   type LayerNode,
   type SelectedTarget,
@@ -13,12 +14,31 @@ export function useInstanceIds(): string[] {
 }
 
 export function useLayerTree(): LayerNode[] {
-  const encoded = useEditorStore(useShallow((state) => state.instances.map(encodeLayerTreeSignature)));
-  return encoded.map(buildLayerTreeFromSignature);
+  const layerMemoKey = useEditorStore(
+    useShallow((state) => state.instances.map((i) => `${i.id}:${encodeLayerTreeSignature(i)}`).join('|')),
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `layerMemoKey` is the stable cache key for derived trees (ids + structure signatures); the callback reads fresh instances from the store.
+  return useMemo(
+    () => useEditorStore.getState().instances.map((instance) => buildLayerTree(instance)),
+    [layerMemoKey],
+  );
 }
 
 export function useInstance(id: string): ComponentInstance | null {
   return useEditorStore((state) => state.instances.find((instance) => instance.id === id) ?? null);
+}
+
+export function useInstanceFrame(id: string): { x: number; y: number; width: number; height: number } | null {
+  const tuple = useEditorStore(
+    useShallow((state) => {
+      const inst = state.instances.find((i) => i.id === id);
+      if (!inst) return null;
+      return [inst.x, inst.y, inst.width, inst.height] as const;
+    }),
+  );
+  if (!tuple) return null;
+  const [x, y, width, height] = tuple;
+  return { x, y, width, height };
 }
 
 export function useCardProps(id: string): CardProps | null {
@@ -90,4 +110,29 @@ export function useSelectedTarget(): SelectedTarget | null {
 
 export function useIsSelected(id: string): boolean {
   return useEditorStore((state) => state.selectedId === id);
+}
+
+export function useUpdateProps(id: string): (patch: Record<string, unknown>) => void {
+  return useMemo(
+    () => (patch: Record<string, unknown>) => useEditorStore.getState().updateProps(id, patch),
+    [id],
+  );
+}
+
+function selectedTargetKey(target: SelectedTarget): string {
+  return target.kind === 'instance' ? `i:${target.instanceId}` : `l:${target.instanceId}:${target.layerId}`;
+}
+
+export function useIsLayerSelected(target: SelectedTarget): boolean {
+  const key = selectedTargetKey(target);
+  return useEditorStore(
+    useCallback(
+      (state) => {
+        const sel = state.selectedTarget;
+        if (!sel) return false;
+        return selectedTargetKey(sel) === key;
+      },
+      [key],
+    ),
+  );
 }

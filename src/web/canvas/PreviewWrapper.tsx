@@ -2,6 +2,7 @@ import type { MouseEvent, ReactNode } from 'react';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
 import { buildInstanceMenuItems } from '../context-menu/items.ts';
 import { useEditorStore, useInstance } from '../state/editor.ts';
+import { InstanceIdProvider, useInstanceId } from './InstanceIdContext.tsx';
 import { useInstanceInteraction } from './useInstanceInteraction.ts';
 import { type ResizeCorner, useResizeInteraction } from './useResizeInteraction.ts';
 import './preview-wrapper.css';
@@ -35,25 +36,28 @@ export function PreviewWrapper({ id, children }: Props) {
   }
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles drag + instance context menu
-    <div
-      className="preview-wrapper"
-      data-selected={isSelected || undefined}
-      style={{
-        transform: `translate(${instance.x}px, ${instance.y}px)`,
-        width: `${instance.width}px`,
-        height: `${instance.height}px`,
-      }}
-      {...handlers}
-      onContextMenu={onContextMenu}
-    >
-      {children}
-      {isSelected ? CORNERS.map((corner) => <ResizeHandle key={corner} id={id} corner={corner} />) : null}
-    </div>
+    <InstanceIdProvider id={id}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles drag + instance context menu */}
+      <div
+        className="preview-wrapper"
+        data-selected={isSelected || undefined}
+        style={{
+          transform: `translate(${instance.x}px, ${instance.y}px)`,
+          width: `${instance.width}px`,
+          height: `${instance.height}px`,
+        }}
+        {...handlers}
+        onContextMenu={onContextMenu}
+      >
+        {children}
+        {isSelected ? CORNERS.map((corner) => <ResizeHandle key={corner} corner={corner} />) : null}
+      </div>
+    </InstanceIdProvider>
   );
 }
 
-function ResizeHandle({ id, corner }: { id: string; corner: ResizeCorner }) {
+function ResizeHandle({ corner }: { corner: ResizeCorner }) {
+  const id = useInstanceId();
   const { handlers } = useResizeInteraction(id, corner);
   return <div className={`preview-resize-handle preview-resize-handle-${corner}`} {...handlers} />;
 }

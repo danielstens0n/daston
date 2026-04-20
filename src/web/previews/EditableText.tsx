@@ -1,16 +1,17 @@
 import { type KeyboardEvent, type MouseEvent, useId, useLayoutEffect, useRef } from 'react';
+import { useInstanceId } from '../canvas/InstanceIdContext.tsx';
 import { useTextEditActiveForAnchor, useTextEditStore } from '../state/text-edit.ts';
 import './editable-text.css';
 
 type Props = {
-  instanceId: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
   multiline?: boolean;
 };
 
-export function EditableText({ instanceId, value, onChange, className, multiline = false }: Props) {
+export function EditableText({ value, onChange, className, multiline = false }: Props) {
+  const instanceId = useInstanceId();
   const anchorKey = useId();
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const isAnchorActive = useTextEditActiveForAnchor(anchorKey);

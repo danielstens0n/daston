@@ -49,6 +49,13 @@ function nodeId(selection: SelectedTarget): string {
     : `${selection.instanceId}::${selection.layerId}`;
 }
 
+function instanceToLayerSource(instance: ComponentInstance): LayerSource {
+  if (instance.type === 'imported') {
+    return { type: 'imported', instanceId: instance.id, definitionId: instance.definitionId };
+  }
+  return { type: instance.type, instanceId: instance.id };
+}
+
 function rootNode(source: LayerSource, children: LayerNode[]): LayerNode {
   const selection = instanceSelection(source.instanceId);
   return {
@@ -92,26 +99,53 @@ function expandLayerTemplate(source: LayerSource, nodes: readonly LayerTemplateN
   });
 }
 
-export function buildLayerTree(source: LayerSource): LayerNode {
-  const template = source.type === 'imported' ? null : STOCK_LAYER_ROOT_CHILDREN[source.type];
-  return rootNode(source, template ? expandLayerTemplate(source, template) : []);
+function injectDynamicChildren(
+  instance: ComponentInstance,
+  source: LayerSource,
+  nodes: LayerNode[],
+): LayerNode[] {
+  return nodes.map((node) => {
+    let children =
+      node.children.length > 0 ? injectDynamicChildren(instance, source, node.children) : node.children;
+
+    if (instance.type === 'table') {
+      if (node.selection.kind === 'layer' && node.selection.layerId === 'columns') {
+        children = instance.props.columns.map((_, i) =>
+          leaf(source, `col-${i}`, 'tableColumn', `Column ${i + 1}`),
+        );
+      } else if (node.selection.kind === 'layer' && node.selection.layerId === 'rows') {
+        children = instance.props.rows.map((_, i) => leaf(source, `row-${i}`, 'tableRow', `Row ${i + 1}`));
+      }
+    } else if (instance.type === 'landing') {
+      if (node.selection.kind === 'layer' && node.selection.layerId === 'features-list') {
+        children = instance.props.features.map((_, i) =>
+          leaf(source, `feature-${i}`, 'landingFeature', `Feature ${i + 1}`),
+        );
+      }
+    }
+
+    return { ...node, children };
+  });
+}
+
+export function buildLayerTree(instance: ComponentInstance): LayerNode {
+  const source = instanceToLayerSource(instance);
+  const template = instance.type === 'imported' ? null : STOCK_LAYER_ROOT_CHILDREN[instance.type];
+  const baseChildren = template ? expandLayerTemplate(source, template) : [];
+  return rootNode(source, injectDynamicChildren(instance, source, baseChildren));
 }
 
 export function encodeLayerTreeSignature(instance: ComponentInstance): string {
-  return instance.type === 'imported'
-    ? `imported${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.definitionId}`
-    : `${instance.type}${LAYER_TREE_SEP}${instance.id}`;
-}
-
-export function buildLayerTreeFromSignature(signature: string): LayerNode {
-  const [type, instanceId, definitionId] = signature.split(LAYER_TREE_SEP) as [
-    ComponentInstance['type'],
-    string,
-    string | undefined,
-  ];
-  return buildLayerTree(
-    definitionId === undefined ? { type, instanceId } : { type, instanceId, definitionId },
-  );
+  if (instance.type === 'imported') {
+    return `imported${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.definitionId}`;
+  }
+  if (instance.type === 'table') {
+    return `table${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.props.columns.length}${LAYER_TREE_SEP}${instance.props.rows.length}`;
+  }
+  if (instance.type === 'landing') {
+    return `landing${LAYER_TREE_SEP}${instance.id}${LAYER_TREE_SEP}${instance.props.features.length}`;
+  }
+  return `${instance.type}${LAYER_TREE_SEP}${instance.id}`;
 }
 
 export function findLayerNode(node: LayerNode, layerId: string): LayerNode | null {
@@ -125,8 +159,8 @@ export function findLayerNode(node: LayerNode, layerId: string): LayerNode | nul
   return null;
 }
 
-export function getLayerLabel(source: LayerSource, layerId: string): string | null {
-  return findLayerNode(buildLayerTree(source), layerId)?.label ?? null;
+export function getLayerLabel(instance: ComponentInstance, layerId: string): string | null {
+  return findLayerNode(buildLayerTree(instance), layerId)?.label ?? null;
 }
 
 export function selectedTargetsEqual(a: SelectedTarget | null, b: SelectedTarget): boolean {

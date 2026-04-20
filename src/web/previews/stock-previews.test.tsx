@@ -2,7 +2,8 @@
 
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { useEditorStore } from '../state/editor.ts';
+import { InstanceIdProvider } from '../canvas/InstanceIdContext.tsx';
+import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../state/editor.ts';
 import { Button } from './Button.tsx';
 import { Card } from './Card.tsx';
 import { Landing } from './Landing.tsx';
@@ -17,19 +18,25 @@ describe('stock preview bodies', () => {
     useEditorStore.setState({
       instances: [],
       selectedId: null,
+      selectedTarget: null,
       nextInstanceId: 1,
       clipboard: null,
       lastPasteId: null,
       past: [],
       future: [],
       historyBatch: null,
+      canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
     });
   });
 
   it('renders button label from the store', () => {
     useEditorStore.getState().addInstance('button', { x: 0, y: 0 });
     expect(useEditorStore.getState().instances.at(-1)?.id).toBe('button-1');
-    render(<Button id="button-1" />);
+    render(
+      <InstanceIdProvider id="button-1">
+        <Button id="button-1" />
+      </InstanceIdProvider>,
+    );
     expect(screen.getByText('Button')).toBeInTheDocument();
   });
 
@@ -39,7 +46,11 @@ describe('stock preview bodies', () => {
       title: 'Overview',
       body: 'Quarterly metrics and owner notes.',
     });
-    render(<Card id="card-1" />);
+    render(
+      <InstanceIdProvider id="card-1">
+        <Card id="card-1" />
+      </InstanceIdProvider>,
+    );
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Quarterly metrics and owner notes.')).toBeInTheDocument();
   });
@@ -51,7 +62,11 @@ describe('stock preview bodies', () => {
       columns: ['Company', 'Owner'],
       rows: [['Acme', 'Ada']],
     });
-    render(<Table id="table-1" />);
+    render(
+      <InstanceIdProvider id="table-1">
+        <Table id="table-1" />
+      </InstanceIdProvider>,
+    );
     expect(screen.getByText('Company')).toBeInTheDocument();
     expect(screen.getByText('Acme')).toBeInTheDocument();
   });
@@ -63,7 +78,11 @@ describe('stock preview bodies', () => {
       featuresTitle: 'Highlights',
       features: ['Instant theme sync', 'Editable previews', 'Reusable exports'],
     });
-    render(<Landing id="landing-1" />);
+    render(
+      <InstanceIdProvider id="landing-1">
+        <Landing id="landing-1" />
+      </InstanceIdProvider>,
+    );
     expect(screen.getByText('Build faster')).toBeInTheDocument();
     expect(screen.getByText('Get started')).toBeInTheDocument();
     expect(screen.getByText('Highlights')).toBeInTheDocument();

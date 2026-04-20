@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
-import { useCardProps, useEditorStore } from '../state/editor.ts';
+import { useCardProps, useUpdateProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './card.css';
 
@@ -11,6 +11,7 @@ type Props = {
 // CardProps → CSS variables; PreviewWrapper owns layout and selection chrome.
 export function Card({ id }: Props) {
   const p = useCardProps(id);
+  const updateProps = useUpdateProps(id);
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
@@ -55,20 +56,10 @@ export function Card({ id }: Props) {
   return (
     <div className="preview-card" data-shadow={p.shadowEnabled || undefined} style={style}>
       <h3 className="preview-card-title">
-        <EditableText
-          instanceId={id}
-          value={p.title}
-          onChange={(title) => useEditorStore.getState().updateProps(id, { title })}
-          multiline
-        />
+        <EditableText value={p.title} onChange={(title) => updateProps({ title })} multiline />
       </h3>
       <p className="preview-card-body">
-        <EditableText
-          instanceId={id}
-          value={p.body}
-          onChange={(body) => useEditorStore.getState().updateProps(id, { body })}
-          multiline
-        />
+        <EditableText value={p.body} onChange={(body) => updateProps({ body })} multiline />
       </p>
     </div>
   );

@@ -16,9 +16,15 @@ import {
   mutationCut,
   mutationDuplicate,
   mutationDuplicateInPlaceForDrag,
+  mutationInsertLandingFeature,
+  mutationInsertTableColumn,
+  mutationInsertTableRow,
   mutationMove,
   mutationPaste,
   mutationRemove,
+  mutationRemoveLandingFeature,
+  mutationRemoveTableColumn,
+  mutationRemoveTableRow,
   mutationResize,
   mutationUpdateProps,
 } from './mutations.ts';
@@ -52,6 +58,12 @@ type EditorStoreActions = {
   copy: (id: string) => void;
   cut: (id: string) => void;
   paste: (options?: { at?: Point }) => void;
+  insertTableColumn: (id: string, atIndex?: number) => void;
+  removeTableColumn: (id: string, index: number) => void;
+  insertTableRow: (id: string, atIndex?: number) => void;
+  removeTableRow: (id: string, index: number) => void;
+  insertLandingFeature: (id: string, atIndex?: number) => void;
+  removeLandingFeature: (id: string, index: number) => void;
 };
 
 type FullEditorStore = EditorSnapshot & EditorStoreActions;
@@ -165,5 +177,16 @@ export const useEditorStore = create<FullEditorStore>((set) => {
       }),
     cut: (id) => applyMutation((snapshot) => mutationCut(snapshot, id)),
     paste: (options) => applyMutation((snapshot) => mutationPaste(snapshot, options)),
+    insertTableColumn: (id, atIndex) =>
+      applyMutation((snapshot) => mutationInsertTableColumn(snapshot, id, atIndex)),
+    removeTableColumn: (id, index) =>
+      applyMutation((snapshot) => mutationRemoveTableColumn(snapshot, id, index)),
+    insertTableRow: (id, atIndex) =>
+      applyMutation((snapshot) => mutationInsertTableRow(snapshot, id, atIndex)),
+    removeTableRow: (id, index) => applyMutation((snapshot) => mutationRemoveTableRow(snapshot, id, index)),
+    insertLandingFeature: (id, atIndex) =>
+      applyMutation((snapshot) => mutationInsertLandingFeature(snapshot, id, atIndex)),
+    removeLandingFeature: (id, index) =>
+      applyMutation((snapshot) => mutationRemoveLandingFeature(snapshot, id, index)),
   };
 });

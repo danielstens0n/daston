@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Canvas } from '../canvas/Canvas.tsx';
+import { InstanceIdProvider } from '../canvas/InstanceIdContext.tsx';
 import { TextEditLayer } from '../canvas/TextEditLayer.tsx';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
 import { useEditorStore } from '../state/editor.ts';
@@ -19,6 +20,7 @@ function resetEditorForPreviewTests() {
   useEditorStore.setState({
     instances: [],
     selectedId: null,
+    selectedTarget: null,
     nextInstanceId: 1,
     clipboard: null,
     lastPasteId: null,
@@ -28,11 +30,11 @@ function resetEditorForPreviewTests() {
   });
 }
 
-function renderOnCanvas(node: ReactNode) {
+function renderOnCanvas(node: ReactNode, instanceId: string) {
   return render(
     <ContextMenuProvider>
       <Canvas>
-        {node}
+        <InstanceIdProvider id={instanceId}>{node}</InstanceIdProvider>
         <TextEditLayer />
       </Canvas>
     </ContextMenuProvider>,
@@ -53,7 +55,7 @@ describe('EditableText', () => {
     it('commits an inline edit on blur', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      renderOnCanvas(<EditableText instanceId="button-1" value="Button" onChange={onChange} />);
+      renderOnCanvas(<EditableText value="Button" onChange={onChange} />, 'button-1');
 
       await user.dblClick(screen.getByText('Button'));
 
@@ -67,7 +69,7 @@ describe('EditableText', () => {
     it('commits the full string when typing multiple characters', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      renderOnCanvas(<EditableText instanceId="button-1" value="Hi" onChange={onChange} />);
+      renderOnCanvas(<EditableText value="Hi" onChange={onChange} />, 'button-1');
 
       await user.dblClick(screen.getByText('Hi'));
 
@@ -81,7 +83,7 @@ describe('EditableText', () => {
     it('cancels edits on escape', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      renderOnCanvas(<EditableText instanceId="button-1" value="Button" onChange={onChange} />);
+      renderOnCanvas(<EditableText value="Button" onChange={onChange} />, 'button-1');
 
       await user.dblClick(screen.getByText('Button'));
 
@@ -103,9 +105,7 @@ describe('EditableText', () => {
     it('uses a textarea for multiline editing', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      renderOnCanvas(
-        <EditableText instanceId="card-1" value="A simple card preview." onChange={onChange} multiline />,
-      );
+      renderOnCanvas(<EditableText value="A simple card preview." onChange={onChange} multiline />, 'card-1');
 
       await user.dblClick(screen.getByText('A simple card preview.'));
 

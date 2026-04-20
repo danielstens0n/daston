@@ -1,4 +1,4 @@
-import type { FontWeight, TextDecoration } from '../../state/types.ts';
+import type { TypographyValues } from '../../state/types.ts';
 import { DecorationField } from './DecorationField.tsx';
 import { FieldRow } from './FieldRow.tsx';
 import { FontField } from './FontField.tsx';
@@ -8,16 +8,8 @@ import { ToggleField } from './ToggleField.tsx';
 import { WeightField } from './WeightField.tsx';
 
 type Props = {
-  font: string;
-  onFontChange: (value: string) => void;
-  fontSize: number;
-  onFontSizeChange: (value: number) => void;
-  fontWeight: FontWeight;
-  onFontWeightChange: (value: FontWeight) => void;
-  italic: boolean;
-  onItalicChange: (value: boolean) => void;
-  decoration: TextDecoration;
-  onDecorationChange: (value: TextDecoration) => void;
+  values: TypographyValues;
+  onChange: (patch: Partial<TypographyValues>) => void;
   /** Label for the font row (e.g. "Title", "Header", or "Font"). */
   fontRowLabel: string;
   fontAriaLabel: string;
@@ -25,36 +17,37 @@ type Props = {
 };
 
 export function TypographyStyleRows({
-  font,
-  onFontChange,
-  fontSize,
-  onFontSizeChange,
-  fontWeight,
-  onFontWeightChange,
-  italic,
-  onItalicChange,
-  decoration,
-  onDecorationChange,
+  values,
+  onChange,
   fontRowLabel,
   fontAriaLabel,
   weightAriaLabel,
 }: Props) {
+  const { font, fontSize, fontWeight, italic, decoration } = values;
   return (
     <>
       <FieldRow label={fontRowLabel}>
-        <FontField value={font} onChange={onFontChange} ariaLabel={fontAriaLabel} />
+        <FontField value={font} onChange={(v) => onChange({ font: v })} ariaLabel={fontAriaLabel} />
       </FieldRow>
       <FieldRow label="Size">
-        <NumberField value={fontSize} onChange={onFontSizeChange} {...INSPECTOR_FONT_SIZE_FIELD} />
+        <NumberField
+          value={fontSize}
+          onChange={(v) => onChange({ fontSize: v })}
+          {...INSPECTOR_FONT_SIZE_FIELD}
+        />
       </FieldRow>
       <FieldRow label="Weight">
-        <WeightField value={fontWeight} onChange={onFontWeightChange} ariaLabel={weightAriaLabel} />
+        <WeightField
+          value={fontWeight}
+          onChange={(v) => onChange({ fontWeight: v })}
+          ariaLabel={weightAriaLabel}
+        />
       </FieldRow>
       <FieldRow label="Italic">
-        <ToggleField value={italic} onChange={onItalicChange} />
+        <ToggleField value={italic} onChange={(v) => onChange({ italic: v })} />
       </FieldRow>
       <FieldRow label="Deco">
-        <DecorationField value={decoration} onChange={onDecorationChange} />
+        <DecorationField value={decoration} onChange={(v) => onChange({ decoration: v })} />
       </FieldRow>
     </>
   );

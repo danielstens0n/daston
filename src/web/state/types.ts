@@ -31,6 +31,15 @@ export type TextColorProps = {
 export type FontWeight = 400 | 500 | 600 | 700;
 export type TextDecoration = 'none' | 'underline' | 'strikethrough';
 
+/** Generic typography slice for inspector fields (maps to prefixed keys per component). */
+export type TypographyValues = {
+  font: string;
+  fontSize: number;
+  fontWeight: FontWeight;
+  italic: boolean;
+  decoration: TextDecoration;
+};
+
 export type CardProps = LayoutProps &
   FillProps &
   BorderProps &

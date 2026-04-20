@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
-import { useButtonProps, useEditorStore } from '../state/editor.ts';
+import { useButtonProps, useUpdateProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './button.css';
 
@@ -10,6 +10,7 @@ type Props = {
 
 export function Button({ id }: Props) {
   const p = useButtonProps(id);
+  const updateProps = useUpdateProps(id);
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
@@ -40,9 +41,8 @@ export function Button({ id }: Props) {
   return (
     <div className="preview-button" data-shadow={p.shadowEnabled || undefined} style={style}>
       <EditableText
-        instanceId={id}
         value={p.label}
-        onChange={(label) => useEditorStore.getState().updateProps(id, { label })}
+        onChange={(label) => updateProps({ label })}
         className="preview-button-label"
       />
     </div>

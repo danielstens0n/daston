@@ -6,7 +6,7 @@ type Props = {
   id: string;
 };
 
-export function ImportedInspector({ id }: Props) {
+export function ImportedLayerInspector({ id }: Props) {
   const instance = useInstance(id);
   const definition = useImportedDefinition(instance?.type === 'imported' ? instance.definitionId : null);
   const [message, setMessage] = useState<string | null>(null);

@@ -3,9 +3,10 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ContextMenuProvider } from '../context-menu/ContextMenu.tsx';
+import { createDefaultTableProps } from '../state/editor/instance-defaults.ts';
 import { useEditorStore } from '../state/editor.ts';
 import { instanceSelection, layerSelection } from '../state/layers.ts';
-import type { CardInstance } from '../state/types.ts';
+import type { CardInstance, TableInstance } from '../state/types.ts';
 import { LayersSidebar } from './LayersSidebar.tsx';
 
 afterEach(() => {
@@ -137,6 +138,27 @@ describe('LayersSidebar', () => {
     useEditorStore.setState({ instances: [], selectedTarget: null });
     renderLayersSidebar();
     expect(screen.getByText('No instances on the canvas.')).toBeInTheDocument();
+  });
+
+  it('table Columns row context menu includes Add column', () => {
+    const table: TableInstance = {
+      id: 'table-1',
+      type: 'table',
+      x: 0,
+      y: 0,
+      width: 320,
+      height: 220,
+      props: createDefaultTableProps(),
+    };
+    useEditorStore.setState({ instances: [table], selectedTarget: null });
+    renderLayersSidebar();
+
+    const columnsLabel = screen.getByText('Columns');
+    const rowButton = columnsLabel.closest('button');
+    if (!rowButton) throw new Error('expected columns row button');
+
+    fireEvent.contextMenu(rowButton, { clientX: 50, clientY: 50, bubbles: true });
+    expect(screen.getByRole('menuitem', { name: 'Add column' })).toBeInTheDocument();
   });
 
   it('opens context menu on a child row and deletes the owning instance', () => {

@@ -5,14 +5,14 @@ import { ImportedPreview } from '../../previews/ImportedPreview.tsx';
 import { Landing } from '../../previews/Landing.tsx';
 import { Table } from '../../previews/Table.tsx';
 import { Section } from '../../sidebar/fields/Section.tsx';
-import { ButtonInspector } from '../../sidebar/inspectors/ButtonInspector.tsx';
-import { CardInspector } from '../../sidebar/inspectors/CardInspector.tsx';
+import { ButtonLayerInspector } from '../../sidebar/inspectors/ButtonLayerInspector.tsx';
 import { CardLayerInspector } from '../../sidebar/inspectors/CardLayerInspector.tsx';
-import { ImportedInspector } from '../../sidebar/inspectors/ImportedInspector.tsx';
-import { LandingInspector } from '../../sidebar/inspectors/LandingInspector.tsx';
-import { TableInspector } from '../../sidebar/inspectors/TableInspector.tsx';
-import type { ButtonProps, CardProps, ComponentInstance, LandingProps, TableProps } from '../types.ts';
-import { isCardLayerId } from './data.ts';
+import { FrameInspector } from '../../sidebar/inspectors/FrameInspector.tsx';
+import { ImportedLayerInspector } from '../../sidebar/inspectors/ImportedLayerInspector.tsx';
+import { LandingLayerInspector } from '../../sidebar/inspectors/LandingLayerInspector.tsx';
+import { TableLayerInspector } from '../../sidebar/inspectors/TableLayerInspector.tsx';
+import type { ComponentInstance } from '../types.ts';
+import { componentTypeLabel, isCardLayerId } from './data.ts';
 
 export function renderPreviewBody(instance: ComponentInstance): ReactNode {
   switch (instance.type) {
@@ -33,54 +33,34 @@ export function renderPreviewBody(instance: ComponentInstance): ReactNode {
   }
 }
 
-type StockInstanceType = Exclude<ComponentInstance['type'], 'imported'>;
-
-export function renderStockInstanceInspector(
-  type: StockInstanceType,
-  instanceId: string,
-  onPatch: (patch: Record<string, unknown>) => void,
-): ReactNode {
-  switch (type) {
-    case 'card':
-      return <CardInspector id={instanceId} onPatch={onPatch as (patch: Partial<CardProps>) => void} />;
-    case 'button':
-      return <ButtonInspector id={instanceId} onPatch={onPatch as (patch: Partial<ButtonProps>) => void} />;
-    case 'table':
-      return <TableInspector id={instanceId} onPatch={onPatch as (patch: Partial<TableProps>) => void} />;
-    case 'landing':
-      return <LandingInspector id={instanceId} onPatch={onPatch as (patch: Partial<LandingProps>) => void} />;
-    default: {
-      const _exhaustive: never = type;
-      return _exhaustive;
-    }
-  }
+export function renderStockInstanceInspector(instanceId: string): ReactNode {
+  return <FrameInspector id={instanceId} />;
 }
 
 export function renderImportedInstanceInspector(instanceId: string): ReactNode {
-  return <ImportedInspector id={instanceId} />;
+  return <ImportedLayerInspector id={instanceId} />;
 }
 
-export function renderLayerInspector(
-  meta: {
-    type: ComponentInstance['type'];
-    instanceId: string;
-    layerId: string;
-  },
-  selectedLabel: string,
-  onPatch: (patch: Record<string, unknown>) => void,
-): ReactNode {
+export function renderLayerInspector(meta: {
+  type: ComponentInstance['type'];
+  instanceId: string;
+  layerId: string;
+}): ReactNode {
   if (meta.type === 'card' && isCardLayerId(meta.layerId)) {
-    return (
-      <CardLayerInspector
-        id={meta.instanceId}
-        layerId={meta.layerId}
-        onPatch={onPatch as (patch: Partial<CardProps>) => void}
-      />
-    );
+    return <CardLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
+  }
+  if (meta.type === 'button') {
+    return <ButtonLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
+  }
+  if (meta.type === 'table') {
+    return <TableLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
+  }
+  if (meta.type === 'landing') {
+    return <LandingLayerInspector id={meta.instanceId} layerId={meta.layerId} />;
   }
   return (
     <Section title="Layer">
-      <p className="sidebar-help-text">{selectedLabel} editing is not available yet.</p>
+      <p className="sidebar-help-text">{componentTypeLabel(meta.type)} layer editing is not available yet.</p>
     </Section>
   );
 }

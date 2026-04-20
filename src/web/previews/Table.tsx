@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
-import { useEditorStore, useTableProps } from '../state/editor.ts';
+import { useTableProps, useUpdateProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './table.css';
 
@@ -10,6 +10,7 @@ type Props = {
 
 export function Table({ id }: Props) {
   const p = useTableProps(id);
+  const updateProps = useUpdateProps(id);
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
@@ -62,10 +63,9 @@ export function Table({ id }: Props) {
                 {p.columns.map((column, columnIndex) => (
                   <th key={`${id}-column-${column}`}>
                     <EditableText
-                      instanceId={id}
                       value={column}
                       onChange={(nextColumn) =>
-                        useEditorStore.getState().updateProps(id, {
+                        updateProps({
                           columns: p.columns.map((entry, index) =>
                             index === columnIndex ? nextColumn : entry,
                           ),
@@ -90,10 +90,9 @@ export function Table({ id }: Props) {
                   {p.columns.map((column, columnIndex) => (
                     <td key={`${id}-cell-${column}-${row[columnIndex] ?? ''}`}>
                       <EditableText
-                        instanceId={id}
                         value={row[columnIndex] ?? ''}
                         onChange={(nextCell) =>
-                          useEditorStore.getState().updateProps(id, {
+                          updateProps({
                             rows: p.rows.map((entry, entryIndex) =>
                               entryIndex === rowIndex
                                 ? p.columns.map((__, cellIndex) =>

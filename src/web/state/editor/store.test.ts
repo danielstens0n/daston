@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../editor.ts';
-import {
-  buildLayerTreeFromSignature,
-  encodeLayerTreeSignature,
-  instanceSelection,
-  layerSelection,
-} from '../layers.ts';
+import { buildLayerTree, instanceSelection, layerSelection } from '../layers.ts';
 import type { CardInstance, ImportedInstance } from '../types.ts';
 
 // Reset the store to a known two-instance baseline before each test. We
@@ -95,10 +90,7 @@ describe('select', () => {
 
 describe('layer tree projection', () => {
   it('derives nested card layers from the flat instance list', () => {
-    const tree = useEditorStore
-      .getState()
-      .instances.map(encodeLayerTreeSignature)
-      .map(buildLayerTreeFromSignature);
+    const tree = useEditorStore.getState().instances.map((instance) => buildLayerTree(instance));
     expect(tree[0]).toMatchObject({
       instanceId: 'a',
       label: 'Card',
@@ -110,10 +102,7 @@ describe('layer tree projection', () => {
 
   it('keeps imported components as opaque leaves', () => {
     useEditorStore.setState({ instances: [importedBaseline], selectedTarget: null });
-    const tree = useEditorStore
-      .getState()
-      .instances.map(encodeLayerTreeSignature)
-      .map(buildLayerTreeFromSignature);
+    const tree = useEditorStore.getState().instances.map((instance) => buildLayerTree(instance));
     expect(tree[0]).toMatchObject({
       instanceId: 'imported-1',
       label: 'Imported',

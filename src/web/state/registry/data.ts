@@ -8,7 +8,10 @@ export type LayerKind =
   | 'circle'
   | 'triangle'
   | 'polygon'
-  | 'imported';
+  | 'imported'
+  | 'tableColumn'
+  | 'tableRow'
+  | 'landingFeature';
 
 /** Declarative layer tree under the instance root; expanded in `layers.ts`. */
 export type LayerTemplateNode = {
@@ -35,14 +38,14 @@ export const STOCK_LAYER_ROOT_CHILDREN = {
       label: 'Header',
       children: [
         { id: 'header-surface', kind: 'rectangle', label: 'Header background' },
-        { id: 'columns', kind: 'text', label: 'Column labels' },
+        { id: 'columns', kind: 'group', label: 'Columns' },
       ],
     },
     {
       id: 'body',
       kind: 'group',
       label: 'Body',
-      children: [{ id: 'rows', kind: 'text', label: 'Rows' }],
+      children: [{ id: 'rows', kind: 'group', label: 'Rows' }],
     },
   ],
   landing: [
@@ -63,7 +66,7 @@ export const STOCK_LAYER_ROOT_CHILDREN = {
       children: [
         { id: 'features-surface', kind: 'rectangle', label: 'Features surface' },
         { id: 'features-title', kind: 'text', label: 'Features title' },
-        { id: 'features-list', kind: 'text', label: 'Feature list' },
+        { id: 'features-list', kind: 'group', label: 'Features list' },
       ],
     },
     {

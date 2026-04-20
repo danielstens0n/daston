@@ -6,8 +6,8 @@
       "src/**/*.tsx",
       "bin/**/*.ts",
       "!src/web/routeTree.gen.ts",
-      "!dist/**",
-      "!node_modules/**"
+      "!dist",
+      "!node_modules"
     ]
   },
   "linter": {

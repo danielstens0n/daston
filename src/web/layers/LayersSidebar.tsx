@@ -1,10 +1,26 @@
-import { useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { useContextMenuHost } from '../context-menu/ContextMenu.tsx';
-import { buildInstanceMenuItems } from '../context-menu/items.ts';
-import { useEditorStore, useLayerTree, useSelectedTarget } from '../state/editor.ts';
-import { type LayerNode, type SelectedTarget, selectedTargetsEqual } from '../state/layers.ts';
+import { buildLayerMenuItems } from '../context-menu/items.ts';
+import { useEditorStore, useIsLayerSelected, useLayerTree } from '../state/editor.ts';
+import type { LayerNode } from '../state/layers.ts';
 import { SidebarToggleIcon } from '../toolbar/icons.tsx';
 import './layers.css';
+
+type LayerRowContextValue = {
+  collapsedRows: Set<string>;
+  toggleRow: (id: string) => void;
+  openMenu: ReturnType<typeof useContextMenuHost>['openMenu'];
+};
+
+const LayerRowContext = createContext<LayerRowContextValue | null>(null);
+
+function useLayerRowContext(): LayerRowContextValue {
+  const ctx = useContext(LayerRowContext);
+  if (!ctx) {
+    throw new Error('LayerTreeRow must be used within LayerRowContext');
+  }
+  return ctx;
+}
 
 export function LayersSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -31,61 +47,46 @@ export function LayersSidebar() {
 
 function LayersSidebarBody() {
   const rows = useLayerTree();
-  const selectedTarget = useSelectedTarget();
   const { openMenu } = useContextMenuHost();
   const [collapsedRows, setCollapsedRows] = useState<Set<string>>(() => new Set());
   const reversedRows = useMemo(() => [...rows].reverse(), [rows]);
 
-  function toggleRow(id: string) {
+  const toggleRow = useCallback((id: string) => {
     setCollapsedRows((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  }
+  }, []);
+
+  const rowContextValue: LayerRowContextValue = useMemo(
+    () => ({ collapsedRows, toggleRow, openMenu }),
+    [collapsedRows, openMenu, toggleRow],
+  );
 
   return (
-    <div className="layers-sidebar-body">
-      {rows.length === 0 ? (
-        <p className="layers-empty">No instances on the canvas.</p>
-      ) : (
-        <ul className="layers-list" aria-label="Layers tree">
-          {reversedRows.map((row) => (
-            <LayerTreeRow
-              key={row.id}
-              node={row}
-              depth={0}
-              collapsedRows={collapsedRows}
-              selectedTarget={selectedTarget}
-              onToggle={toggleRow}
-              onOpenMenu={openMenu}
-            />
-          ))}
-        </ul>
-      )}
-    </div>
+    <LayerRowContext.Provider value={rowContextValue}>
+      <div className="layers-sidebar-body">
+        {rows.length === 0 ? (
+          <p className="layers-empty">No instances on the canvas.</p>
+        ) : (
+          <ul className="layers-list" aria-label="Layers tree">
+            {reversedRows.map((row) => (
+              <LayerTreeRow key={row.id} node={row} depth={0} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </LayerRowContext.Provider>
   );
 }
 
-function LayerTreeRow({
-  node,
-  depth,
-  collapsedRows,
-  selectedTarget,
-  onToggle,
-  onOpenMenu,
-}: {
-  node: LayerNode;
-  depth: number;
-  collapsedRows: Set<string>;
-  selectedTarget: SelectedTarget | null;
-  onToggle: (id: string) => void;
-  onOpenMenu: ReturnType<typeof useContextMenuHost>['openMenu'];
-}) {
+function LayerTreeRow({ node, depth }: { node: LayerNode; depth: number }) {
+  const { collapsedRows, toggleRow, openMenu } = useLayerRowContext();
+  const isSelected = useIsLayerSelected(node.selection);
   const hasChildren = node.children.length > 0;
   const isCollapsed = collapsedRows.has(node.id);
-  const isSelected = selectedTargetsEqual(selectedTarget, node.selection);
 
   function onSelect() {
     if (node.selection.kind === 'instance') {
@@ -104,7 +105,7 @@ function LayerTreeRow({
             className="layers-row-toggle"
             aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${node.label}`}
             aria-expanded={!isCollapsed}
-            onClick={() => onToggle(node.id)}
+            onClick={() => toggleRow(node.id)}
           >
             {isCollapsed ? '>' : 'v'}
           </button>
@@ -120,10 +121,10 @@ function LayerTreeRow({
           onContextMenu={(event) => {
             event.preventDefault();
             onSelect();
-            onOpenMenu({
+            openMenu({
               clientX: event.clientX,
               clientY: event.clientY,
-              items: buildInstanceMenuItems(node.instanceId),
+              items: buildLayerMenuItems(node.selection),
             });
           }}
         >
@@ -134,15 +135,7 @@ function LayerTreeRow({
       {hasChildren && !isCollapsed ? (
         <ul className="layers-sublist">
           {node.children.map((child) => (
-            <LayerTreeRow
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              collapsedRows={collapsedRows}
-              selectedTarget={selectedTarget}
-              onToggle={onToggle}
-              onOpenMenu={onOpenMenu}
-            />
+            <LayerTreeRow key={child.id} node={child} depth={depth + 1} />
           ))}
         </ul>
       ) : null}

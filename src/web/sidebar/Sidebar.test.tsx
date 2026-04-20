@@ -2,7 +2,7 @@
 
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { useEditorStore } from '../state/editor.ts';
+import { DEFAULT_CANVAS_BACKGROUND, useEditorStore } from '../state/editor.ts';
 import { layerSelection } from '../state/layers.ts';
 import type { CardInstance } from '../state/types.ts';
 import { Sidebar } from './Sidebar.tsx';
@@ -56,34 +56,34 @@ beforeEach(() => {
     past: [],
     future: [],
     historyBatch: null,
+    canvasBackgroundColor: DEFAULT_CANVAS_BACKGROUND,
   });
 });
 
 describe('Sidebar', () => {
-  it('shows the full card inspector when the component root is selected', () => {
+  it('shows the frame inspector when the component root is selected', () => {
     useEditorStore.getState().select('card-1');
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Card' })).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Card title')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Card body')).toBeInTheDocument();
-    expect(screen.getByText('Layout')).toBeInTheDocument();
-    expect(screen.getByText('Fill')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Frame' })).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Card title')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Card body')).not.toBeInTheDocument();
   });
 
-  it('focuses title controls when the title layer is selected', () => {
+  it('shows typography for the title layer without a content field', () => {
     useEditorStore.getState().selectLayer(layerSelection('card-1', 'title'));
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Card title')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Card title')).not.toBeInTheDocument();
     expect(screen.getByText('Typography')).toBeInTheDocument();
     expect(screen.queryByText('Padding')).not.toBeInTheDocument();
   });
 
-  it('focuses body controls when the body layer is selected', () => {
+  it('shows typography for the body layer without a content field', () => {
     useEditorStore.getState().selectLayer(layerSelection('card-1', 'body'));
     render(<Sidebar />);
     expect(screen.getByRole('heading', { name: 'Body' })).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Card body')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Card body')).not.toBeInTheDocument();
     expect(screen.getByText('Typography')).toBeInTheDocument();
   });
 

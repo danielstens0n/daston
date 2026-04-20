@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { previewTypographyVars } from '../lib/previewTypographyVars.ts';
-import { useEditorStore, useLandingProps } from '../state/editor.ts';
+import { useLandingProps, useUpdateProps } from '../state/editor.ts';
 import { EditableText } from './EditableText.tsx';
 import './landing.css';
 
@@ -10,6 +10,7 @@ type Props = {
 
 export function Landing({ id }: Props) {
   const p = useLandingProps(id);
+  const updateProps = useUpdateProps(id);
   if (!p) return null;
 
   const style: CSSProperties & Record<string, string> = {
@@ -53,35 +54,20 @@ export function Landing({ id }: Props) {
     <div className="preview-landing" style={style}>
       <div className="preview-landing-hero" data-shadow={p.shadowEnabled || undefined}>
         <h2 className="preview-landing-title">
-          <EditableText
-            instanceId={id}
-            value={p.heroTitle}
-            onChange={(heroTitle) => useEditorStore.getState().updateProps(id, { heroTitle })}
-            multiline
-          />
+          <EditableText value={p.heroTitle} onChange={(heroTitle) => updateProps({ heroTitle })} multiline />
         </h2>
         <p className="preview-landing-body">
-          <EditableText
-            instanceId={id}
-            value={p.heroBody}
-            onChange={(heroBody) => useEditorStore.getState().updateProps(id, { heroBody })}
-            multiline
-          />
+          <EditableText value={p.heroBody} onChange={(heroBody) => updateProps({ heroBody })} multiline />
         </p>
         <span className="preview-landing-cta">
-          <EditableText
-            instanceId={id}
-            value={p.ctaLabel}
-            onChange={(ctaLabel) => useEditorStore.getState().updateProps(id, { ctaLabel })}
-          />
+          <EditableText value={p.ctaLabel} onChange={(ctaLabel) => updateProps({ ctaLabel })} />
         </span>
       </div>
       <div className="preview-landing-features">
         <p className="preview-landing-features-title">
           <EditableText
-            instanceId={id}
             value={p.featuresTitle}
-            onChange={(featuresTitle) => useEditorStore.getState().updateProps(id, { featuresTitle })}
+            onChange={(featuresTitle) => updateProps({ featuresTitle })}
             multiline
           />
         </p>
@@ -89,10 +75,9 @@ export function Landing({ id }: Props) {
           {p.features.map((feature, index) => (
             <li key={`${id}-feature-${feature}`} className="preview-landing-feature">
               <EditableText
-                instanceId={id}
                 value={feature}
                 onChange={(nextFeature) =>
-                  useEditorStore.getState().updateProps(id, {
+                  updateProps({
                     features: p.features.map((entry, featureIndex) =>
                       featureIndex === index ? nextFeature : entry,
                     ),
